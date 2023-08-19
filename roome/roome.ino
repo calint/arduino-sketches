@@ -113,10 +113,6 @@ void handle_input(entity_id_t eid, input_buffer *buf) {
       break;
     }
   }
-  //  for (unsigned i = 0; i < nwords; i++) {
-  //    uart_send_str(words[i]);
-  //    uart_send_str("\r\n");
-  //  }
   if (strings_equal(words[0], "help")) {
     print_help();
   } else if (strings_equal(words[0], "i")) {

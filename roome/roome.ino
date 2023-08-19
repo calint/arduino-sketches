@@ -447,7 +447,7 @@ void uart_send_char(char ch) {
 char uart_read_char() {
   while (!Serial.available())
     ;
-  return Serial.read();  // Read a character from serial buffer
+  return Serial.read();
 }
 
 void setup() {

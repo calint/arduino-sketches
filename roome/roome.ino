@@ -424,7 +424,7 @@ bool strings_equal(const char *s1, const char *s2) {
 }
 
 void uart_send_str(const char *str) {
-  Serial.printf("%s", str);
+  Serial.print(str);
 }
 
 void uart_send_hex_byte(char ch) {

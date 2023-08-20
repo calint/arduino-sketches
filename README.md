@@ -1,15 +1,15 @@
 # arduino-sketches
 experiments with arduino sketches for raspberry pico w
 
-### howto
+### howto in arduino ide (2.1.1)
 File -> Preferences
 
 Additional boards manager URLs:
 https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json
 
-Tools -> Board Manager
+Tools -> Board -> Board Manager
 
-install "Raspberry Pi Pico/RP2040 by Earle F. Philhower, III"
+install "Raspberry Pi Pico/RP2040 by Earle F. Philhower, III" (3.3.2)
 
 compile
 

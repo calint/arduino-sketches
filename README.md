@@ -15,9 +15,8 @@ compile
 
 first time uploading:
 * select board "Raspberry Pi Pico W"
-* boot pico with "bootsel" pressed
-* enable "Show all ports"
-* select board port "UF2 Board UF2 Devices"
+* boot pico with "bootsel" pressed then release it
+* select Tools -> Port -> UF2 Board
 
 subsequent uploads select port e.g. "/dev/ttyACM0"
 

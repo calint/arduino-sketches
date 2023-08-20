@@ -18,6 +18,7 @@ typedef unsigned char location_id_t;
 typedef unsigned char object_id_t;
 typedef unsigned char entity_id_t;
 typedef unsigned char direction_t;
+typedef unsigned char bool_t;
 
 static const char *hello = "welcome to adventure #3\r\n    type 'help'\r\n\r\n";
 
@@ -58,9 +59,9 @@ static const char *exit_names[] = { "north", "east", "south",
 
 void print_help();
 void print_location(location_id_t lid, entity_id_t eid_exclude_from_output);
-bool add_object_to_list(object_id_t list[], unsigned list_len, object_id_t oid);
+bool_t add_object_to_list(object_id_t list[], unsigned list_len, object_id_t oid);
 void remove_object_from_list_by_index(object_id_t list[], unsigned ix);
-bool add_entity_to_list(entity_id_t list[], unsigned list_len, entity_id_t eid);
+bool_t add_entity_to_list(entity_id_t list[], unsigned list_len, entity_id_t eid);
 void remove_entity_from_list_by_index(entity_id_t list[], unsigned ix);
 void remove_entity_from_list(entity_id_t list[], unsigned list_len,
                              entity_id_t eid);
@@ -71,7 +72,7 @@ void action_drop(entity_id_t eid, name_t obj);
 void action_take(entity_id_t eid, name_t obj);
 void input(input_buffer *buf);
 void handle_input(entity_id_t eid, input_buffer *buf);
-bool strings_equal(const char *s1, const char *s2);
+bool_t strings_equal(const char *s1, const char *s2);
 
 void run() {
   unsigned char active_entity = 1;
@@ -160,7 +161,7 @@ void print_location(location_id_t lid, entity_id_t eid_exclude_from_output) {
   uart_send_str("\r\nu c: ");
 
   // print objects in location
-  bool add_list_sep = FALSE;
+  bool_t add_list_sep = FALSE;
   const object_id_t *lso = loc->objects;
   for (unsigned i = 0; i < LOCATION_MAX_OBJECTS; i++) {
     const object_id_t oid = lso[i];
@@ -219,7 +220,7 @@ void print_location(location_id_t lid, entity_id_t eid_exclude_from_output) {
 
 void action_inventory(entity_id_t eid) {
   uart_send_str("u have: ");
-  bool add_list_sep = FALSE;
+  bool_t add_list_sep = FALSE;
   const object_id_t *lso = entities[eid].objects;
   for (unsigned i = 0; i < ENTITY_MAX_OBJECTS; i++) {
     const object_id_t oid = lso[i];
@@ -248,7 +249,7 @@ void remove_object_from_list_by_index(object_id_t list[], unsigned ix) {
   }
 }
 
-bool add_object_to_list(object_id_t list[], unsigned list_len, object_id_t oid) {
+bool_t add_object_to_list(object_id_t list[], unsigned list_len, object_id_t oid) {
   // list_len - 1 since last element has to be 0
   for (unsigned i = 0; i < list_len - 1; i++) {
     if (list[i])
@@ -261,7 +262,7 @@ bool add_object_to_list(object_id_t list[], unsigned list_len, object_id_t oid) 
   return FALSE;
 }
 
-bool add_entity_to_list(entity_id_t list[], unsigned list_len, entity_id_t eid) {
+bool_t add_entity_to_list(entity_id_t list[], unsigned list_len, entity_id_t eid) {
   // list_len - 1 since last element has to be 0
   for (unsigned i = 0; i < list_len - 1; i++) {
     if (list[i])
@@ -412,7 +413,7 @@ void input(input_buffer *buf) {
   }
 }
 
-bool strings_equal(const char *s1, const char *s2) {
+bool_t strings_equal(const char *s1, const char *s2) {
   while (1) {
     if (*s1 - *s2)
       return FALSE;

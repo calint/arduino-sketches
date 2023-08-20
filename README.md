@@ -1,9 +1,10 @@
 # arduino-sketches
 experiments with arduino sketches for raspberry pico w
 
-## arduino ide library with support for raspberry pico w
-menu
-File->Preferences
+install arduino ide library with support for raspberry pico w
+
+File -> Preferences
+
 additional boards manager URLs:
 https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json
 

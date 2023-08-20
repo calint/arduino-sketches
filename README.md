@@ -1,18 +1,25 @@
 # arduino-sketches
 experiments with arduino sketches for raspberry pico w
 
-install arduino ide library with support for raspberry pico w
-
+### howto
 File -> Preferences
 
-additional boards manager URLs:
+Additional boards manager URLs:
 https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json
 
-install library
+Tools -> Board Manager
 
-select board "Raspberry Pi Pico W"
+install "Raspberry Pi Pico/RP2040 by Earle F. Philhower, III"
 
-compile and upload
+compile
+
+first time uploading:
+* select board "Raspberry Pi Pico W"
+* boot pico with "bootsel" pressed
+* enable "Show all ports"
+* select board port "UF2 Board UF2 Devices"
+
+subsequent uploads select port "/dev/ttyACM0"
 
 connect with serial terminal to e.g. /dev/ttyACM0 at 115200 baud
 

@@ -19,7 +19,7 @@ first time uploading:
 * enable "Show all ports"
 * select board port "UF2 Board UF2 Devices"
 
-subsequent uploads select port "/dev/ttyACM0"
+subsequent uploads select port e.g. "/dev/ttyACM0"
 
 connect with serial terminal to e.g. /dev/ttyACM0 at 115200 baud
 

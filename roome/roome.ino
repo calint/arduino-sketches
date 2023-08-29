@@ -419,11 +419,11 @@ void uart_send_hex_nibble(char nibble) {
 }
 
 void input(input_buffer *buf) {
-//  fgets(buf->line, sizeof(buf->line), stdin);
-//  const size_t len = strlen(buf->line);
-//  if (buf->line[len - 1] == '\n') {
-//    buf->line[len - 1] = '\0';
-//  }
+  //  fgets(buf->line, sizeof(buf->line), stdin);
+  //  const size_t len = strlen(buf->line);
+  //  if (buf->line[len - 1] == '\n') {
+  //    buf->line[len - 1] = '\0';
+  //  }
   while (1) {
     const char ch = uart_read_char();
     if (ch == CHAR_BACKSPACE) {
@@ -459,6 +459,8 @@ char uart_read_char() {
 
 void setup() {
   Serial.begin(115200);
+  while (!Serial)
+    ;  // wait for serial port to connect. Needed for native USB port only
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
   run();

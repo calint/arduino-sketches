@@ -239,6 +239,7 @@ void action_inventory(entity_id_t eid) {
   uart_send_str("\r\n");
 }
 
+// todo: make to O(1) instead of O(n) if order is irrelevant
 void remove_object_from_list_by_index(object_id_t list[], unsigned ix) {
   object_id_t *ptr = &list[ix];
   while (1) {
@@ -249,6 +250,7 @@ void remove_object_from_list_by_index(object_id_t list[], unsigned ix) {
   }
 }
 
+// todo: make to O(1) instead of O(n)
 bool_t add_object_to_list(object_id_t list[], unsigned list_len, object_id_t oid) {
   // list_len - 1 since last element has to be 0
   for (unsigned i = 0; i < list_len - 1; i++) {
@@ -262,6 +264,7 @@ bool_t add_object_to_list(object_id_t list[], unsigned list_len, object_id_t oid
   return FALSE;
 }
 
+// todo: make to O(1) instead of O(n)
 bool_t add_entity_to_list(entity_id_t list[], unsigned list_len, entity_id_t eid) {
   // list_len - 1 since last element has to be 0
   for (unsigned i = 0; i < list_len - 1; i++) {
@@ -275,6 +278,7 @@ bool_t add_entity_to_list(entity_id_t list[], unsigned list_len, entity_id_t eid
   return FALSE;
 }
 
+// todo: make to O(1) instead of O(n) if order is irrelevant
 void remove_entity_from_list(entity_id_t list[], unsigned list_len,
                              entity_id_t eid) {
   // list_len - 1 since last element has to be 0
@@ -291,6 +295,7 @@ void remove_entity_from_list(entity_id_t list[], unsigned list_len,
   uart_send_str("entity not here\r\n");
 }
 
+// todo: make to O(1) instead of O(n) if order is irrelevant
 void remove_entity_from_list_by_index(entity_id_t list[], unsigned ix) {
   entity_id_t *ptr = &list[ix];
   while (1) {

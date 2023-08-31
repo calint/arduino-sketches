@@ -33,14 +33,14 @@ void setup() {
 
 bool get_json_from_url(const char* url, DynamicJsonDocument& json_doc) {
   HTTPClient http_client;
-  http_client.useHTTP10(true);
+//  http_client.useHTTP10(true);
   if (!http_client.begin(url)) {
     Serial.printf("unable to connect to %s\n", url);
     return false;
   }
   const auto http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
-    Serial.printf("GET failed, error: %s\n", http_client.errorToString(http_code).c_str());
+    Serial.printf("get error: %d: %s\n", http_code, http_client.errorToString(http_code).c_str());
     http_client.end();
     return false;
   }

@@ -33,7 +33,7 @@ void setup() {
 
 bool get_json_from_url(const char* url, DynamicJsonDocument& json_doc) {
   HTTPClient http_client;
-//  http_client.useHTTP10(true);
+  http_client.useHTTP10(true);
   if (!http_client.begin(url)) {
     Serial.printf("unable to connect to %s\n", url);
     return false;

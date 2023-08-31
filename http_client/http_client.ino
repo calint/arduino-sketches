@@ -33,7 +33,7 @@ void setup() {
 
 void print_astronauts_in_space_right_now() {
   digitalWrite(LED_BUILTIN, LOW);
-  
+
   HTTPClient http_client;
   if (!http_client.begin(ASTROS_URL)) {
     Serial.printf("unable to connect to %s\n", ASTROS_URL);
@@ -42,21 +42,20 @@ void print_astronauts_in_space_right_now() {
   const auto http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
     Serial.printf("GET failed, error: %s\n", http_client.errorToString(http_code).c_str());
+    http_client.end();
     return;
   }
 
-  const auto json_str = http_client.getString();
-
-  http_client.end();
-  
-  digitalWrite(LED_BUILTIN, HIGH);
-  
   DynamicJsonDocument json_doc(8 * 1024);
-  const auto json_error = deserializeJson(json_doc, json_str);
+  const auto json_error = deserializeJson(json_doc, http_client.getStream());
   if (json_error) {
     Serial.printf("json parsing failed: %s\n", json_error.c_str());
     return;
   }
+
+  http_client.end();
+
+  digitalWrite(LED_BUILTIN, HIGH);
 
   const auto people = json_doc["people"].as<JsonArray>();
   for (const auto p : people) {
@@ -80,24 +79,22 @@ void print_current_time_based_on_ip() {
   const auto http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
     Serial.printf("GET failed, error: %s\n", http_client.errorToString(http_code).c_str());
+    http_client.end();
     return;
   }
 
-  const auto json_str = http_client.getString();
+  DynamicJsonDocument json_doc(1024);
+  const auto json_error = deserializeJson(json_doc, http_client.getStream());
+  if (json_error) {
+    Serial.printf("json parsing failed: %s\n", json_error.c_str());
+    return;
+  }
 
   http_client.end();
 
   digitalWrite(LED_BUILTIN, HIGH);
 
-  DynamicJsonDocument json_doc(1024);
-  const auto json_error = deserializeJson(json_doc, json_str);
-  if (json_error) {
-    Serial.printf("json parsing failed: %s\n", json_error.c_str());
-    return;
-  }
-  //  Serial.println(jsonstr);
   const auto date_time = json_doc["datetime"].as<String>();
-  //  Serial.println(date_time);
 
   //  "2023-08-31T16:32:47.653086+02:00" to "2023-08-31 16:32:47"
   const auto date_time_fmt = date_time.substring(0, 10) + " " + date_time.substring(11, 19);

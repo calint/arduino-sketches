@@ -38,14 +38,14 @@ void print_astronauts_in_space_right_now() {
   const int httpCode = http.GET();
   if (httpCode != HTTP_CODE_OK) {
     Serial.printf("GET failed, error: %s\n", http.errorToString(httpCode).c_str());
-    http.end();
     return;
   }
+
   const String json_str = http.getString();
 
   http.end();
 
-  DynamicJsonDocument json_doc(8*1024);
+  DynamicJsonDocument json_doc(8 * 1024);
   const DeserializationError error = deserializeJson(json_doc, json_str);
   if (error) {
     Serial.printf("json parsing failed: %s\n", error.c_str());
@@ -68,7 +68,6 @@ void print_current_time_based_on_ip() {
   const int httpCode = http.GET();
   if (httpCode != HTTP_CODE_OK) {
     Serial.printf("GET failed, error: %s\n", http.errorToString(httpCode).c_str());
-    http.end();
     return;
   }
 

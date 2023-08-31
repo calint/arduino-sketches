@@ -86,11 +86,11 @@ void print_current_time_based_on_ip() {
     return;
   }
   //  Serial.println(jsonstr);
-  auto date_time = json_doc["datetime"].as<String>();
+  const auto date_time = json_doc["datetime"].as<String>();
   //  Serial.println(date_time);
 
   //  "2023-08-31T16:32:47.653086+02:00" to "2023-08-31 16:32:47"
-  auto date_time_fmt = date_time.substring(0, 10) + " " + date_time.substring(11, 19);
+  const auto date_time_fmt = date_time.substring(0, 10) + " " + date_time.substring(11, 19);
   Serial.println(date_time_fmt);
 }
 

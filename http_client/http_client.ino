@@ -34,20 +34,20 @@ void setup() {
 void print_astronauts_in_space_right_now() {
   digitalWrite(LED_BUILTIN, LOW);
   
-  HTTPClient http;
-  if (!http.begin(ASTROS_URL)) {
+  HTTPClient http_client;
+  if (!http_client.begin(ASTROS_URL)) {
     Serial.printf("unable to connect to %s\n", ASTROS_URL);
     return;
   }
-  const auto http_code = http.GET();
+  const auto http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
-    Serial.printf("GET failed, error: %s\n", http.errorToString(http_code).c_str());
+    Serial.printf("GET failed, error: %s\n", http_client.errorToString(http_code).c_str());
     return;
   }
 
-  const auto json_str = http.getString();
+  const auto json_str = http_client.getString();
 
-  http.end();
+  http_client.end();
   
   digitalWrite(LED_BUILTIN, HIGH);
   

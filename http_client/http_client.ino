@@ -44,14 +44,12 @@ bool get_json_from_url(const char* url, DynamicJsonDocument& json_doc) {
     http_client.end();
     return false;
   }
-
   const auto json_error = deserializeJson(json_doc, http_client.getStream());
   http_client.end();
   if (json_error) {
     Serial.printf("json parsing failed: %s\n", json_error.c_str());
     return false;
   }
-
   return true;
 }
 

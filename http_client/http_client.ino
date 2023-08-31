@@ -45,7 +45,7 @@ void print_astronauts_in_space_right_now() {
 
   http.end();
 
-  DynamicJsonDocument json_doc(8 * 1024);
+  DynamicJsonDocument json_doc(8*1024);
   const DeserializationError error = deserializeJson(json_doc, json_str);
   if (error) {
     Serial.printf("json parsing failed: %s\n", error.c_str());

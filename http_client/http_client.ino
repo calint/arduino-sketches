@@ -31,32 +31,34 @@ void setup() {
   digitalWrite(LED_BUILTIN, HIGH);
 }
 
-void get_json_from_web(const char* url, DynamicJsonDocument& json_doc) {
+bool get_json_from_url(const char* url, DynamicJsonDocument& json_doc) {
   HTTPClient http_client;
   if (!http_client.begin(url)) {
     Serial.printf("unable to connect to %s\n", url);
-    return;
+    return false;
   }
   const auto http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
     Serial.printf("GET failed, error: %s\n", http_client.errorToString(http_code).c_str());
     http_client.end();
-    return;
+    return false;
   }
 
   const auto json_error = deserializeJson(json_doc, http_client.getStream());
   if (json_error) {
     Serial.printf("json parsing failed: %s\n", json_error.c_str());
-    return;
+    http_client.end();
+    return false;
   }
 
   http_client.end();
+  return true;
 }
 
 void print_astronauts_in_space_right_now() {
   digitalWrite(LED_BUILTIN, LOW);
   DynamicJsonDocument json_doc(8 * 1024);
-  get_json_from_web(ASTROS_URL, json_doc);
+  if (!get_json_from_url(ASTROS_URL, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   const auto people = json_doc["people"].as<JsonArray>();
   for (const auto p : people) {
@@ -71,7 +73,7 @@ void print_astronauts_in_space_right_now() {
 void print_current_time_based_on_ip() {
   digitalWrite(LED_BUILTIN, LOW);
   DynamicJsonDocument json_doc(1024);
-  get_json_from_web(TIME_SERVER_URL, json_doc);
+  if (!get_json_from_url(TIME_SERVER_URL, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   const auto date_time = json_doc["datetime"].as<String>();
   //  "2023-08-31T16:32:47.653086+02:00" to "2023-08-31 16:32:47"

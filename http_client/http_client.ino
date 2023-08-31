@@ -7,11 +7,6 @@
 
 #include "secrets.h"  // defines STASSID and STAPSK
 
-#ifndef STASSID
-#define STASSID "wifi-network"
-#define STAPSK "wifi-password"
-#endif
-
 #define TIME_SERVER_URL "http://worldtimeapi.org/api/ip"
 #define ASTROS_URL "http://api.open-notify.org/astros.json"
 
@@ -24,6 +19,10 @@ void setup() {
   Serial.printf("connecting to '%s' with '%s'\n", STASSID, STAPSK);
   WiFi.begin(STASSID, STAPSK);
   while (WiFi.status() != WL_CONNECTED) {
+    if (WiFi.status() == WL_CONNECT_FAILED) {
+      Serial.println("\nconnection to wifi failed");
+      while (true) delay(10000);
+    }
     Serial.print(".");
     delay(500);
   }
@@ -53,9 +52,10 @@ void print_astronauts_in_space_right_now() {
     return;
   }
 
+  auto json_people = json_doc["people"];
   const unsigned n = json_doc["number"].as<unsigned>();
   for (unsigned i = 0; i < n; i++) {
-    Serial.printf("%s\n", json_doc["people"][i]["name"].as<const char*>());
+    Serial.printf("%s\n", json_people[i]["name"].as<const char*>());
   }
 }
 

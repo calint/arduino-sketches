@@ -35,28 +35,32 @@ void print_astronauts_in_space_right_now() {
     Serial.printf("unable to connect to %s\n", ASTROS_URL);
     return;
   }
-  const int httpCode = http.GET();
-  if (httpCode != HTTP_CODE_OK) {
-    Serial.printf("GET failed, error: %s\n", http.errorToString(httpCode).c_str());
+  const auto http_code = http.GET();
+  if (http_code != HTTP_CODE_OK) {
+    Serial.printf("GET failed, error: %s\n", http.errorToString(http_code).c_str());
     return;
   }
 
-  const String json_str = http.getString();
+  const auto json_str = http.getString();
 
   http.end();
 
   DynamicJsonDocument json_doc(8 * 1024);
-  const DeserializationError error = deserializeJson(json_doc, json_str);
-  if (error) {
-    Serial.printf("json parsing failed: %s\n", error.c_str());
+  const auto json_error = deserializeJson(json_doc, json_str);
+  if (json_error) {
+    Serial.printf("json parsing failed: %s\n", json_error.c_str());
     return;
   }
 
-  auto json_people = json_doc["people"];
-  const unsigned n = json_doc["number"].as<unsigned>();
-  for (unsigned i = 0; i < n; i++) {
-    Serial.printf("%s\n", json_people[i]["name"].as<const char*>());
+  const auto people = json_doc["people"].as<JsonArray>();
+  for (const auto p : people) {
+    Serial.println(p["name"].as<const char*>());
   }
+
+  //const unsigned n = json_doc["number"].as<unsigned>();
+  //for (unsigned i = 0; i < n; i++) {
+  //  Serial.println(json_people[i]["name"].as<const char*>());
+  //}
 }
 
 void print_current_time_based_on_ip() {
@@ -65,28 +69,28 @@ void print_current_time_based_on_ip() {
     Serial.printf("unable to connect to %s\n", TIME_SERVER_URL);
     return;
   }
-  const int httpCode = http.GET();
-  if (httpCode != HTTP_CODE_OK) {
-    Serial.printf("GET failed, error: %s\n", http.errorToString(httpCode).c_str());
+  const auto http_code = http.GET();
+  if (http_code != HTTP_CODE_OK) {
+    Serial.printf("GET failed, error: %s\n", http.errorToString(http_code).c_str());
     return;
   }
 
-  const String json_str = http.getString();
+  const auto json_str = http.getString();
 
   http.end();
 
   DynamicJsonDocument json_doc(1024);
-  const DeserializationError error = deserializeJson(json_doc, json_str);
-  if (error) {
-    Serial.printf("json parsing failed: %s\n", error.c_str());
+  const auto json_error = deserializeJson(json_doc, json_str);
+  if (json_error) {
+    Serial.printf("json parsing failed: %s\n", json_error.c_str());
     return;
   }
   //  Serial.println(jsonstr);
-  String date_time = json_doc["datetime"];
+  auto date_time = json_doc["datetime"].as<String>();
   //  Serial.println(date_time);
 
   //  "2023-08-31T16:32:47.653086+02:00" to "2023-08-31 16:32:47"
-  String date_time_fmt = date_time.substring(0, 10) + " " + date_time.substring(11, 19);
+  auto date_time_fmt = date_time.substring(0, 10) + " " + date_time.substring(11, 19);
   Serial.println(date_time_fmt);
 }
 

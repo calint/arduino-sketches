@@ -9,6 +9,7 @@
 
 #define TIME_SERVER_URL "http://worldtimeapi.org/api/ip"
 #define ASTROS_URL "http://api.open-notify.org/astros.json"
+#define JOKES_URL "https://v2.jokeapi.dev/joke/Programming"
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -34,6 +35,9 @@ void setup() {
 bool read_url_to_json_doc(const char* url, DynamicJsonDocument& json_doc) {
   HTTPClient http_client;
   http_client.useHTTP10(true);
+  if (!strncmp(url, "https://", 8)) {
+    http_client.setInsecure();
+  }
   if (!http_client.begin(url)) {
     Serial.printf("unable to connect to %s\n", url);
     return false;
@@ -79,12 +83,28 @@ void print_current_time_based_on_ip() {
   Serial.println(date_time_fmt);
 }
 
+void print_random_programming_joke() {
+  digitalWrite(LED_BUILTIN, LOW);
+  DynamicJsonDocument json_doc(4 * 1024);
+  if (!read_url_to_json_doc(JOKES_URL, json_doc)) return;
+  digitalWrite(LED_BUILTIN, HIGH);
+  if (json_doc["type"].as<String>() == "single") {
+    Serial.println(json_doc["joke"].as<const char*>());
+  } else {
+    Serial.println(json_doc["setup"].as<const char*>());
+    Serial.println(json_doc["delivery"].as<const char*>());
+  }
+}
+
 void loop() {
   Serial.println("\ncurrent date time based on ip:");
   print_current_time_based_on_ip();
 
   Serial.println("\nastronauts in space right now:");
   print_astronauts_in_space_right_now();
+
+  Serial.println("\nprogramming joke:");
+  print_random_programming_joke();
 
   delay(10000);
 }

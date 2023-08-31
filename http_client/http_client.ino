@@ -77,10 +77,10 @@ void print_current_time_based_on_ip() {
   DynamicJsonDocument json_doc(1024);
   if (!read_url_to_json_doc(TIME_SERVER_URL, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
-  const auto date_time = json_doc["datetime"].as<String>();
+  const auto date_time_raw = json_doc["datetime"].as<String>();
   //  "2023-08-31T16:32:47.653086+02:00" to "2023-08-31 16:32:47"
-  const auto date_time_fmt = date_time.substring(0, 10) + " " + date_time.substring(11, 19);
-  Serial.println(date_time_fmt);
+  const auto date_time = date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19);
+  Serial.println(date_time);
 }
 
 void print_random_programming_joke() {

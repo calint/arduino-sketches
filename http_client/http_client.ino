@@ -42,11 +42,11 @@ void print_astronauts_in_space_right_now() {
     http.end();
     return;
   }
-  DynamicJsonDocument json_doc(8 * 1024);
   const String json_str = http.getString();
 
   http.end();
 
+  DynamicJsonDocument json_doc(8 * 1024);
   const DeserializationError error = deserializeJson(json_doc, json_str);
   if (error) {
     Serial.printf("json parsing failed: %s\n", error.c_str());
@@ -71,11 +71,12 @@ void print_current_time_based_on_ip() {
     http.end();
     return;
   }
-  DynamicJsonDocument json_doc(1024);
+
   const String json_str = http.getString();
 
   http.end();
 
+  DynamicJsonDocument json_doc(1024);
   const DeserializationError error = deserializeJson(json_doc, json_str);
   if (error) {
     Serial.printf("json parsing failed: %s\n", error.c_str());

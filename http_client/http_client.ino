@@ -11,6 +11,7 @@
 #define ASTROS_URL "http://api.open-notify.org/astros.json"
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(115200);
   while (!Serial)
     ;
@@ -27,9 +28,12 @@ void setup() {
     delay(500);
   }
   Serial.printf("\nconnected to wifi\nip: %s\n", WiFi.localIP().toString().c_str());
+  digitalWrite(LED_BUILTIN, HIGH);
 }
 
 void print_astronauts_in_space_right_now() {
+  digitalWrite(LED_BUILTIN, LOW);
+  
   HTTPClient http;
   if (!http.begin(ASTROS_URL)) {
     Serial.printf("unable to connect to %s\n", ASTROS_URL);
@@ -44,7 +48,9 @@ void print_astronauts_in_space_right_now() {
   const auto json_str = http.getString();
 
   http.end();
-
+  
+  digitalWrite(LED_BUILTIN, HIGH);
+  
   DynamicJsonDocument json_doc(8 * 1024);
   const auto json_error = deserializeJson(json_doc, json_str);
   if (json_error) {
@@ -64,20 +70,24 @@ void print_astronauts_in_space_right_now() {
 }
 
 void print_current_time_based_on_ip() {
-  HTTPClient http;
-  if (!http.begin(TIME_SERVER_URL)) {
+  digitalWrite(LED_BUILTIN, LOW);
+
+  HTTPClient http_client;
+  if (!http_client.begin(TIME_SERVER_URL)) {
     Serial.printf("unable to connect to %s\n", TIME_SERVER_URL);
     return;
   }
-  const auto http_code = http.GET();
+  const auto http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
-    Serial.printf("GET failed, error: %s\n", http.errorToString(http_code).c_str());
+    Serial.printf("GET failed, error: %s\n", http_client.errorToString(http_code).c_str());
     return;
   }
 
-  const auto json_str = http.getString();
+  const auto json_str = http_client.getString();
 
-  http.end();
+  http_client.end();
+
+  digitalWrite(LED_BUILTIN, HIGH);
 
   DynamicJsonDocument json_doc(1024);
   const auto json_error = deserializeJson(json_doc, json_str);

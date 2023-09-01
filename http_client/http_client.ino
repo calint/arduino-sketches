@@ -33,7 +33,7 @@ void setup() {
     Serial.print(".");
     delay(500);
   }
-  Serial.printf("\nconnected to wifi\nip: %s\n", WiFi.localIP().toString().c_str());
+  Serial.println("\nconnected");
   digitalWrite(LED_BUILTIN, HIGH);
 }
 
@@ -182,13 +182,15 @@ bool handle_web_server() {
     headers.push_back(line);
   }
 
-  Serial.println("\nwebserver request: ");
-  Serial.println("-------------------------------------------------");
-  Serial.println(path);
-  Serial.println(query);
-  for (const auto& s : headers)
-    Serial.println(s);
-  Serial.println("-------------------------------------------------");
+  // Serial.println("\nwebserver request: ");
+  // Serial.println("-------------------------------------------------");
+  // Serial.print("path: ");
+  // Serial.println(path);
+  // Serial.print("query: ");
+  // Serial.println(query);
+  // for (const auto& s : headers)
+  //   Serial.println(s);
+  // Serial.println("-------------------------------------------------");
 
   client.println("HTTP/1.1 200 OK");
   client.println("Content-Type: text/html");

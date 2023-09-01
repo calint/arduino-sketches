@@ -37,6 +37,9 @@ void setup() {
   }
   Serial.printf("\nconnected to wifi\nip: %s\n", WiFi.localIP().toString().c_str());
   digitalWrite(LED_BUILTIN, HIGH);
+}
+
+void setup1() {
   web_server.begin();
 }
 
@@ -111,17 +114,51 @@ void print_current_time_from_ntp() {
   Serial.println(ntp_client.getFormattedTime());
 }
 
-void handle_web_server() {
+bool handle_web_server() {
   WiFiClient client = web_server.available();
   if (!client)
-    return;
-  String request = client.readString();
+    return false;
+
+  // read first request line
+  const String method = client.readStringUntil(' ');
+  const String uri = client.readStringUntil(' ');
+  const String version = client.readStringUntil('\r');
+  if (client.read() != '\n') {
+    Serial.println("*** malformed http request");
+    return false;
+  }
+  //Serial.printf("%s\n\n", uri.c_str());
+  String req;
+  req.reserve(1024);
+  req.concat(method);
+  req.concat(" ");
+  req.concat(uri);
+  req.concat(" ");
+  req.concat(version);
+  req.concat("\r\n");
+
+  // read the rest of the request
+  while (true) {
+    const String line = client.readStringUntil('\r');
+    if (client.read() != '\n') {
+      Serial.println("*** malformed http request");
+      return false;
+    }
+    //Serial.printf("%d: %s\r\n", line.length(), line.c_str());
+    if (line.length() == 0)
+      break;
+    req.concat(line);
+    req.concat("\r\n");
+  }
+  Serial.println("\nwebserver request:\n-------------------------------------------------");
+  Serial.print(req);
+  Serial.println("-------------------------------------------------");
   client.println("HTTP/1.1 200 OK");
-  client.println("Content-Type: text/html");
+  client.println("Content-Type: text/plain");
   client.println();
-  client.print("<pre>");
-  client.println(request);
+  client.println(req);
   client.stop();
+  return true;
 }
 
 void print_web_server_ip() {
@@ -144,7 +181,10 @@ void loop() {
   Serial.println("\nweb server ip:");
   print_web_server_ip();
 
-  handle_web_server();
-
   delay(10000);
+}
+
+void loop1() {
+  if (!handle_web_server())
+    delay(1000);  // slightly less busy wait
 }

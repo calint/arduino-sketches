@@ -170,8 +170,8 @@ bool handle_web_server() {
   }
 
   const int query_start_ix = uri.indexOf("?");
-  const String query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
   const String path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
+  const String query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
 
   std::vector<String> headers;
   while (true) {

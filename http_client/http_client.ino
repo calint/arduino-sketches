@@ -136,6 +136,16 @@ void print_output_to_stream(Stream& os) {
   print_web_server_ip(os);
 }
 
+void handle_web_server_root(const String& uri, const String& req, Stream& os) {
+  os.print(req);
+}
+
+void handle_web_server_status(const String& uri, const String& req, Stream& os) {
+  os.print(req);
+  os.println();
+  print_output_to_stream(os);
+}
+
 // returns true if a request was serviced or false if no client available
 bool handle_web_server() {
   WiFiClient client = web_server.available();
@@ -179,9 +189,14 @@ bool handle_web_server() {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-Type: text/plain");
   client.println();
-  client.print(req);
-  client.println();
-  print_output_to_stream(client);
+  if (uri == "/") {
+    handle_web_server_root(uri, req, client);
+  } else if (uri == "/status") {
+    handle_web_server_status(uri, req, client);
+  } else {
+    client.print("unknown uri ");
+    client.println(uri);
+  }
   client.stop();
   return true;
 }

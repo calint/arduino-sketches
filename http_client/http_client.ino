@@ -43,6 +43,7 @@ void setup1() {
   web_server.begin();
 }
 
+// returns true if request succeeded or false if something went wrong
 bool read_url_to_json_doc(const char* url, DynamicJsonDocument& json_doc) {
   HTTPClient http_client;
   http_client.useHTTP10(true);
@@ -114,6 +115,7 @@ void print_current_time_from_ntp() {
   Serial.println(ntp_client.getFormattedTime());
 }
 
+// returns true if a request was serviced or false if not client available
 bool handle_web_server() {
   WiFiClient client = web_server.available();
   if (!client)
@@ -185,6 +187,7 @@ void loop() {
 }
 
 void loop1() {
-  if (!handle_web_server())
-    delay(1000);  // slightly less busy wait
+  if (!handle_web_server()) {
+    delay(100);  // slightly less busy wait
+  }
 }

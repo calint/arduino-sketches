@@ -3,8 +3,6 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-#include <vector>
-
 #include "secrets.h"  // defines WIFI_NETWORK and WIFI_PASSWORD used for WiFi login
 
 #define TIME_SERVER_URL "http://worldtimeapi.org/api/ip"
@@ -46,7 +44,7 @@ void setup1() {
 bool read_url_to_json_doc(const char* url, DynamicJsonDocument& json_doc) {
   HTTPClient http_client;
   http_client.useHTTP10(true);
-  if (!strncmp(url, "https://", 8)) { // 8 characters in "https://"
+  if (!strncmp(url, "https://", 8)) {  // 8 characters in "https://"
     http_client.setInsecure();
   }
   if (!http_client.begin(url)) {
@@ -217,7 +215,7 @@ void loop() {
 
 // loop on second core
 void loop1() {
-  if (!handle_web_server()) {
-    delay(100);  // slightly less busy wait
-  }
+  while (handle_web_server())
+    ;
+  delay(100);  // slightly less busy wait
 }

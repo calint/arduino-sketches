@@ -41,7 +41,7 @@ void setup1() {
 }
 
 // returns true if request succeeded or false if something went wrong
-bool read_url_to_json_doc(const char* url, DynamicJsonDocument& json_doc) {
+bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
   HTTPClient http_client;
   http_client.useHTTP10(true);
   if (!strncmp(url, "https://", 8)) {  // 8 characters in "https://"
@@ -83,7 +83,7 @@ void print_astronauts_in_space_right_now(Stream& os) {
 
 void print_current_time_based_on_ip(Stream& os) {
   digitalWrite(LED_BUILTIN, LOW);
-  DynamicJsonDocument json_doc(1024);
+  StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
   if (!read_url_to_json_doc(TIME_SERVER_URL, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   const auto date_time_raw = json_doc["datetime"].as<String>();
@@ -94,7 +94,7 @@ void print_current_time_based_on_ip(Stream& os) {
 
 void print_random_programming_joke(Stream& os) {
   digitalWrite(LED_BUILTIN, LOW);
-  DynamicJsonDocument json_doc(4 * 1024);
+  StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
   if (!read_url_to_json_doc(JOKES_URL, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   if (json_doc["type"].as<String>() == "single") {

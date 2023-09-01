@@ -46,7 +46,7 @@ void setup1() {
 bool read_url_to_json_doc(const char* url, DynamicJsonDocument& json_doc) {
   HTTPClient http_client;
   http_client.useHTTP10(true);
-  if (!strncmp(url, "https://", 8)) {
+  if (!strncmp(url, "https://", 8)) { // 8 characters in "https://"
     http_client.setInsecure();
   }
   if (!http_client.begin(url)) {

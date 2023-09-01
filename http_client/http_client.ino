@@ -20,6 +20,7 @@ NTPClient ntp_client(ntp_udp);
 
 WiFiServer web_server(80);
 
+// setup first core
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(115200);
@@ -41,6 +42,7 @@ void setup() {
   digitalWrite(LED_BUILTIN, HIGH);
 }
 
+// setup second core
 void setup1() {
   web_server.begin();
 }
@@ -209,11 +211,13 @@ bool handle_web_server() {
   return true;
 }
 
+// loop on first core
 void loop() {
   print_output_to_stream(Serial);
   delay(10000);
 }
 
+// loop on second core
 void loop1() {
   if (!handle_web_server()) {
     delay(100);  // slightly less busy wait

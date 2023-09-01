@@ -19,8 +19,8 @@ WiFiServer web_server(80);
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(115200);
-  while (!Serial)
-    ;
+  while (!Serial && millis() < 10'000)
+    ;  // wait for serial over usb for 10 seconds
   WiFi.mode(WIFI_STA);
   //  WiFi.setHostname("RasberryPicoW");
   Serial.printf("connecting to '%s' with '%s'\n", WIFI_NETWORK, WIFI_PASSWORD);
@@ -28,7 +28,7 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     if (WiFi.status() == WL_CONNECT_FAILED) {
       Serial.println("\nconnection to wifi failed");
-      while (true) delay(10000);
+      while (true) delay(10'000);
     }
     Serial.print(".");
     delay(500);
@@ -212,7 +212,7 @@ bool handle_web_server() {
 // loop on first core
 void loop() {
   print_output_to_stream(Serial);
-  delay(10000);
+  delay(10'000);
 }
 
 // loop on second core

@@ -4,12 +4,17 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <NTPClient.h>
 
 #include "secrets.h"  // defines STASSID and STAPSK
 
 #define TIME_SERVER_URL "http://worldtimeapi.org/api/ip"
 #define ASTROS_URL "http://api.open-notify.org/astros.json"
 #define JOKES_URL "https://v2.jokeapi.dev/joke/Programming"
+
+WiFiUDP ntp_udp;
+// default 'pool.ntp.org' is used with 60 seconds update interval and no offset
+NTPClient ntp_client(ntp_udp);
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -96,9 +101,17 @@ void print_random_programming_joke() {
   }
 }
 
+void print_current_time_from_ntp() {
+  ntp_client.update();
+  Serial.println(ntp_client.getFormattedTime());
+}
+
 void loop() {
-  Serial.println("\ncurrent date time based on ip:");
+  Serial.println("\ncurrent time based on ip:");
   print_current_time_based_on_ip();
+
+  Serial.println("\ncurrent time in utc from ntp:");
+  print_current_time_from_ntp();
 
   Serial.println("\nastronauts in space right now:");
   print_astronauts_in_space_right_now();

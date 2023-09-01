@@ -174,14 +174,12 @@ bool handle_web_server() {
   const String path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
 
   std::vector<String> headers;
-  headers.reserve(1024);
   while (true) {
     const String line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");
       return false;
     }
-    //Serial.printf("%d: %s\r\n", line.length(), line.c_str());
     if (line.length() == 0)
       break;
     headers.push_back(line);

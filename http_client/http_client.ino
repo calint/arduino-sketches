@@ -6,6 +6,8 @@
 #include <HTTPClient.h>
 #include <NTPClient.h>
 
+#include <vector>
+
 #include "secrets.h"  // defines STASSID and STAPSK
 
 #define TIME_SERVER_URL "http://worldtimeapi.org/api/ip"
@@ -136,16 +138,18 @@ void print_output_to_stream(Stream& os) {
   print_web_server_ip(os);
 }
 
-void handle_web_server_root(const String& query, const String& headers, Stream& os) {
+void handle_web_server_root(const String& query, const std::vector<String>& headers, Stream& os) {
   os.print("<pre>query: ");
   os.println(query);
-  os.print(headers);
+  for (const auto& s : headers)
+    os.println(s);
 }
 
-void handle_web_server_status(const String& query, const String& headers, Stream& os) {
+void handle_web_server_status(const String& query, const std::vector<String>& headers, Stream& os) {
   os.print("<pre>query: ");
   os.println(query);
-  os.print(headers);
+  for (const auto& s : headers)
+    os.println(s);
   os.println();
   print_output_to_stream(os);
 }
@@ -159,25 +163,18 @@ bool handle_web_server() {
   // read first request line
   const String method = client.readStringUntil(' ');
   const String uri = client.readStringUntil(' ');
-  const int query_start_ix = uri.indexOf("?");
-  const String query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
-  const String path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
   const String version = client.readStringUntil('\r');
   if (client.read() != '\n') {
     Serial.println("*** malformed http request");
     return false;
   }
-  //Serial.printf("%s\n\n", uri.c_str());
-  String headers;
-  headers.reserve(1024);
-  //  req.concat(method);
-  //  req.concat(" ");
-  //  req.concat(uri);
-  //  req.concat(" ");
-  //  req.concat(version);
-  //  req.concat("\r\n");
 
-  // read the rest of the request
+  const int query_start_ix = uri.indexOf("?");
+  const String query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
+  const String path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
+
+  std::vector<String> headers;
+  headers.reserve(1024);
   while (true) {
     const String line = client.readStringUntil('\r');
     if (client.read() != '\n') {
@@ -187,15 +184,15 @@ bool handle_web_server() {
     //Serial.printf("%d: %s\r\n", line.length(), line.c_str());
     if (line.length() == 0)
       break;
-    headers.concat(line);
-    headers.concat("\n");
+    headers.push_back(line);
   }
 
   Serial.println("\nwebserver request: ");
   Serial.println("-------------------------------------------------");
   Serial.println(path);
   Serial.println(query);
-  Serial.print(headers);
+  for (const auto& s : headers)
+    Serial.println(s);
   Serial.println("-------------------------------------------------");
 
   client.println("HTTP/1.1 200 OK");

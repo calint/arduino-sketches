@@ -115,7 +115,7 @@ void print_current_time_from_ntp() {
   Serial.println(ntp_client.getFormattedTime());
 }
 
-// returns true if a request was serviced or false if not client available
+// returns true if a request was serviced or false if no client available
 bool handle_web_server() {
   WiFiClient client = web_server.available();
   if (!client)

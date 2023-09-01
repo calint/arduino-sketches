@@ -16,6 +16,8 @@ WiFiUDP ntp_udp;
 // default 'pool.ntp.org' is used with 60 seconds update interval and no offset
 NTPClient ntp_client(ntp_udp);
 
+WiFiServer web_server(80);
+
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   Serial.begin(115200);
@@ -35,6 +37,7 @@ void setup() {
   }
   Serial.printf("\nconnected to wifi\nip: %s\n", WiFi.localIP().toString().c_str());
   digitalWrite(LED_BUILTIN, HIGH);
+  web_server.begin();
 }
 
 bool read_url_to_json_doc(const char* url, DynamicJsonDocument& json_doc) {
@@ -102,8 +105,27 @@ void print_random_programming_joke() {
 }
 
 void print_current_time_from_ntp() {
+  digitalWrite(LED_BUILTIN, LOW);
   ntp_client.update();
+  digitalWrite(LED_BUILTIN, HIGH);
   Serial.println(ntp_client.getFormattedTime());
+}
+
+void handle_web_server() {
+  WiFiClient client = web_server.available();
+  if (!client)
+    return;
+  String request = client.readString();
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-Type: text/html");
+  client.println();
+  client.print("<pre>");
+  client.println(request);
+  client.stop();
+}
+
+void print_web_server_ip() {
+  Serial.println(WiFi.localIP().toString().c_str());
 }
 
 void loop() {
@@ -118,6 +140,11 @@ void loop() {
 
   Serial.println("\nprogramming joke:");
   print_random_programming_joke();
+
+  Serial.println("\nweb server ip:");
+  print_web_server_ip();
+
+  handle_web_server();
 
   delay(10000);
 }

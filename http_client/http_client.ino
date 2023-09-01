@@ -69,14 +69,14 @@ bool read_url_to_json_doc(const char* url, DynamicJsonDocument& json_doc) {
   return true;
 }
 
-void print_astronauts_in_space_right_now() {
+void print_astronauts_in_space_right_now(Stream& os) {
   digitalWrite(LED_BUILTIN, LOW);
   DynamicJsonDocument json_doc(8 * 1024);
   if (!read_url_to_json_doc(ASTROS_URL, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   const auto people = json_doc["people"].as<JsonArray>();
   for (const auto p : people) {
-    Serial.println(p["name"].as<const char*>());
+    os.println(p["name"].as<const char*>());
   }
   //const unsigned n = json_doc["number"].as<unsigned>();
   //for (unsigned i = 0; i < n; i++) {
@@ -84,7 +84,7 @@ void print_astronauts_in_space_right_now() {
   //}
 }
 
-void print_current_time_based_on_ip() {
+void print_current_time_based_on_ip(Stream& os) {
   digitalWrite(LED_BUILTIN, LOW);
   DynamicJsonDocument json_doc(1024);
   if (!read_url_to_json_doc(TIME_SERVER_URL, json_doc)) return;
@@ -92,27 +92,48 @@ void print_current_time_based_on_ip() {
   const auto date_time_raw = json_doc["datetime"].as<String>();
   //  "2023-08-31T16:32:47.653086+02:00" to "2023-08-31 16:32:47"
   const auto date_time = date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19);
-  Serial.println(date_time);
+  os.println(date_time);
 }
 
-void print_random_programming_joke() {
+void print_random_programming_joke(Stream& os) {
   digitalWrite(LED_BUILTIN, LOW);
   DynamicJsonDocument json_doc(4 * 1024);
   if (!read_url_to_json_doc(JOKES_URL, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   if (json_doc["type"].as<String>() == "single") {
-    Serial.println(json_doc["joke"].as<const char*>());
+    os.println(json_doc["joke"].as<const char*>());
   } else {
-    Serial.println(json_doc["setup"].as<const char*>());
-    Serial.println(json_doc["delivery"].as<const char*>());
+    os.println(json_doc["setup"].as<const char*>());
+    os.println(json_doc["delivery"].as<const char*>());
   }
 }
 
-void print_current_time_from_ntp() {
+void print_current_time_from_ntp(Stream& os) {
   digitalWrite(LED_BUILTIN, LOW);
   ntp_client.update();
   digitalWrite(LED_BUILTIN, HIGH);
-  Serial.println(ntp_client.getFormattedTime());
+  os.println(ntp_client.getFormattedTime());
+}
+
+void print_web_server_ip(Stream& os) {
+  os.println(WiFi.localIP().toString().c_str());
+}
+
+void print_output_to_stream(Stream& os) {
+  os.println("\ncurrent time based on ip:");
+  print_current_time_based_on_ip(os);
+
+  os.println("\ncurrent time in utc from ntp:");
+  print_current_time_from_ntp(os);
+
+  os.println("\nastronauts in space right now:");
+  print_astronauts_in_space_right_now(os);
+
+  os.println("\nprogramming joke:");
+  print_random_programming_joke(os);
+
+  os.println("\nweb server ip:");
+  print_web_server_ip(os);
 }
 
 // returns true if a request was serviced or false if no client available
@@ -158,31 +179,15 @@ bool handle_web_server() {
   client.println("HTTP/1.1 200 OK");
   client.println("Content-Type: text/plain");
   client.println();
-  client.println(req);
+  client.print(req);
+  client.println();
+  print_output_to_stream(client);
   client.stop();
   return true;
 }
 
-void print_web_server_ip() {
-  Serial.println(WiFi.localIP().toString().c_str());
-}
-
 void loop() {
-  Serial.println("\ncurrent time based on ip:");
-  print_current_time_based_on_ip();
-
-  Serial.println("\ncurrent time in utc from ntp:");
-  print_current_time_from_ntp();
-
-  Serial.println("\nastronauts in space right now:");
-  print_astronauts_in_space_right_now();
-
-  Serial.println("\nprogramming joke:");
-  print_random_programming_joke();
-
-  Serial.println("\nweb server ip:");
-  print_web_server_ip();
-
+  print_output_to_stream(Serial);
   delay(10000);
 }
 

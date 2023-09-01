@@ -1,2 +1,2 @@
-#define STASSID "wifi-network"
-#define STAPSK "wifi-password"
+#define WIFI_NETWORK "wifi-network"
+#define WIFI_PASSWORD "wifi-password"

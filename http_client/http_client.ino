@@ -1,23 +1,18 @@
-#include <ArduinoJson.h>
-#include <ArduinoJson.hpp>
-
-#include <Arduino.h>
 #include <WiFi.h>
-#include <HTTPClient.h>
 #include <NTPClient.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
 
 #include <vector>
 
-#include "secrets.h"  // defines STASSID and STAPSK
+#include "secrets.h"  // defines WIFI_NETWORK and WIFI_PASSWORD used for WiFi login
 
 #define TIME_SERVER_URL "http://worldtimeapi.org/api/ip"
 #define ASTROS_URL "http://api.open-notify.org/astros.json"
 #define JOKES_URL "https://v2.jokeapi.dev/joke/Programming"
 
 WiFiUDP ntp_udp;
-// default 'pool.ntp.org' is used with 60 seconds update interval and no offset
-NTPClient ntp_client(ntp_udp);
-
+NTPClient ntp_client(ntp_udp);  // default 'pool.ntp.org', 60 seconds update interval, no offset
 WiFiServer web_server(80);
 
 // setup first core
@@ -28,8 +23,8 @@ void setup() {
     ;
   WiFi.mode(WIFI_STA);
   //  WiFi.setHostname("RasberryPicoW");
-  Serial.printf("connecting to '%s' with '%s'\n", STASSID, STAPSK);
-  WiFi.begin(STASSID, STAPSK);
+  Serial.printf("connecting to '%s' with '%s'\n", WIFI_NETWORK, WIFI_PASSWORD);
+  WiFi.begin(WIFI_NETWORK, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     if (WiFi.status() == WL_CONNECT_FAILED) {
       Serial.println("\nconnection to wifi failed");
@@ -207,6 +202,7 @@ bool handle_web_server() {
     client.print("unknown path ");
     client.println(path);
   }
+
   client.stop();
   return true;
 }

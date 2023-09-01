@@ -136,12 +136,16 @@ void print_output_to_stream(Stream& os) {
   print_web_server_ip(os);
 }
 
-void handle_web_server_root(const String& uri, const String& req, Stream& os) {
-  os.print(req);
+void handle_web_server_root(const String& query, const String& headers, Stream& os) {
+  os.print("<pre>query: ");
+  os.println(query);
+  os.print(headers);
 }
 
-void handle_web_server_status(const String& uri, const String& req, Stream& os) {
-  os.print(req);
+void handle_web_server_status(const String& query, const String& headers, Stream& os) {
+  os.print("<pre>query: ");
+  os.println(query);
+  os.print(headers);
   os.println();
   print_output_to_stream(os);
 }
@@ -155,20 +159,23 @@ bool handle_web_server() {
   // read first request line
   const String method = client.readStringUntil(' ');
   const String uri = client.readStringUntil(' ');
+  const int query_start_ix = uri.indexOf("?");
+  const String query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
+  const String path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
   const String version = client.readStringUntil('\r');
   if (client.read() != '\n') {
     Serial.println("*** malformed http request");
     return false;
   }
   //Serial.printf("%s\n\n", uri.c_str());
-  String req;
-  req.reserve(1024);
-  req.concat(method);
-  req.concat(" ");
-  req.concat(uri);
-  req.concat(" ");
-  req.concat(version);
-  req.concat("\r\n");
+  String headers;
+  headers.reserve(1024);
+  //  req.concat(method);
+  //  req.concat(" ");
+  //  req.concat(uri);
+  //  req.concat(" ");
+  //  req.concat(version);
+  //  req.concat("\r\n");
 
   // read the rest of the request
   while (true) {
@@ -180,22 +187,28 @@ bool handle_web_server() {
     //Serial.printf("%d: %s\r\n", line.length(), line.c_str());
     if (line.length() == 0)
       break;
-    req.concat(line);
-    req.concat("\r\n");
+    headers.concat(line);
+    headers.concat("\n");
   }
-  Serial.println("\nwebserver request:\n-------------------------------------------------");
-  Serial.print(req);
+
+  Serial.println("\nwebserver request: ");
   Serial.println("-------------------------------------------------");
+  Serial.println(path);
+  Serial.println(query);
+  Serial.print(headers);
+  Serial.println("-------------------------------------------------");
+
   client.println("HTTP/1.1 200 OK");
-  client.println("Content-Type: text/plain");
+  client.println("Content-Type: text/html");
   client.println();
-  if (uri == "/") {
-    handle_web_server_root(uri, req, client);
-  } else if (uri == "/status") {
-    handle_web_server_status(uri, req, client);
+
+  if (path == "/") {
+    handle_web_server_root(query, headers, client);
+  } else if (path == "/status") {
+    handle_web_server_status(query, headers, client);
   } else {
-    client.print("unknown uri ");
-    client.println(uri);
+    client.print("unknown path ");
+    client.println(path);
   }
   client.stop();
   return true;

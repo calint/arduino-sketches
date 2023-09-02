@@ -25,7 +25,7 @@ void setup() {
   WiFi.begin(WIFI_NETWORK, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     if (WiFi.status() == WL_CONNECT_FAILED) {
-      Serial.println("\nconnection to wifi failed");
+      Serial.println("\n*** connection to wifi failed");
       while (true) delay(10'000);
     }
     Serial.print(".");
@@ -48,19 +48,19 @@ bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
     http_client.setInsecure();
   }
   if (!http_client.begin(url)) {
-    Serial.printf("unable to connect to %s\n", url);
+    Serial.printf("*** unable to connect to %s\n", url);
     return false;
   }
   const auto http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
-    Serial.printf("get error: %d: %s\n", http_code, http_client.errorToString(http_code).c_str());
+    Serial.printf("*** GET error: %d: %s\n", http_code, http_client.errorToString(http_code).c_str());
     http_client.end();
     return false;
   }
   const auto json_error = deserializeJson(json_doc, http_client.getStream());
   http_client.end();
   if (json_error) {
-    Serial.printf("json parsing failed: %s\n", json_error.c_str());
+    Serial.printf("*** json parsing failed: %s\n", json_error.c_str());
     return false;
   }
   return true;

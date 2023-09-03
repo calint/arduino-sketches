@@ -9,8 +9,6 @@
 #define ASTROS_URL "http://api.open-notify.org/astros.json"
 #define JOKES_URL "https://v2.jokeapi.dev/joke/Programming"
 
-WiFiUDP ntp_udp;
-NTPClient ntp_client(ntp_udp);  // default 'pool.ntp.org', 60 seconds update interval, no offset
 WiFiServer web_server(80);
 
 // setup first core
@@ -21,7 +19,7 @@ void setup() {
     ;  // wait for serial over usb for 10 seconds
   WiFi.mode(WIFI_STA);
   //  WiFi.setHostname("RasberryPicoW");
-  Serial.printf("connecting to '%s' with '%s'\n", WIFI_NETWORK, WIFI_PASSWORD);
+  Serial.printf("\nconnecting to '%s' with '%s'\n", WIFI_NETWORK, WIFI_PASSWORD);
   WiFi.begin(WIFI_NETWORK, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     if (WiFi.status() == WL_CONNECT_FAILED) {
@@ -45,6 +43,8 @@ bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
   HTTPClient http_client;
   http_client.useHTTP10(true);
   if (!strncmp(url, "https://", 8)) {  // 8 characters in "https://"
+    // todo: https implementation does not seem to be thread safe
+    //       running on two cores hangs the Raspberry Pico W
     http_client.setInsecure();
   }
   if (!http_client.begin(url)) {
@@ -106,6 +106,8 @@ void print_random_programming_joke(Stream& os) {
 }
 
 void print_current_time_from_ntp(Stream& os) {
+  WiFiUDP ntp_udp;
+  NTPClient ntp_client(ntp_udp);  // default 'pool.ntp.org', 60 seconds update interval, no offset
   digitalWrite(LED_BUILTIN, LOW);
   ntp_client.update();
   digitalWrite(LED_BUILTIN, HIGH);
@@ -126,8 +128,8 @@ void print_output_to_stream(Stream& os) {
   os.println("\nastronauts in space right now:");
   print_astronauts_in_space_right_now(os);
 
-  os.println("\nprogramming joke:");
-  print_random_programming_joke(os);
+  // os.println("\nprogramming joke:");
+  // print_random_programming_joke(os);
 
   os.println("\nweb server ip:");
   print_web_server_ip(os);
@@ -137,18 +139,33 @@ void print_output_to_stream(Stream& os) {
 void handle_web_server_root(const String& query, const std::vector<String>& headers, Stream& os) {
   os.print("<pre>query: ");
   os.println(query);
-  for (const auto& s : headers)
+  for (const auto& s : headers) {
     os.println(s);
+  }
 }
 
 // serve "/status"
 void handle_web_server_status(const String& query, const std::vector<String>& headers, Stream& os) {
   os.print("<pre>query: ");
   os.println(query);
-  for (const auto& s : headers)
+  for (const auto& s : headers) {
     os.println(s);
-  os.println();
-  print_output_to_stream(os);
+  }
+
+  os.println("\ncurrent time based on ip:");
+  print_current_time_based_on_ip(os);
+
+  os.println("\ncurrent time in utc from ntp:");
+  print_current_time_from_ntp(os);
+
+  os.println("\nastronauts in space right now:");
+  print_astronauts_in_space_right_now(os);
+
+  // os.println("\nprogramming joke:");
+  // print_random_programming_joke(os);
+
+  os.println("\nweb server ip:");
+  print_web_server_ip(os);
 }
 
 // returns true if a request was serviced or false if no client available
@@ -212,7 +229,7 @@ bool handle_web_server() {
 // loop on first core
 void loop() {
   print_output_to_stream(Serial);
-  delay(10'000);
+  //  delay(10'000);
 }
 
 // loop on second core

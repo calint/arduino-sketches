@@ -57,7 +57,7 @@ bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
     http_client.end();
     return false;
   }
-  const auto json_error = deserializeJson(json_doc, http_client.getStream());
+  const DeserializationError json_error = deserializeJson(json_doc, http_client.getStream());
   http_client.end();
   if (json_error) {
     Serial.printf("*** json parsing failed: %s\n", json_error.c_str());
@@ -72,7 +72,7 @@ void print_astronauts_in_space_right_now(Stream& os) {
   if (!read_url_to_json_doc(ASTROS_URL, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   const auto people = json_doc["people"].as<JsonArray>();
-  for (const auto p : people) {
+  for (const auto& p : people) {
     os.println(p["name"].as<const char*>());
   }
   //const unsigned n = json_doc["number"].as<unsigned>();

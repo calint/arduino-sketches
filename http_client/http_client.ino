@@ -51,7 +51,7 @@ bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
     Serial.printf("*** unable to connect to %s\n", url);
     return false;
   }
-  const auto http_code = http_client.GET();
+  const int http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
     Serial.printf("*** GET error: %d: %s\n", http_code, http_client.errorToString(http_code).c_str());
     http_client.end();
@@ -133,6 +133,7 @@ void print_output_to_stream(Stream& os) {
   print_web_server_ip(os);
 }
 
+// serve "/"
 void handle_web_server_root(const String& query, const std::vector<String>& headers, Stream& os) {
   os.print("<pre>query: ");
   os.println(query);
@@ -140,6 +141,7 @@ void handle_web_server_root(const String& query, const std::vector<String>& head
     os.println(s);
 }
 
+// serve "/status"
 void handle_web_server_status(const String& query, const std::vector<String>& headers, Stream& os) {
   os.print("<pre>query: ");
   os.println(query);

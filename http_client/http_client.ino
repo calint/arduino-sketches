@@ -128,6 +128,7 @@ void print_output_to_stream(Stream& os) {
   os.println("\nastronauts in space right now:");
   print_astronauts_in_space_right_now(os);
 
+  // todo: https request while using HTTPClient on both cores hangs Rasperry Pico W
   // os.println("\nprogramming joke:");
   // print_random_programming_joke(os);
 
@@ -161,6 +162,7 @@ void handle_web_server_status(const String& query, const std::vector<String>& he
   os.println("\nastronauts in space right now:");
   print_astronauts_in_space_right_now(os);
 
+  // todo: https request while using HTTPClient on both cores hangs Rasperry Pico W
   // os.println("\nprogramming joke:");
   // print_random_programming_joke(os);
 

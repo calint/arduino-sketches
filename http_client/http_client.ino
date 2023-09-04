@@ -231,7 +231,7 @@ bool handle_web_server() {
 // loop on first core
 void loop() {
   print_output_to_stream(Serial);
-  //  delay(10'000);
+  delay(10'000);
 }
 
 // loop on second core

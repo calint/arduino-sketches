@@ -51,13 +51,13 @@ bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
     Serial.printf("*** unable to connect to %s\n", url);
     return false;
   }
-  const int http_code = http_client.GET();
+  const auto http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
     Serial.printf("*** GET error: %d: %s\n", http_code, http_client.errorToString(http_code).c_str());
     http_client.end();
     return false;
   }
-  const DeserializationError json_error = deserializeJson(json_doc, http_client.getStream());
+  const auto json_error = deserializeJson(json_doc, http_client.getStream());
   http_client.end();
   if (json_error) {
     Serial.printf("*** json parsing failed: %s\n", json_error.c_str());
@@ -177,21 +177,21 @@ bool handle_web_server() {
     return false;
 
   // read first request line
-  const String method = client.readStringUntil(' ');
-  const String uri = client.readStringUntil(' ');
-  const String version = client.readStringUntil('\r');
+  const auto method = client.readStringUntil(' ');
+  const auto uri = client.readStringUntil(' ');
+  const auto version = client.readStringUntil('\r');
   if (client.read() != '\n') {
     Serial.println("*** malformed http request");
     return false;
   }
 
-  const int query_start_ix = uri.indexOf("?");
-  const String path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
-  const String query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
+  const auto query_start_ix = uri.indexOf("?");
+  const auto path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
+  const auto query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
 
   std::vector<String> headers;
   while (true) {
-    const String line = client.readStringUntil('\r');
+    const auto line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");
       return false;
@@ -231,7 +231,7 @@ bool handle_web_server() {
 // loop on first core
 void loop() {
   print_output_to_stream(Serial);
-  delay(10'000);
+  // delay(10'000);
 }
 
 // loop on second core

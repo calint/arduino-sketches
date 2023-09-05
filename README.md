@@ -1,7 +1,7 @@
 # arduino-sketches
-experiments with arduino sketches for raspberry pico w
+experiments with arduino sketches for raspberry pico w and arduino nano esp32
 
-### howto in arduino ide (2.1.1)
+### howto: raspberry pico w in arduino ide (2.1.1)
 File -> Preferences
 
 Additional boards manager URLs:

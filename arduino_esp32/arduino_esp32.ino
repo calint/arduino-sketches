@@ -14,8 +14,9 @@ WiFiServer web_server(80);
 // setup first core
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
   Serial.begin(115200);
-  while (!Serial && millis() < 10'000)
+  while (!Serial && millis() < 10000)
     ;  // wait for serial over usb for 10 seconds
   WiFi.mode(WIFI_STA);
   //  WiFi.setHostname("RasberryPicoW");
@@ -24,29 +25,31 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     if (WiFi.status() == WL_CONNECT_FAILED) {
       Serial.println("\n*** connection to wifi failed");
-      while (true) delay(10'000);
+      while (true) delay(10000);
     }
     Serial.print(".");
     delay(500);
   }
-  Serial.println("\nconnected");
+  Serial.print("\nconnected\nip: ");
+  Serial.println(WiFi.localIP().toString().c_str());
   digitalWrite(LED_BUILTIN, HIGH);
-}
-
-// setup second core
-void setup1() {
   web_server.begin();
 }
+
+// // setup second core
+// void setup1() {
+//   web_server.begin();
+// }
 
 // returns true if request succeeded or false if something went wrong
 bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
   HTTPClient http_client;
   http_client.useHTTP10(true);
-  if (!strncmp(url, "https://", 8)) {  // 8 characters in "https://"
-    // todo: https implementation does not seem to be thread safe
-    //       running on two cores hangs the Raspberry Pico W
-    http_client.setInsecure();
-  }
+  // if (!strncmp(url, "https://", 8)) {  // 8 characters in "https://"
+  //   // todo: https implementation does not seem to be thread safe
+  //   //       running on two cores hangs the Raspberry Pico W
+  //   http_client.setInsecure();
+  // }
   if (!http_client.begin(url)) {
     Serial.printf("*** unable to connect to %s\n", url);
     return false;
@@ -132,8 +135,8 @@ void print_output_to_stream(Stream& os) {
   // // os.println("\nprogramming joke:");
   // // print_random_programming_joke(os);
 
-  // os.println("\nweb server ip:");
-  // print_web_server_ip(os);
+  os.println("\nweb server ip:");
+  print_web_server_ip(os);
 }
 
 // serve "/"
@@ -153,21 +156,21 @@ void handle_web_server_status(const String& query, const std::vector<String>& he
     os.println(s);
   }
 
-  // os.println("\ncurrent time based on ip:");
+  os.println("\ncurrent time based on ip:");
   print_current_time_based_on_ip(os);
 
-  // os.println("\ncurrent time in utc from ntp:");
-  // print_current_time_from_ntp(os);
+  os.println("\ncurrent time in utc from ntp:");
+  print_current_time_from_ntp(os);
 
-  // os.println("\nastronauts in space right now:");
-  // print_astronauts_in_space_right_now(os);
+  os.println("\nastronauts in space right now:");
+  print_astronauts_in_space_right_now(os);
 
   // todo: https request while using HTTPClient on both cores hangs Rasperry Pico W
-  // os.println("\nprogramming joke:");
-  // print_random_programming_joke(os);
+  os.println("\nprogramming joke:");
+  print_random_programming_joke(os);
 
-  // os.println("\nweb server ip:");
-  // print_web_server_ip(os);
+  os.println("\nweb server ip:");
+  print_web_server_ip(os);
 }
 
 // returns true if a request was serviced or false if no client available
@@ -229,13 +232,13 @@ bool handle_web_server() {
 }
 
 // loop on first core
-void loop() {
-  print_output_to_stream(Serial);
-  // delay(10'000);
-}
+// void loop() {
+//   print_output_to_stream(Serial);
+//   // delay(10'000);
+// }
 
 // loop on second core
-void loop1() {
+void loop() {
   while (handle_web_server())
     ;
   delay(100);  // slightly less busy wait

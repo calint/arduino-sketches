@@ -11,6 +11,7 @@
 
 WiFiServer web_server(80);
 
+#ifdef ARDUINO_NANO_ESP32
 TaskHandle_t task_loop1;
 void esploop1(void* vpParameter) {
   setup1();
@@ -18,6 +19,7 @@ void esploop1(void* vpParameter) {
     loop1();
   }
 }
+#endif
 
 // setup first core
 void setup() {
@@ -42,10 +44,12 @@ void setup() {
   Serial.println(WiFi.localIP().toString().c_str());
   digitalWrite(LED_BUILTIN, HIGH);
 
+#ifdef ARDUINO_NANO_ESP32
   xTaskCreatePinnedToCore(esploop1, "loop1", 64 * 1024, NULL, 1, &task_loop1, !ARDUINO_RUNNING_CORE);
+#endif
 }
 
-// // setup second core
+// setup second core
 void setup1() {
   web_server.begin();
 }
@@ -54,11 +58,15 @@ void setup1() {
 bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
   HTTPClient http_client;
   http_client.useHTTP10(true);
-  // if (!strncmp(url, "https://", 8)) {  // 8 characters in "https://"
-  //   // todo: https implementation does not seem to be thread safe
-  //   //       running on two cores hangs the Raspberry Pico W
-  //   http_client.setInsecure();
-  // }
+
+#ifdef RASPBERRYPI_PICO
+  if (!strncmp(url, "https://", 8)) {  // 8 characters in "https://"
+    // todo: https implementation does not seem to be thread safe
+    //       running on two cores hangs the Raspberry Pico W
+    http_client.setInsecure();
+  }
+#endif
+
   if (!http_client.begin(url)) {
     Serial.printf("*** unable to connect to %s\n", url);
     return false;

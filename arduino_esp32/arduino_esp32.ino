@@ -11,6 +11,14 @@
 
 WiFiServer web_server(80);
 
+TaskHandle_t task_loop1;
+void esploop1(void* vpParameter) {
+  setup1();
+  while (true) {
+    loop1();
+  }
+}
+
 // setup first core
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -33,13 +41,14 @@ void setup() {
   Serial.print("\nconnected\nip: ");
   Serial.println(WiFi.localIP().toString().c_str());
   digitalWrite(LED_BUILTIN, HIGH);
-  web_server.begin();
+
+  xTaskCreatePinnedToCore(esploop1, "loop1", 64 * 1024, NULL, 1, &task_loop1, !ARDUINO_RUNNING_CORE);
 }
 
 // // setup second core
-// void setup1() {
-//   web_server.begin();
-// }
+void setup1() {
+  web_server.begin();
+}
 
 // returns true if request succeeded or false if something went wrong
 bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
@@ -125,15 +134,14 @@ void print_output_to_stream(Stream& os) {
   // os.println("\ncurrent time based on ip:");
   print_current_time_based_on_ip(os);
 
-  // os.println("\ncurrent time in utc from ntp:");
-  // print_current_time_from_ntp(os);
+  os.println("\ncurrent time in utc from ntp:");
+  print_current_time_from_ntp(os);
 
-  // os.println("\nastronauts in space right now:");
-  // print_astronauts_in_space_right_now(os);
+  os.println("\nastronauts in space right now:");
+  print_astronauts_in_space_right_now(os);
 
-  // // todo: https request while using HTTPClient on both cores hangs Rasperry Pico W
-  // // os.println("\nprogramming joke:");
-  // // print_random_programming_joke(os);
+  os.println("\nprogramming joke:");
+  print_random_programming_joke(os);
 
   os.println("\nweb server ip:");
   print_web_server_ip(os);
@@ -165,7 +173,6 @@ void handle_web_server_status(const String& query, const std::vector<String>& he
   os.println("\nastronauts in space right now:");
   print_astronauts_in_space_right_now(os);
 
-  // todo: https request while using HTTPClient on both cores hangs Rasperry Pico W
   os.println("\nprogramming joke:");
   print_random_programming_joke(os);
 
@@ -232,13 +239,13 @@ bool handle_web_server() {
 }
 
 // loop on first core
-// void loop() {
-//   print_output_to_stream(Serial);
-//   // delay(10'000);
-// }
+void loop() {
+  print_output_to_stream(Serial);
+  // delay(10'000);
+}
 
 // loop on second core
-void loop() {
+void loop1() {
   while (handle_web_server())
     ;
   delay(100);  // slightly less busy wait

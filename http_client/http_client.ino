@@ -45,6 +45,7 @@ bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
   if (!strncmp(url, "https://", 8)) {  // 8 characters in "https://"
     // todo: https implementation does not seem to be thread safe
     //       running on two cores hangs the Raspberry Pico W
+    //       
     http_client.setInsecure();
   }
   if (!http_client.begin(url)) {
@@ -119,21 +120,21 @@ void print_web_server_ip(Stream& os) {
 }
 
 void print_output_to_stream(Stream& os) {
-  // os.println("\ncurrent time based on ip:");
+  os.println("\ncurrent time based on ip:");
   print_current_time_based_on_ip(os);
 
-  // os.println("\ncurrent time in utc from ntp:");
-  // print_current_time_from_ntp(os);
+  os.println("\ncurrent time in utc from ntp:");
+  print_current_time_from_ntp(os);
 
-  // os.println("\nastronauts in space right now:");
-  // print_astronauts_in_space_right_now(os);
+  os.println("\nastronauts in space right now:");
+  print_astronauts_in_space_right_now(os);
 
   // // todo: https request while using HTTPClient on both cores hangs Rasperry Pico W
   // // os.println("\nprogramming joke:");
   // // print_random_programming_joke(os);
 
-  // os.println("\nweb server ip:");
-  // print_web_server_ip(os);
+  os.println("\nweb server ip:");
+  print_web_server_ip(os);
 }
 
 // serve "/"
@@ -153,21 +154,21 @@ void handle_web_server_status(const String& query, const std::vector<String>& he
     os.println(s);
   }
 
-  // os.println("\ncurrent time based on ip:");
+  os.println("\ncurrent time based on ip:");
   print_current_time_based_on_ip(os);
 
-  // os.println("\ncurrent time in utc from ntp:");
-  // print_current_time_from_ntp(os);
+  os.println("\ncurrent time in utc from ntp:");
+  print_current_time_from_ntp(os);
 
-  // os.println("\nastronauts in space right now:");
-  // print_astronauts_in_space_right_now(os);
+  os.println("\nastronauts in space right now:");
+  print_astronauts_in_space_right_now(os);
 
   // todo: https request while using HTTPClient on both cores hangs Rasperry Pico W
-  // os.println("\nprogramming joke:");
-  // print_random_programming_joke(os);
+  os.println("\nprogramming joke:");
+  print_random_programming_joke(os);
 
-  // os.println("\nweb server ip:");
-  // print_web_server_ip(os);
+  os.println("\nweb server ip:");
+  print_web_server_ip(os);
 }
 
 // returns true if a request was serviced or false if no client available

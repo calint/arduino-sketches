@@ -46,7 +46,7 @@ void setup() {
   digitalWrite(LED_BUILTIN, LOW);
   Serial.begin(115200);
   while (!Serial && millis() < 10000)
-    ;  // wait for serial over usb for 10 seconds
+    delay(100);  // wait max 10 seconds for serial over usb
 
   Serial.printf("\nconnecting to '%s' with '%s'\n", secret_wifi_network, secret_wifi_password);
 

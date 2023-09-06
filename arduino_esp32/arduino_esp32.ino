@@ -11,7 +11,11 @@ constexpr const char* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 
 WiFiServer web_server(80);
 
+#ifdef ARDUINO_NANO_ESP32
 const char* lookup_wifi_status_to_cstr(const wl_status_t status) {
+#else
+const char* lookup_wifi_status_to_cstr(const uint8_t status) {
+#endif
   switch (status) {
     case WL_CONNECTED: return "connected";
     case WL_NO_SHIELD: return "no shield";
@@ -36,7 +40,7 @@ void func_second_core(void* vpParameter) {
 }
 #endif
 
-[[noreturn]] void hang() {
+void hang() {
   while (true) delay(10000);
 }
 
@@ -57,9 +61,11 @@ void setup() {
       case WL_CONNECT_FAILED:
         Serial.println("\n*** connection to wifi failed");
         hang();
+        break;
       case WL_NO_SSID_AVAIL:
         Serial.println("\n*** network not found or wrong password");
         hang();
+        break;
       default: break;
     }
     Serial.print(".");
@@ -71,8 +77,9 @@ void setup() {
   Serial.print(WiFi.RSSI());
   Serial.println(" dBm");
   Serial.print("auto-reconnect: ");
+#ifdef ARDUINO_NANO_ESP32
   Serial.println(WiFi.getAutoReconnect() ? "yes" : "no");
-
+#endif
   digitalWrite(LED_BUILTIN, HIGH);
 
 #ifdef ARDUINO_NANO_ESP32
@@ -89,7 +96,9 @@ void setup1() {
 bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
   HTTPClient http_client;
   http_client.useHTTP10();
+#ifdef ARDUINO_NANO_ESP32
   http_client.setConnectTimeout(10000);
+#endif
   http_client.setTimeout(10000);
 
 #ifdef RASPBERRYPI_PICO

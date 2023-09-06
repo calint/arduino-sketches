@@ -13,24 +13,15 @@ WiFiServer web_server(80);
 
 const char* lookup_wifi_status_to_text(const wl_status_t status) {
   switch (status) {
-    case WL_CONNECTED:
-      return "connected";
-    case WL_NO_SHIELD:
-      return "no shield";
-    case WL_IDLE_STATUS:
-      return "idle";
-    case WL_NO_SSID_AVAIL:
-      return "no SSID available";
-    case WL_SCAN_COMPLETED:
-      return "scan completed";
-    case WL_CONNECT_FAILED:
-      return "connect failed";
-    case WL_CONNECTION_LOST:
-      return "connection lost";
-    case WL_DISCONNECTED:
-      return "disconnected";
-    default:
-      return "unknown";
+    case WL_CONNECTED: return "connected";
+    case WL_NO_SHIELD: return "no shield";
+    case WL_IDLE_STATUS: return "idle";
+    case WL_NO_SSID_AVAIL: return "no SSID available";
+    case WL_SCAN_COMPLETED: return "scan completed";
+    case WL_CONNECT_FAILED: return "connect failed";
+    case WL_CONNECTION_LOST: return "connection lost";
+    case WL_DISCONNECTED: return "disconnected";
+    default: return "unknown";
   }
 }
 

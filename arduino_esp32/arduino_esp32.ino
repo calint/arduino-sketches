@@ -26,8 +26,9 @@ const char* lookup_wifi_status_to_cstr(const wl_status_t status) {
 }
 
 #ifdef ARDUINO_NANO_ESP32
-TaskHandle_t task_loop1;
-void esploop1(void* vpParameter) {
+// code to run on second core
+TaskHandle_t task_second_core;
+void func_second_core(void* vpParameter) {
   setup1();
   while (true) {
     loop1();
@@ -64,7 +65,7 @@ void setup() {
   digitalWrite(LED_BUILTIN, HIGH);
 
 #ifdef ARDUINO_NANO_ESP32
-  xTaskCreatePinnedToCore(esploop1, "loop1", 64 * 1024, NULL, 1, &task_loop1, !ARDUINO_RUNNING_CORE);
+  xTaskCreatePinnedToCore(func_second_core, "loop1", 64 * 1024, NULL, 1, &task_second_core, !ARDUINO_RUNNING_CORE);
 #endif
 }
 

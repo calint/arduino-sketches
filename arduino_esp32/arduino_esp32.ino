@@ -30,7 +30,7 @@ const char* lookup_wifi_status_to_text(const wl_status_t status) {
     case WL_DISCONNECTED:
       return "disconnected";
     default:
-      return "Unknown";
+      return "unknown";
   }
 }
 
@@ -84,7 +84,9 @@ void setup1() {
 // returns true if request succeeded or false if something went wrong
 bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
   HTTPClient http_client;
-  http_client.useHTTP10(true);
+  http_client.useHTTP10();
+  http_client.setConnectTimeout(10000);
+  http_client.setTimeout(10000);
 
 #ifdef RASPBERRYPI_PICO
   if (!strncmp(url, "https://", 8)) {  // 8 characters in "https://"

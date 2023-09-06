@@ -3,34 +3,88 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-#include "secrets.h"  // defines WIFI_NETWORK and WIFI_PASSWORD used for WiFi login
+#include "secrets.h"  // defines WiFi login info 'secret_wifi_network' and 'secret_wifi_password'
 
-#define TIME_SERVER_URL "http://worldtimeapi.org/api/ip"
-#define ASTROS_URL "http://api.open-notify.org/astros.json"
-#define JOKES_URL "https://v2.jokeapi.dev/joke/Programming"
+constexpr const char* url_time_server = "http://worldtimeapi.org/api/ip";
+constexpr const char* url_astros = "http://api.open-notify.org/astros.json";
+constexpr const char* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 
 WiFiServer web_server(80);
+
+#ifdef RASPBERRYPI_PICO
+const char* lookup_wifi_status_to_cstr(const uint8_t status) {
+#else
+const char* lookup_wifi_status_to_cstr(const wl_status_t status) {
+#endif
+  switch (status) {
+    case WL_CONNECTED: return "connected";
+    case WL_NO_SHIELD: return "no shield";
+    case WL_IDLE_STATUS: return "idle";
+    case WL_NO_SSID_AVAIL: return "no wifi network available";
+    case WL_SCAN_COMPLETED: return "scan completed";
+    case WL_CONNECT_FAILED: return "connect failed";
+    case WL_CONNECTION_LOST: return "connection lost";
+    case WL_DISCONNECTED: return "disconnected";
+    default: return "unknown";
+  }
+}
+
+#ifdef ARDUINO_NANO_ESP32
+// code to run on second core
+TaskHandle_t task_second_core;
+void func_second_core(void* vpParameter) {
+  setup1();
+  while (true) {
+    loop1();
+  }
+}
+#endif
+
+void hang() {
+  while (true) delay(10000);
+}
 
 // setup first core
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
   Serial.begin(115200);
-  while (!Serial && millis() < 10'000)
-    ;  // wait for serial over usb for 10 seconds
+  while (!Serial && millis() < 10000)
+    delay(100);  // wait max 10 seconds for serial over usb
+
+  Serial.printf("\nconnecting to '%s' with '%s'\n", secret_wifi_network, secret_wifi_password);
+
   WiFi.mode(WIFI_STA);
-  //  WiFi.setHostname("RasberryPicoW");
-  Serial.printf("\nconnecting to '%s' with '%s'\n", WIFI_NETWORK, WIFI_PASSWORD);
-  WiFi.begin(WIFI_NETWORK, WIFI_PASSWORD);
+  WiFi.begin(secret_wifi_network, secret_wifi_password);
   while (WiFi.status() != WL_CONNECTED) {
-    if (WiFi.status() == WL_CONNECT_FAILED) {
-      Serial.println("\n*** connection to wifi failed");
-      while (true) delay(10'000);
+    switch (WiFi.status()) {
+      case WL_CONNECT_FAILED:
+        Serial.println("\n*** connection to wifi failed");
+        hang();
+        break;
+      case WL_NO_SSID_AVAIL:
+        Serial.println("\n*** network not found or wrong password");
+        hang();
+        break;
+      default: break;
     }
     Serial.print(".");
     delay(500);
   }
-  Serial.println("\nconnected");
+  Serial.print("\nconnected\nip: ");
+  Serial.println(WiFi.localIP().toString().c_str());
+  Serial.print("signal strength: ");
+  Serial.print(WiFi.RSSI());
+  Serial.println(" dBm");
+#ifdef ARDUINO_NANO_ESP32
+  Serial.print("auto-reconnect: ");
+  Serial.println(WiFi.getAutoReconnect() ? "yes" : "no");
+#endif
   digitalWrite(LED_BUILTIN, HIGH);
+
+#ifdef ARDUINO_NANO_ESP32
+  xTaskCreatePinnedToCore(func_second_core, "loop1", 64 * 1024, NULL, 1, &task_second_core, !ARDUINO_RUNNING_CORE);
+#endif
 }
 
 // setup second core
@@ -41,13 +95,20 @@ void setup1() {
 // returns true if request succeeded or false if something went wrong
 bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
   HTTPClient http_client;
-  http_client.useHTTP10(true);
+  http_client.useHTTP10();
+#ifdef ARDUINO_NANO_ESP32
+  http_client.setConnectTimeout(10000);
+#endif
+  http_client.setTimeout(10000);
+
+#ifdef RASPBERRYPI_PICO
   if (!strncmp(url, "https://", 8)) {  // 8 characters in "https://"
     // todo: https implementation does not seem to be thread safe
     //       running on two cores hangs the Raspberry Pico W
-    //       
     http_client.setInsecure();
   }
+#endif
+
   if (!http_client.begin(url)) {
     Serial.printf("*** unable to connect to %s\n", url);
     return false;
@@ -70,7 +131,7 @@ bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
 void print_astronauts_in_space_right_now(Stream& os) {
   digitalWrite(LED_BUILTIN, LOW);
   DynamicJsonDocument json_doc(8 * 1024);
-  if (!read_url_to_json_doc(ASTROS_URL, json_doc)) return;
+  if (!read_url_to_json_doc(url_astros, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   const auto people = json_doc["people"].as<JsonArray>();
   for (const auto& p : people) {
@@ -85,7 +146,7 @@ void print_astronauts_in_space_right_now(Stream& os) {
 void print_current_time_based_on_ip(Stream& os) {
   digitalWrite(LED_BUILTIN, LOW);
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
-  if (!read_url_to_json_doc(TIME_SERVER_URL, json_doc)) return;
+  if (!read_url_to_json_doc(url_time_server, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   const auto date_time_raw = json_doc["datetime"].as<String>();
   //  "2023-08-31T16:32:47.653086+02:00" to "2023-08-31 16:32:47"
@@ -96,7 +157,7 @@ void print_current_time_based_on_ip(Stream& os) {
 void print_random_programming_joke(Stream& os) {
   digitalWrite(LED_BUILTIN, LOW);
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
-  if (!read_url_to_json_doc(JOKES_URL, json_doc)) return;
+  if (!read_url_to_json_doc(url_jokes, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   if (json_doc["type"].as<String>() == "single") {
     os.println(json_doc["joke"].as<const char*>());
@@ -119,6 +180,13 @@ void print_web_server_ip(Stream& os) {
   os.println(WiFi.localIP().toString().c_str());
 }
 
+void print_wifi_status(Stream& os) {
+  os.print(lookup_wifi_status_to_cstr(WiFi.status()));
+  os.print(" ");
+  os.print(WiFi.RSSI());
+  os.println(" dBm");
+}
+
 void print_output_to_stream(Stream& os) {
   os.println("\ncurrent time based on ip:");
   print_current_time_based_on_ip(os);
@@ -129,12 +197,14 @@ void print_output_to_stream(Stream& os) {
   os.println("\nastronauts in space right now:");
   print_astronauts_in_space_right_now(os);
 
-  // // todo: https request while using HTTPClient on both cores hangs Rasperry Pico W
-  // // os.println("\nprogramming joke:");
-  // // print_random_programming_joke(os);
+  os.println("\nprogramming joke:");
+  print_random_programming_joke(os);
 
   os.println("\nweb server ip:");
   print_web_server_ip(os);
+
+  os.println("\nwifi status: ");
+  print_wifi_status(os);
 }
 
 // serve "/"
@@ -163,12 +233,14 @@ void handle_web_server_status(const String& query, const std::vector<String>& he
   os.println("\nastronauts in space right now:");
   print_astronauts_in_space_right_now(os);
 
-  // todo: https request while using HTTPClient on both cores hangs Rasperry Pico W
   os.println("\nprogramming joke:");
   print_random_programming_joke(os);
 
   os.println("\nweb server ip:");
   print_web_server_ip(os);
+
+  os.println("\nwifi status: ");
+  print_wifi_status(os);
 }
 
 // returns true if a request was serviced or false if no client available

@@ -11,7 +11,7 @@
 
 WiFiServer web_server(80);
 
-const char* lookup_wifi_status_to_text(const wl_status_t status) {
+const char* lookup_wifi_status_to_cstr(const wl_status_t status) {
   switch (status) {
     case WL_CONNECTED: return "connected";
     case WL_NO_SHIELD: return "no shield";
@@ -42,6 +42,7 @@ void setup() {
   Serial.begin(115200);
   while (!Serial && millis() < 10000)
     ;  // wait for serial over usb for 10 seconds
+    
   Serial.printf("\nconnecting to '%s' with '%s'\n", WIFI_NETWORK, WIFI_PASSWORD);
 
   WiFi.mode(WIFI_STA);
@@ -159,7 +160,7 @@ void print_web_server_ip(Stream& os) {
 }
 
 void print_wifi_status(Stream& os) {
-  os.print(lookup_wifi_status_to_text(WiFi.status()));
+  os.print(lookup_wifi_status_to_cstr(WiFi.status()));
   os.print(" ");
   os.print(WiFi.RSSI());
   os.println(" dBm");

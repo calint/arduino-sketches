@@ -16,7 +16,7 @@ const char* lookup_wifi_status_to_cstr(const wl_status_t status) {
     case WL_CONNECTED: return "connected";
     case WL_NO_SHIELD: return "no shield";
     case WL_IDLE_STATUS: return "idle";
-    case WL_NO_SSID_AVAIL: return "no SSID available";
+    case WL_NO_SSID_AVAIL: return "no wifi network available";
     case WL_SCAN_COMPLETED: return "scan completed";
     case WL_CONNECT_FAILED: return "connect failed";
     case WL_CONNECTION_LOST: return "connection lost";
@@ -36,6 +36,10 @@ void func_second_core(void* vpParameter) {
 }
 #endif
 
+[[noreturn]] void hang() {
+  while (true) delay(10000);
+}
+
 // setup first core
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
@@ -49,9 +53,14 @@ void setup() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(secret_wifi_network, secret_wifi_password);
   while (WiFi.status() != WL_CONNECTED) {
-    if (WiFi.status() == WL_CONNECT_FAILED) {
-      Serial.println("\n*** connection to wifi failed");
-      while (true) delay(10000);
+    switch (WiFi.status()) {
+      case WL_CONNECT_FAILED:
+        Serial.println("\n*** connection to wifi failed");
+        hang();
+      case WL_NO_SSID_AVAIL:
+        Serial.println("\n*** network not found or wrong password");
+        hang();
+      default: break;
     }
     Serial.print(".");
     delay(500);
@@ -61,6 +70,8 @@ void setup() {
   Serial.print("signal strength: ");
   Serial.print(WiFi.RSSI());
   Serial.println(" dBm");
+  Serial.print("auto-reconnect: ");
+  Serial.println(WiFi.getAutoReconnect() ? "yes" : "no");
 
   digitalWrite(LED_BUILTIN, HIGH);
 

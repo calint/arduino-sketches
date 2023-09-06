@@ -14,21 +14,21 @@ WiFiServer web_server(80);
 const char* lookup_wifi_status_to_text(const wl_status_t status) {
   switch (status) {
     case WL_CONNECTED:
-      return "Connected";
+      return "connected";
     case WL_NO_SHIELD:
-      return "No Shield";
+      return "no shield";
     case WL_IDLE_STATUS:
-      return "Idle";
+      return "idle";
     case WL_NO_SSID_AVAIL:
-      return "No SSID Available";
+      return "no SSID available";
     case WL_SCAN_COMPLETED:
-      return "Scan Completed";
+      return "scan completed";
     case WL_CONNECT_FAILED:
-      return "Connect Failed";
+      return "connect failed";
     case WL_CONNECTION_LOST:
-      return "Connection Lost";
+      return "connection lost";
     case WL_DISCONNECTED:
-      return "Disconnected";
+      return "disconnected";
     default:
       return "Unknown";
   }
@@ -57,8 +57,7 @@ void setup() {
   WiFi.begin(WIFI_NETWORK, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     if (WiFi.status() == WL_CONNECT_FAILED) {
-      Serial.print("\n*** connection to wifi failed: ");
-      Serial.println(lookup_wifi_status_to_text(WiFi.status()));
+      Serial.println("\n*** connection to wifi failed");
       while (true) delay(10000);
     }
     Serial.print(".");

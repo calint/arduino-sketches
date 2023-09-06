@@ -11,6 +11,29 @@
 
 WiFiServer web_server(80);
 
+const char* lookup_wifi_status_to_text(const wl_status_t status) {
+  switch (status) {
+    case WL_CONNECTED:
+      return "Connected";
+    case WL_NO_SHIELD:
+      return "No Shield";
+    case WL_IDLE_STATUS:
+      return "Idle";
+    case WL_NO_SSID_AVAIL:
+      return "No SSID Available";
+    case WL_SCAN_COMPLETED:
+      return "Scan Completed";
+    case WL_CONNECT_FAILED:
+      return "Connect Failed";
+    case WL_CONNECTION_LOST:
+      return "Connection Lost";
+    case WL_DISCONNECTED:
+      return "Disconnected";
+    default:
+      return "Unknown";
+  }
+}
+
 #ifdef ARDUINO_NANO_ESP32
 TaskHandle_t task_loop1;
 void esploop1(void* vpParameter) {
@@ -28,13 +51,14 @@ void setup() {
   Serial.begin(115200);
   while (!Serial && millis() < 10000)
     ;  // wait for serial over usb for 10 seconds
-  WiFi.mode(WIFI_STA);
-  //  WiFi.setHostname("RasberryPicoW");
   Serial.printf("\nconnecting to '%s' with '%s'\n", WIFI_NETWORK, WIFI_PASSWORD);
+
+  WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_NETWORK, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     if (WiFi.status() == WL_CONNECT_FAILED) {
-      Serial.println("\n*** connection to wifi failed");
+      Serial.print("\n*** connection to wifi failed: ");
+      Serial.println(lookup_wifi_status_to_text(WiFi.status()));
       while (true) delay(10000);
     }
     Serial.print(".");
@@ -42,6 +66,10 @@ void setup() {
   }
   Serial.print("\nconnected\nip: ");
   Serial.println(WiFi.localIP().toString().c_str());
+  Serial.print("signal strength: ");
+  Serial.print(WiFi.RSSI());
+  Serial.println(" dBm");
+
   digitalWrite(LED_BUILTIN, HIGH);
 
 #ifdef ARDUINO_NANO_ESP32
@@ -138,8 +166,15 @@ void print_web_server_ip(Stream& os) {
   os.println(WiFi.localIP().toString().c_str());
 }
 
+void print_wifi_status(Stream& os) {
+  os.print(lookup_wifi_status_to_text(WiFi.status()));
+  os.print(" ");
+  os.print(WiFi.RSSI());
+  os.println(" dBm");
+}
+
 void print_output_to_stream(Stream& os) {
-  // os.println("\ncurrent time based on ip:");
+  os.println("\ncurrent time based on ip:");
   print_current_time_based_on_ip(os);
 
   os.println("\ncurrent time in utc from ntp:");
@@ -153,6 +188,9 @@ void print_output_to_stream(Stream& os) {
 
   os.println("\nweb server ip:");
   print_web_server_ip(os);
+
+  os.println("\nwifi status: ");
+  print_wifi_status(os);
 }
 
 // serve "/"
@@ -186,6 +224,9 @@ void handle_web_server_status(const String& query, const std::vector<String>& he
 
   os.println("\nweb server ip:");
   print_web_server_ip(os);
+
+  os.println("\nwifi status: ");
+  print_wifi_status(os);
 }
 
 // returns true if a request was serviced or false if no client available

@@ -3,11 +3,11 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-#include "secrets.h"  // defines WIFI_NETWORK and WIFI_PASSWORD used for WiFi login
+#include "secrets.h"  // defines WiFi login info 'secret_wifi_network' and 'secret_wifi_password'
 
-#define TIME_SERVER_URL "http://worldtimeapi.org/api/ip"
-#define ASTROS_URL "http://api.open-notify.org/astros.json"
-#define JOKES_URL "https://v2.jokeapi.dev/joke/Programming"
+constexpr const char* url_time_server = "http://worldtimeapi.org/api/ip";
+constexpr const char* url_astros = "http://api.open-notify.org/astros.json";
+constexpr const char* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 
 WiFiServer web_server(80);
 
@@ -43,11 +43,11 @@ void setup() {
   Serial.begin(115200);
   while (!Serial && millis() < 10000)
     ;  // wait for serial over usb for 10 seconds
-    
-  Serial.printf("\nconnecting to '%s' with '%s'\n", WIFI_NETWORK, WIFI_PASSWORD);
+
+  Serial.printf("\nconnecting to '%s' with '%s'\n", secret_wifi_network, secret_wifi_password);
 
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_NETWORK, WIFI_PASSWORD);
+  WiFi.begin(secret_wifi_network, secret_wifi_password);
   while (WiFi.status() != WL_CONNECTED) {
     if (WiFi.status() == WL_CONNECT_FAILED) {
       Serial.println("\n*** connection to wifi failed");
@@ -111,7 +111,7 @@ bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
 void print_astronauts_in_space_right_now(Stream& os) {
   digitalWrite(LED_BUILTIN, LOW);
   DynamicJsonDocument json_doc(8 * 1024);
-  if (!read_url_to_json_doc(ASTROS_URL, json_doc)) return;
+  if (!read_url_to_json_doc(url_astros, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   const auto people = json_doc["people"].as<JsonArray>();
   for (const auto& p : people) {
@@ -126,7 +126,7 @@ void print_astronauts_in_space_right_now(Stream& os) {
 void print_current_time_based_on_ip(Stream& os) {
   digitalWrite(LED_BUILTIN, LOW);
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
-  if (!read_url_to_json_doc(TIME_SERVER_URL, json_doc)) return;
+  if (!read_url_to_json_doc(url_time_server, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   const auto date_time_raw = json_doc["datetime"].as<String>();
   //  "2023-08-31T16:32:47.653086+02:00" to "2023-08-31 16:32:47"
@@ -137,7 +137,7 @@ void print_current_time_based_on_ip(Stream& os) {
 void print_random_programming_joke(Stream& os) {
   digitalWrite(LED_BUILTIN, LOW);
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
-  if (!read_url_to_json_doc(JOKES_URL, json_doc)) return;
+  if (!read_url_to_json_doc(url_jokes, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   if (json_doc["type"].as<String>() == "single") {
     os.println(json_doc["joke"].as<const char*>());

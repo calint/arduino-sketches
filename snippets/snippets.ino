@@ -105,6 +105,8 @@ bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
   if (!strncmp(url, "https://", 8)) {  // 8 characters in "https://"
     // todo: https implementation does not seem to be thread safe
     //       running on two cores hangs the Raspberry Pico W
+    //       using arduino ide: 2.2.1
+    //       board Raspberry Pi Pico/RP2040 by Earl F. Philhower, III: 3.4.1
     http_client.setInsecure();
   }
 #endif

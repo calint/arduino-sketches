@@ -1,3 +1,7 @@
+#if !(defined(ARDUINO_NANO_ESP32) || defined(RASPBERRYPI_PICO))
+#error "supports board Arduino Nano ESP32 and Raspberry Pico W"
+#endif
+
 #include <WiFi.h>
 #include <NTPClient.h>
 #include <HTTPClient.h>
@@ -189,6 +193,16 @@ void print_wifi_status(Stream& os) {
   os.println(" dBm");
 }
 
+void print_heap_info(Stream& os) {
+#ifdef ARDUINO_NANO_ESP32
+  os.printf("total: %u\n", ESP.getHeapSize());
+  os.printf(" free: %u\n", ESP.getFreeHeap());
+#else
+  struct mallinfo m = mallinfo();
+  os.printf("used: %u\n", m.uordblks);
+#endif
+}
+
 void print_output_to_stream(Stream& os) {
   os.println("\ncurrent time based on ip:");
   print_current_time_based_on_ip(os);
@@ -207,6 +221,9 @@ void print_output_to_stream(Stream& os) {
 
   os.println("\nwifi status: ");
   print_wifi_status(os);
+
+  os.println("\nheap info:");
+  print_heap_info(os);
 }
 
 // serve "/"
@@ -226,23 +243,7 @@ void handle_web_server_status(const String& query, const std::vector<String>& he
     os.println(s);
   }
 
-  os.println("\ncurrent time based on ip:");
-  print_current_time_based_on_ip(os);
-
-  os.println("\ncurrent time in utc from ntp:");
-  print_current_time_from_ntp(os);
-
-  os.println("\nastronauts in space right now:");
-  print_astronauts_in_space_right_now(os);
-
-  os.println("\nprogramming joke:");
-  print_random_programming_joke(os);
-
-  os.println("\nweb server ip:");
-  print_web_server_ip(os);
-
-  os.println("\nwifi status: ");
-  print_wifi_status(os);
+  print_output_to_stream(os);
 }
 
 // returns true if a request was serviced or false if no client available

@@ -161,24 +161,24 @@ void print_location(location_id_t lid, entity_id_t eid_exclude_from_output) {
   uart_send_str("\r\nu c: ");
 
   // print objects in location
-  unsigned add_list_sep = 0;
+  unsigned counter = 0;
   const object_id_t *lso = loc->objects;
   for (unsigned i = 0; i < LOCATION_MAX_OBJECTS; i++) {
     const object_id_t oid = lso[i];
     if (!oid)
       break;
-    if (add_list_sep++) {
+    if (counter++) {
       uart_send_str(", ");
     }
     uart_send_str(objects[oid].name);
   }
-  if (!add_list_sep) {
+  if (!counter) {
     uart_send_str("nothing");
   }
   uart_send_str("\r\n");
 
   // print entities in location
-  add_list_sep = 0;
+  counter = 0;
   const entity_id_t *lse = loc->entities;
   for (unsigned i = 0; i < LOCATION_MAX_ENTITIES; i++) {
     const entity_id_t eid = lse[i];
@@ -186,27 +186,27 @@ void print_location(location_id_t lid, entity_id_t eid_exclude_from_output) {
       break;
     if (eid == eid_exclude_from_output)
       continue;
-    if (add_list_sep++) {
+    if (counter++) {
       uart_send_str(", ");
     }
     uart_send_str(entities[eid].name);
   }
-  if (add_list_sep) {
+  if (counter) {
     uart_send_str(" is here\r\n");
   }
 
   // print exits from location
-  add_list_sep = 0;
+  counter = 0;
   uart_send_str("exits: ");
   for (unsigned i = 0; i < LOCATION_MAX_EXITS; i++) {
     if (!loc->exits[i])
       continue;
-    if (add_list_sep++) {
+    if (counter++) {
       uart_send_str(", ");
     }
     uart_send_str(exit_names[i]);
   }
-  if (!add_list_sep) {
+  if (!counter) {
     uart_send_str("none");
   }
   uart_send_str("\r\n");
@@ -214,18 +214,18 @@ void print_location(location_id_t lid, entity_id_t eid_exclude_from_output) {
 
 void action_inventory(entity_id_t eid) {
   uart_send_str("u have: ");
-  unsigned add_list_sep = 0;
+  unsigned counter = 0;
   const object_id_t *lso = entities[eid].objects;
   for (unsigned i = 0; i < ENTITY_MAX_OBJECTS; i++) {
     const object_id_t oid = lso[i];
     if (!oid)
       break;
-    if (add_list_sep++) {
+    if (counter++) {
       uart_send_str(", ");
     }
     uart_send_str(objects[oid].name);
   }
-  if (!add_list_sep) {
+  if (!counter) {
     uart_send_str("nothing");
   }
   uart_send_str("\r\n");

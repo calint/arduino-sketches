@@ -194,13 +194,17 @@ void print_wifi_status(Stream& os) {
 }
 
 void print_heap_info(Stream& os) {
+  os.print("used: ");
 #ifdef ARDUINO_NANO_ESP32
-  os.printf("total: %u\n", ESP.getHeapSize());
-  os.printf(" free: %u\n", ESP.getFreeHeap());
+  // os.printf("total: %u B\n", ESP.getHeapSize());
+  // os.printf(" free: %u B\n", ESP.getFreeHeap());
+  // os.printf(" used: %u B\n", ESP.getHeapSize() - ESP.getFreeHeap());
+  os.print(ESP.getHeapSize() - ESP.getFreeHeap());
 #else
   struct mallinfo m = mallinfo();
-  os.printf("used: %u\n", m.uordblks);
+  os.print(m.uordblks);
 #endif
+  os.println(" B");
 }
 
 void print_output_to_stream(Stream& os) {
@@ -233,6 +237,8 @@ void handle_web_server_root(const String& query, const std::vector<String>& head
   for (const auto& s : headers) {
     os.println(s);
   }
+
+  print_heap_info(os);
 }
 
 // serve "/status"
@@ -267,6 +273,7 @@ bool handle_web_server() {
 
   std::vector<String> headers;
   while (true) {
+    // Serial.println("*** reading header");
     const auto line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");
@@ -277,16 +284,6 @@ bool handle_web_server() {
     headers.push_back(line);
   }
 
-  // Serial.println("\nwebserver request: ");
-  // Serial.println("-------------------------------------------------");
-  // Serial.print("path: ");
-  // Serial.println(path);
-  // Serial.print("query: ");
-  // Serial.println(query);
-  // for (const auto& s : headers)
-  //   Serial.println(s);
-  // Serial.println("-------------------------------------------------");
-
   client.println("HTTP/1.1 200 OK");
   client.println("Content-Type: text/html");
   client.println();
@@ -296,8 +293,9 @@ bool handle_web_server() {
   } else if (path == "/status") {
     handle_web_server_status(query, headers, client);
   } else {
-    client.print("unknown path ");
-    client.println(path);
+    client.print("unknown path '");
+    client.print(path);
+    client.println("'");
   }
 
   client.stop();
@@ -307,8 +305,9 @@ bool handle_web_server() {
 // loop on first core
 void loop() {
   print_output_to_stream(Serial);
-  // delay(10'000);
+  // delay(10000);
 }
+
 
 // loop on second core
 void loop1() {

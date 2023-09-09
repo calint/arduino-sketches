@@ -1,5 +1,5 @@
 #if !(defined(ARDUINO_NANO_ESP32) || defined(RASPBERRYPI_PICO))
-// note: Raspberry Pico W can only run WiFi related code on one core
+// note: Raspberry Pico W can only run WiFi related code on core 0
 //       https://github.com/earlephilhower/arduino-pico/issues/1701
 #error "supports board Arduino Nano ESP32 and Raspberry Pico W"
 #endif

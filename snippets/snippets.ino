@@ -84,6 +84,7 @@ void setup() {
   preferences.putUInt("boot_count", boot_count);
   preferences.end();
 
+  // setup second core
   web_server.begin();
 
   // start second core

@@ -1,4 +1,4 @@
-// intended for board arduino nano esp32
+// intended for 'arduino nano esp32'
 #include <WiFi.h>
 #include <NTPClient.h>
 #include <HTTPClient.h>

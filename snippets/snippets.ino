@@ -74,7 +74,7 @@ void setup() {
   Serial.print("auto-reconnect: ");
   Serial.println(WiFi.getAutoReconnect() ? "yes" : "no");
   // todo: check status and reconnect if not WL_CONNECTED
-  //       turning off wifi base station gives WL_NO_SSID_AVAIL 
+  //       turning off wifi base station gives WL_NO_SSID_AVAIL
   digitalWrite(LED_BUILTIN, HIGH);
 
   Preferences preferences;
@@ -237,12 +237,15 @@ bool handle_web_server() {
   if (!client)
     return false;
 
+  digitalWrite(LED_GREEN, LOW);
+
   // read first request line
   auto const method = client.readStringUntil(' ');
   auto const uri = client.readStringUntil(' ');
   auto const version = client.readStringUntil('\r');
   if (client.read() != '\n') {
     Serial.println("*** malformed http request");
+    digitalWrite(LED_GREEN, HIGH);
     return false;
   }
 
@@ -255,6 +258,7 @@ bool handle_web_server() {
     auto const line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");
+      digitalWrite(LED_GREEN, HIGH);
       return false;
     }
     if (line.length() == 0)
@@ -277,6 +281,9 @@ bool handle_web_server() {
   }
 
   client.stop();
+
+  digitalWrite(LED_GREEN, HIGH);
+
   return true;
 }
 

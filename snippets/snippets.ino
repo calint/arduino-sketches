@@ -7,6 +7,10 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 
+#if defined(ARDUINO_NANO_ESP32)
+#include <Preferences.h>
+#endif
+
 #include "secrets.h"  // defines WiFi login info 'secret_wifi_network' and 'secret_wifi_password'
 
 constexpr const char* url_time_server = "http://worldtimeapi.org/api/ip";
@@ -83,10 +87,21 @@ void setup() {
 #ifdef ARDUINO_NANO_ESP32
   Serial.print("auto-reconnect: ");
   Serial.println(WiFi.getAutoReconnect() ? "yes" : "no");
+  // todo: check status and reconnect if WL_NO_SSID_AVAIL
 #endif
   digitalWrite(LED_BUILTIN, HIGH);
 
-#ifdef ARDUINO_NANO_ESP32
+#if defined(ARDUINO_NANO_ESP32)
+  Preferences preferences;
+  preferences.begin("store", false);
+  unsigned boot_count = preferences.getUInt("boot_count", 0);
+  boot_count++;
+  Serial.printf("boot count: %u\n", boot_count);
+  preferences.putUInt("boot_count", boot_count);
+  preferences.end();
+#endif
+
+#if defined(ARDUINO_NANO_ESP32)
   xTaskCreatePinnedToCore(func_second_core, "loop1", 64 * 1024, NULL, 1, &task_second_core, !ARDUINO_RUNNING_CORE);
 #endif
 }
@@ -100,12 +115,12 @@ void setup1() {
 bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
   HTTPClient http_client;
   http_client.useHTTP10();
-#ifdef ARDUINO_NANO_ESP32
+#if defined(ARDUINO_NANO_ESP32)
   http_client.setConnectTimeout(10000);
 #endif
   http_client.setTimeout(10000);
 
-#ifdef RASPBERRYPI_PICO
+#if defined(RASPBERRYPI_PICO)
   if (!strncmp(url, "https://", 8)) {  // 8 characters in "https://"
     // todo: https implementation does not seem to be thread safe
     //       running on two cores hangs the Raspberry Pico W
@@ -195,7 +210,7 @@ void print_wifi_status(Stream& os) {
 
 void print_heap_info(Stream& os) {
   os.print("used: ");
-#ifdef ARDUINO_NANO_ESP32
+#if defined(ARDUINO_NANO_ESP32)
   // os.printf("total: %u B\n", ESP.getHeapSize());
   // os.printf(" free: %u B\n", ESP.getFreeHeap());
   // os.printf(" used: %u B\n", ESP.getHeapSize() - ESP.getFreeHeap());

@@ -210,8 +210,10 @@ void print_output_to_stream(Stream& os) {
 }
 
 // serve "/"
-void handle_web_server_root(String const& query, std::vector<String> const& headers, Stream& os) {
-  os.print("<pre>query: ");
+void handle_web_server_root(String const& path, String const& query, std::vector<String> const& headers, Stream& os) {
+  os.print("<pre>path: ");
+  os.println(path);
+  os.print("query: ");
   os.println(query);
   for (auto const& s : headers) {
     os.println(s);
@@ -221,8 +223,10 @@ void handle_web_server_root(String const& query, std::vector<String> const& head
 }
 
 // serve "/status"
-void handle_web_server_status(String const& query, std::vector<String> const& headers, Stream& os) {
-  os.print("<pre>query: ");
+void handle_web_server_status(String const& path, String const& query, std::vector<String> const& headers, Stream& os) {
+  os.print("<pre>path: ");
+  os.println(path);
+  os.print("query: ");
   os.println(query);
   for (auto const& s : headers) {
     os.println(s);
@@ -237,7 +241,7 @@ bool handle_web_server() {
   if (!client)
     return false;
 
-  digitalWrite(LED_GREEN, LOW);
+  digitalWrite(LED_GREEN, LOW);  // turn on green led
 
   // read first request line
   auto const method = client.readStringUntil(' ');
@@ -271,9 +275,9 @@ bool handle_web_server() {
   client.println();
 
   if (path == "/") {
-    handle_web_server_root(query, headers, client);
+    handle_web_server_root(path, query, headers, client);
   } else if (path == "/status") {
-    handle_web_server_status(query, headers, client);
+    handle_web_server_status(path, query, headers, client);
   } else {
     client.print("unknown path '");
     client.print(path);

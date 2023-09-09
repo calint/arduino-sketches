@@ -1,17 +1,9 @@
-#if !(defined(ARDUINO_NANO_ESP32) || defined(RASPBERRYPI_PICO))
-// note: Raspberry Pico W can only run WiFi related code on core 0
-//       https://github.com/earlephilhower/arduino-pico/issues/1701
-#error "supports board Arduino Nano ESP32 and Raspberry Pico W"
-#endif
-
+// intended for board arduino nano esp32
 #include <WiFi.h>
 #include <NTPClient.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
-
-#if defined(ARDUINO_NANO_ESP32)
 #include <Preferences.h>
-#endif
 
 #include "secrets.h"  // defines WiFi login info 'secret_wifi_network' and 'secret_wifi_password'
 
@@ -21,11 +13,7 @@ constexpr char const* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 
 WiFiServer web_server(80);
 
-#ifdef RASPBERRYPI_PICO
-char const* lookup_wifi_status_to_cstr(uint8_t const status) {
-#else
 char const* lookup_wifi_status_to_cstr(wl_status_t const status) {
-#endif
   switch (status) {
     case WL_CONNECTED: return "connected";
     case WL_NO_SHIELD: return "no shield";
@@ -43,16 +31,13 @@ void hang() {
   while (true) delay(10000);
 }
 
-#ifdef ARDUINO_NANO_ESP32
 // code to run on second core
 TaskHandle_t task_second_core;
 void func_second_core(void* vpParameter) {
-  setup1();
   while (true) {
     loop1();
   }
 }
-#endif
 
 // setup first core
 void setup() {
@@ -86,14 +71,11 @@ void setup() {
   Serial.print("signal strength: ");
   Serial.print(WiFi.RSSI());
   Serial.println(" dBm");
-#ifdef ARDUINO_NANO_ESP32
   Serial.print("auto-reconnect: ");
   Serial.println(WiFi.getAutoReconnect() ? "yes" : "no");
   // todo: check status and reconnect if WL_NO_SSID_AVAIL
-#endif
   digitalWrite(LED_BUILTIN, HIGH);
 
-#if defined(ARDUINO_NANO_ESP32)
   Preferences preferences;
   preferences.begin("store", false);
   unsigned boot_count = preferences.getUInt("boot_count", 0);
@@ -101,33 +83,19 @@ void setup() {
   Serial.printf("boot count: %u\n", boot_count);
   preferences.putUInt("boot_count", boot_count);
   preferences.end();
-#endif
 
-#if defined(ARDUINO_NANO_ESP32)
+  web_server.begin();
+
   // start second core
   xTaskCreatePinnedToCore(func_second_core, "core1", 64 * 1024, NULL, 1, &task_second_core, !ARDUINO_RUNNING_CORE);
-#endif
-}
-
-// setup second core
-void setup1() {
-  web_server.begin();
 }
 
 // returns true if request succeeded or false if something went wrong
 bool read_url_to_json_doc(char const* url, JsonDocument& json_doc) {
   HTTPClient http_client;
   http_client.useHTTP10();
-#if defined(ARDUINO_NANO_ESP32)
   http_client.setConnectTimeout(10000);
-#endif
   http_client.setTimeout(10000);
-
-#if defined(RASPBERRYPI_PICO)
-  if (!strncmp(url, "https://", 8)) {  // 8 characters in "https://"
-    http_client.setInsecure();
-  }
-#endif
 
   if (!http_client.begin(url)) {
     Serial.printf("*** unable to connect to %s\n", url);
@@ -209,15 +177,10 @@ void print_wifi_status(Stream& os) {
 
 void print_heap_info(Stream& os) {
   os.print("used: ");
-#if defined(ARDUINO_NANO_ESP32)
   // os.printf("total: %u B\n", ESP.getHeapSize());
   // os.printf(" free: %u B\n", ESP.getFreeHeap());
   // os.printf(" used: %u B\n", ESP.getHeapSize() - ESP.getFreeHeap());
   os.print(ESP.getHeapSize() - ESP.getFreeHeap());
-#else
-  struct mallinfo m = mallinfo();
-  os.print(m.uordblks);
-#endif
   os.println(" B");
 }
 
@@ -320,7 +283,6 @@ void loop() {
   print_output_to_stream(Serial);
   // delay(10000);
 }
-
 
 // loop on second core
 void loop1() {

@@ -286,7 +286,7 @@ bool handle_web_server() {
 
   client.stop();
 
-  digitalWrite(LED_GREEN, HIGH);
+  digitalWrite(LED_GREEN, HIGH); // turn off green led
 
   return true;
 }

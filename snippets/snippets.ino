@@ -241,7 +241,7 @@ bool handle_web_server() {
   if (!client)
     return false;
 
-  digitalWrite(LED_GREEN, LOW);  // turn on green led
+//  digitalWrite(LED_GREEN, LOW);  // turn on green led
 
   // read first request line
   auto const method = client.readStringUntil(' ');
@@ -249,7 +249,7 @@ bool handle_web_server() {
   auto const version = client.readStringUntil('\r');
   if (client.read() != '\n') {
     Serial.println("*** malformed http request");
-    digitalWrite(LED_GREEN, HIGH);
+    // digitalWrite(LED_GREEN, HIGH);
     return false;
   }
 
@@ -262,7 +262,7 @@ bool handle_web_server() {
     auto const line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");
-      digitalWrite(LED_GREEN, HIGH);
+      // digitalWrite(LED_GREEN, HIGH);
       return false;
     }
     if (line.length() == 0)
@@ -286,7 +286,7 @@ bool handle_web_server() {
 
   client.stop();
 
-  digitalWrite(LED_GREEN, HIGH); // turn off green led
+  // digitalWrite(LED_GREEN, HIGH); // turn off green led
 
   return true;
 }

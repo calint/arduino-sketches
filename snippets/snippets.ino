@@ -20,9 +20,9 @@ constexpr const char* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 WiFiServer web_server(80);
 
 #ifdef RASPBERRYPI_PICO
-const char* lookup_wifi_status_to_cstr(const uint8_t status) {
+const char* lookup_wifi_status_to_cstr(uint8_t const status) {
 #else
-const char* lookup_wifi_status_to_cstr(const wl_status_t status) {
+const char* lookup_wifi_status_to_cstr(wl_status_t const status) {
 #endif
   switch (status) {
     case WL_CONNECTED: return "connected";
@@ -37,6 +37,10 @@ const char* lookup_wifi_status_to_cstr(const wl_status_t status) {
   }
 }
 
+void hang() {
+  while (true) delay(10000);
+}
+
 #ifdef ARDUINO_NANO_ESP32
 // code to run on second core
 TaskHandle_t task_second_core;
@@ -47,10 +51,6 @@ void func_second_core(void* vpParameter) {
   }
 }
 #endif
-
-void hang() {
-  while (true) delay(10000);
-}
 
 // setup first core
 void setup() {
@@ -102,7 +102,8 @@ void setup() {
 #endif
 
 #if defined(ARDUINO_NANO_ESP32)
-  xTaskCreatePinnedToCore(func_second_core, "loop1", 64 * 1024, NULL, 1, &task_second_core, !ARDUINO_RUNNING_CORE);
+  // start second core
+  xTaskCreatePinnedToCore(func_second_core, "core1", 64 * 1024, NULL, 1, &task_second_core, !ARDUINO_RUNNING_CORE);
 #endif
 }
 
@@ -134,13 +135,13 @@ bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
     Serial.printf("*** unable to connect to %s\n", url);
     return false;
   }
-  const auto http_code = http_client.GET();
+  auto const http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
     Serial.printf("*** GET error: %d: %s\n", http_code, http_client.errorToString(http_code).c_str());
     http_client.end();
     return false;
   }
-  const auto json_error = deserializeJson(json_doc, http_client.getStream());
+  auto const json_error = deserializeJson(json_doc, http_client.getStream());
   http_client.end();
   if (json_error) {
     Serial.printf("*** json parsing failed: %s\n", json_error.c_str());
@@ -154,8 +155,8 @@ void print_astronauts_in_space_right_now(Stream& os) {
   DynamicJsonDocument json_doc(8 * 1024);
   if (!read_url_to_json_doc(url_astros, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
-  const auto people = json_doc["people"].as<JsonArray>();
-  for (const auto& p : people) {
+  auto const people = json_doc["people"].as<JsonArray>();
+  for (auto const& p : people) {
     os.println(p["name"].as<const char*>());
   }
   //const unsigned n = json_doc["number"].as<unsigned>();
@@ -169,9 +170,9 @@ void print_current_time_based_on_ip(Stream& os) {
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
   if (!read_url_to_json_doc(url_time_server, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
-  const auto date_time_raw = json_doc["datetime"].as<String>();
+  auto const date_time_raw = json_doc["datetime"].as<String>();
   //  "2023-08-31T16:32:47.653086+02:00" to "2023-08-31 16:32:47"
-  const auto date_time = date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19);
+  auto const date_time = date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19);
   os.println(date_time);
 }
 
@@ -246,10 +247,10 @@ void print_output_to_stream(Stream& os) {
 }
 
 // serve "/"
-void handle_web_server_root(const String& query, const std::vector<String>& headers, Stream& os) {
+void handle_web_server_root(String const& query, std::vector<String> const& headers, Stream& os) {
   os.print("<pre>query: ");
   os.println(query);
-  for (const auto& s : headers) {
+  for (auto const& s : headers) {
     os.println(s);
   }
 
@@ -257,10 +258,10 @@ void handle_web_server_root(const String& query, const std::vector<String>& head
 }
 
 // serve "/status"
-void handle_web_server_status(const String& query, const std::vector<String>& headers, Stream& os) {
+void handle_web_server_status(String const& query, std::vector<String> const& headers, Stream& os) {
   os.print("<pre>query: ");
   os.println(query);
-  for (const auto& s : headers) {
+  for (auto const& s : headers) {
     os.println(s);
   }
 
@@ -274,22 +275,21 @@ bool handle_web_server() {
     return false;
 
   // read first request line
-  const auto method = client.readStringUntil(' ');
-  const auto uri = client.readStringUntil(' ');
-  const auto version = client.readStringUntil('\r');
+  auto const method = client.readStringUntil(' ');
+  auto const uri = client.readStringUntil(' ');
+  auto const version = client.readStringUntil('\r');
   if (client.read() != '\n') {
     Serial.println("*** malformed http request");
     return false;
   }
 
-  const auto query_start_ix = uri.indexOf("?");
-  const auto path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
-  const auto query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
+  auto const query_start_ix = uri.indexOf("?");
+  auto const path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
+  auto const query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
 
   std::vector<String> headers;
   while (true) {
-    // Serial.println("*** reading header");
-    const auto line = client.readStringUntil('\r');
+    auto const line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");
       return false;

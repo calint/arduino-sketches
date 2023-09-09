@@ -13,16 +13,16 @@
 
 #include "secrets.h"  // defines WiFi login info 'secret_wifi_network' and 'secret_wifi_password'
 
-constexpr const char* url_time_server = "http://worldtimeapi.org/api/ip";
-constexpr const char* url_astros = "http://api.open-notify.org/astros.json";
-constexpr const char* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
+constexpr char const* url_time_server = "http://worldtimeapi.org/api/ip";
+constexpr char const* url_astros = "http://api.open-notify.org/astros.json";
+constexpr char const* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 
 WiFiServer web_server(80);
 
 #ifdef RASPBERRYPI_PICO
-const char* lookup_wifi_status_to_cstr(uint8_t const status) {
+char const* lookup_wifi_status_to_cstr(uint8_t const status) {
 #else
-const char* lookup_wifi_status_to_cstr(wl_status_t const status) {
+char const* lookup_wifi_status_to_cstr(wl_status_t const status) {
 #endif
   switch (status) {
     case WL_CONNECTED: return "connected";
@@ -113,7 +113,7 @@ void setup1() {
 }
 
 // returns true if request succeeded or false if something went wrong
-bool read_url_to_json_doc(const char* url, JsonDocument& json_doc) {
+bool read_url_to_json_doc(char const* url, JsonDocument& json_doc) {
   HTTPClient http_client;
   http_client.useHTTP10();
 #if defined(ARDUINO_NANO_ESP32)
@@ -157,11 +157,11 @@ void print_astronauts_in_space_right_now(Stream& os) {
   digitalWrite(LED_BUILTIN, HIGH);
   auto const people = json_doc["people"].as<JsonArray>();
   for (auto const& p : people) {
-    os.println(p["name"].as<const char*>());
+    os.println(p["name"].as<char const*>());
   }
   //const unsigned n = json_doc["number"].as<unsigned>();
   //for (unsigned i = 0; i < n; i++) {
-  //  Serial.println(json_people[i]["name"].as<const char*>());
+  //  Serial.println(json_people[i]["name"].as<char const*>());
   //}
 }
 
@@ -182,10 +182,10 @@ void print_random_programming_joke(Stream& os) {
   if (!read_url_to_json_doc(url_jokes, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   if (json_doc["type"].as<String>() == "single") {
-    os.println(json_doc["joke"].as<const char*>());
+    os.println(json_doc["joke"].as<char const*>());
   } else {
-    os.println(json_doc["setup"].as<const char*>());
-    os.println(json_doc["delivery"].as<const char*>());
+    os.println(json_doc["setup"].as<char const*>());
+    os.println(json_doc["delivery"].as<char const*>());
   }
 }
 

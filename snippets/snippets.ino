@@ -73,7 +73,8 @@ void setup() {
   Serial.println(" dBm");
   Serial.print("auto-reconnect: ");
   Serial.println(WiFi.getAutoReconnect() ? "yes" : "no");
-  // todo: check status and reconnect if WL_NO_SSID_AVAIL
+  // todo: check status and reconnect if not WL_CONNECTED
+  //       turning off wifi base station gives WL_NO_SSID_AVAIL 
   digitalWrite(LED_BUILTIN, HIGH);
 
   Preferences preferences;

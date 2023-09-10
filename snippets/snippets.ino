@@ -1,4 +1,8 @@
-// intended for 'arduino nano esp32'
+// intended for: Arduino Nano ESP32
+// developed in: Arduino IDE 2.2.1
+//        board: Arduino ESP32 Boards 2.0.12
+//    libraries: NTPClient 3.2.1
+//               ArduinoJson 6.21.3
 #include <WiFi.h>
 #include <NTPClient.h>
 #include <HTTPClient.h>
@@ -247,7 +251,7 @@ void handle_web_server_rgbled(String const& path, String const& query, std::vect
 
   os.println("<!doctype html><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta charset=utf-8><title>RGB Led</title>");
   os.print("<form>RGB Led: ");
-  
+
   os.print("<input type=checkbox name=r value=1 ");
   if (r) os.print("checked");
   os.print("> red ");

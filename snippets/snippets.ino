@@ -237,10 +237,15 @@ void handle_web_server_status(String const& path, String const& query, std::vect
 
 // serve "/rgbled"
 void handle_web_server_rgbled(String const& path, String const& query, std::vector<String> const& headers, Stream& os) {
-  os.println("<!doctype html><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta charset=utf-8><title>RGB Led</title>");
   bool const r = query.indexOf("r=1") != -1;
   bool const g = query.indexOf("g=1") != -1;
   bool const b = query.indexOf("b=1") != -1;
+
+  digitalWrite(LED_RED, r ? LOW : HIGH);
+  digitalWrite(LED_GREEN, g ? LOW : HIGH);
+  digitalWrite(LED_BLUE, b ? LOW : HIGH);
+
+  os.println("<!doctype html><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta charset=utf-8><title>RGB Led</title>");
   os.print("<form>RGB Led: ");
   os.print("<input type=checkbox name=r value=1 ");
   if (r) os.print("checked");
@@ -256,10 +261,6 @@ void handle_web_server_rgbled(String const& path, String const& query, std::vect
 
   os.print("<input type=submit value=apply>");
   os.print("</form>");
-
-  digitalWrite(LED_RED, r ? LOW : HIGH);
-  digitalWrite(LED_GREEN, g ? LOW : HIGH);
-  digitalWrite(LED_BLUE, b ? LOW : HIGH);
 }
 
 // returns true if a request was serviced or false if no client available

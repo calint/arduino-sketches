@@ -17,7 +17,7 @@ constexpr char const* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 
 WiFiServer web_server(80);
 
-char const* lookup_wifi_status_to_cstr(wl_status_t const status) {
+auto lookup_wifi_status_to_cstr(wl_status_t const status) -> char const* {
   switch (status) {
     case WL_CONNECTED: return "connected";
     case WL_NO_SHIELD: return "no shield";
@@ -31,20 +31,22 @@ char const* lookup_wifi_status_to_cstr(wl_status_t const status) {
   }
 }
 
-void hang() {
+auto hang() -> void {
   while (true) delay(10000);
 }
 
+auto loop1() -> void;
+
 // code to run on second core
 TaskHandle_t task_second_core;
-void func_second_core(void* vpParameter) {
+auto func_second_core(void* vpParameter) -> void {
   while (true) {
     loop1();
   }
 }
 
 // setup first core
-void setup() {
+auto setup() -> void {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
   Serial.begin(115200);
@@ -97,7 +99,7 @@ void setup() {
 }
 
 // returns true if request succeeded or false if something went wrong
-bool read_url_to_json_doc(char const* url, JsonDocument& json_doc) {
+auto read_url_to_json_doc(char const* url, JsonDocument& json_doc) -> bool {
   HTTPClient http_client;
   http_client.useHTTP10();
   http_client.setConnectTimeout(10000);
@@ -122,7 +124,7 @@ bool read_url_to_json_doc(char const* url, JsonDocument& json_doc) {
   return true;
 }
 
-void print_astronauts_in_space_right_now(Stream& os) {
+auto print_astronauts_in_space_right_now(Stream& os) -> void {
   digitalWrite(LED_BUILTIN, LOW);
   DynamicJsonDocument json_doc(8 * 1024);
   if (!read_url_to_json_doc(url_astros, json_doc)) return;
@@ -137,7 +139,7 @@ void print_astronauts_in_space_right_now(Stream& os) {
   //}
 }
 
-void print_current_time_based_on_ip(Stream& os) {
+auto print_current_time_based_on_ip(Stream& os) -> void {
   digitalWrite(LED_BUILTIN, LOW);
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
   if (!read_url_to_json_doc(url_time_server, json_doc)) return;
@@ -148,7 +150,7 @@ void print_current_time_based_on_ip(Stream& os) {
   os.println(date_time);
 }
 
-void print_random_programming_joke(Stream& os) {
+auto print_random_programming_joke(Stream& os) -> void {
   digitalWrite(LED_BUILTIN, LOW);
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
   if (!read_url_to_json_doc(url_jokes, json_doc)) return;
@@ -161,7 +163,7 @@ void print_random_programming_joke(Stream& os) {
   }
 }
 
-void print_current_time_from_ntp(Stream& os) {
+auto print_current_time_from_ntp(Stream& os) -> void {
   WiFiUDP ntp_udp;
   NTPClient ntp_client(ntp_udp);  // default 'pool.ntp.org', 60 seconds update interval, no offset
   digitalWrite(LED_BUILTIN, LOW);
@@ -170,18 +172,18 @@ void print_current_time_from_ntp(Stream& os) {
   os.println(ntp_client.getFormattedTime());
 }
 
-void print_web_server_ip(Stream& os) {
+auto print_web_server_ip(Stream& os) -> void {
   os.println(WiFi.localIP().toString().c_str());
 }
 
-void print_wifi_status(Stream& os) {
+auto print_wifi_status(Stream& os) -> void {
   os.print(lookup_wifi_status_to_cstr(WiFi.status()));
   os.print(" ");
   os.print(WiFi.RSSI());
   os.println(" dBm");
 }
 
-void print_heap_info(Stream& os) {
+auto print_heap_info(Stream& os) -> void {
   os.print("used: ");
   // os.printf("total: %u B\n", ESP.getHeapSize());
   // os.printf(" free: %u B\n", ESP.getFreeHeap());
@@ -190,7 +192,7 @@ void print_heap_info(Stream& os) {
   os.println(" B");
 }
 
-void print_output_to_stream(Stream& os) {
+auto print_output_to_stream(Stream& os) -> void {
   os.println("\ncurrent time based on ip:");
   print_current_time_based_on_ip(os);
 
@@ -214,7 +216,7 @@ void print_output_to_stream(Stream& os) {
 }
 
 // serve "/"
-void handle_web_server_root(String const& path, String const& query, std::vector<String> const& headers, Stream& os) {
+auto handle_web_server_root(String const& path, String const& query, std::vector<String> const& headers, Stream& os) -> void {
   os.print("<pre>path: ");
   os.println(path);
   os.print("query: ");
@@ -227,7 +229,7 @@ void handle_web_server_root(String const& path, String const& query, std::vector
 }
 
 // serve "/status"
-void handle_web_server_status(String const& path, String const& query, std::vector<String> const& headers, Stream& os) {
+auto handle_web_server_status(String const& path, String const& query, std::vector<String> const& headers, Stream& os) -> void {
   os.print("<pre>path: ");
   os.println(path);
   os.print("query: ");
@@ -240,7 +242,7 @@ void handle_web_server_status(String const& path, String const& query, std::vect
 }
 
 // serve "/rgbled"
-void handle_web_server_rgbled(String const& path, String const& query, std::vector<String> const& headers, Stream& os) {
+auto handle_web_server_rgbled(String const& path, String const& query, std::vector<String> const& headers, Stream& os) -> void {
   bool const r = query.indexOf("r=1") != -1;
   bool const g = query.indexOf("g=1") != -1;
   bool const b = query.indexOf("b=1") != -1;
@@ -269,7 +271,7 @@ void handle_web_server_rgbled(String const& path, String const& query, std::vect
 }
 
 // returns true if a request was serviced or false if no client available
-bool handle_web_server() {
+auto handle_web_server() -> bool {
   WiFiClient client = web_server.available();
   if (!client)
     return false;
@@ -327,13 +329,13 @@ bool handle_web_server() {
 }
 
 // loop on first core
-void loop() {
+auto loop() -> void {
   print_output_to_stream(Serial);
   // delay(10000);
 }
 
 // loop on second core
-void loop1() {
+auto loop1() -> void {
   while (handle_web_server())
     ;
   delay(100);  // slightly less busy wait

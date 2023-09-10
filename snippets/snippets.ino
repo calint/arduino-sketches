@@ -235,13 +235,40 @@ void handle_web_server_status(String const& path, String const& query, std::vect
   print_output_to_stream(os);
 }
 
+// serve "/rgbled"
+void handle_web_server_rgbled(String const& path, String const& query, std::vector<String> const& headers, Stream& os) {
+  os.println("<!doctype html><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta charset=utf-8><title>RGB Led</title>");
+  bool const r = query.indexOf("r=1") != -1;
+  bool const g = query.indexOf("g=1") != -1;
+  bool const b = query.indexOf("b=1") != -1;
+  os.print("<form>RGB Led: ");
+  os.print("<input type=checkbox name=r value=1 ");
+  if (r) os.print("checked");
+  os.print("> red ");
+
+  os.print("<input type=checkbox name=g value=1 ");
+  if (g) os.print("checked");
+  os.print("> green ");
+
+  os.print("<input type=checkbox name=b value=1 ");
+  if (b) os.print("checked");
+  os.print("> blue ");
+
+  os.print("<input type=submit value=apply>");
+  os.print("</form>");
+
+  digitalWrite(LED_RED, r ? LOW : HIGH);
+  digitalWrite(LED_GREEN, g ? LOW : HIGH);
+  digitalWrite(LED_BLUE, b ? LOW : HIGH);
+}
+
 // returns true if a request was serviced or false if no client available
 bool handle_web_server() {
   WiFiClient client = web_server.available();
   if (!client)
     return false;
 
-//  digitalWrite(LED_GREEN, LOW);  // turn on green led
+  //  digitalWrite(LED_GREEN, LOW);  // turn on green led
 
   // read first request line
   auto const method = client.readStringUntil(' ');
@@ -278,6 +305,8 @@ bool handle_web_server() {
     handle_web_server_root(path, query, headers, client);
   } else if (path == "/status") {
     handle_web_server_status(path, query, headers, client);
+  } else if (path == "/rgbled") {
+    handle_web_server_rgbled(path, query, headers, client);
   } else {
     client.print("unknown path '");
     client.print(path);

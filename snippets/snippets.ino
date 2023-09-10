@@ -331,7 +331,7 @@ auto handle_web_server() -> bool {
 // loop on first core
 auto loop() -> void {
   print_output_to_stream(Serial);
-  // delay(10000);
+  delay(10000);
 }
 
 // loop on second core

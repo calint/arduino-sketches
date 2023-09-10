@@ -251,7 +251,7 @@ auto handle_web_server_rgbled(String const& path, String const& query, std::vect
   digitalWrite(LED_GREEN, g ? LOW : HIGH);
   digitalWrite(LED_BLUE, b ? LOW : HIGH);
 
-  os.println("<!doctype html><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta charset=utf-8><title>RGB Led</title>");
+  os.println("<!doctype html><meta name=viewport content=\"width=device-width,initial-scale=1\"><meta charset=utf-8><style>*{font-family:monospace}</style><title>RGB Led</title>");
   os.print("<form>RGB Led: ");
 
   os.print("<input type=checkbox name=r value=1 ");

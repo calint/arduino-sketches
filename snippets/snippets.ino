@@ -129,14 +129,10 @@ auto print_astronauts_in_space_right_now(Stream& os) -> void {
   DynamicJsonDocument json_doc(8 * 1024);
   if (!read_url_to_json_doc(url_astros, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
-  auto const people = json_doc["people"].as<JsonArray>();
+  auto const& people = json_doc["people"].as<JsonArray>();
   for (auto const& p : people) {
     os.println(p["name"].as<char const*>());
   }
-  //const unsigned n = json_doc["number"].as<unsigned>();
-  //for (unsigned i = 0; i < n; i++) {
-  //  Serial.println(json_people[i]["name"].as<char const*>());
-  //}
 }
 
 auto print_current_time_based_on_ip(Stream& os) -> void {
@@ -144,9 +140,9 @@ auto print_current_time_based_on_ip(Stream& os) -> void {
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
   if (!read_url_to_json_doc(url_time_server, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
-  auto const date_time_raw = json_doc["datetime"].as<String>();
+  auto const& date_time_raw = json_doc["datetime"].as<String>();
   //  "2023-08-31T16:32:47.653086+02:00" to "2023-08-31 16:32:47"
-  auto const date_time = date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19);
+  auto const& date_time = date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19);
   os.println(date_time);
 }
 
@@ -279,9 +275,9 @@ auto handle_web_server() -> bool {
   //  digitalWrite(LED_GREEN, LOW);  // turn on green led
 
   // read first request line
-  auto const method = client.readStringUntil(' ');
-  auto const uri = client.readStringUntil(' ');
-  auto const version = client.readStringUntil('\r');
+  auto const& method = client.readStringUntil(' ');
+  auto const& uri = client.readStringUntil(' ');
+  auto const& version = client.readStringUntil('\r');
   if (client.read() != '\n') {
     Serial.println("*** malformed http request");
     // digitalWrite(LED_GREEN, HIGH);
@@ -289,12 +285,12 @@ auto handle_web_server() -> bool {
   }
 
   auto const query_start_ix = uri.indexOf("?");
-  auto const path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
-  auto const query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
+  auto const& path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
+  auto const& query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
 
   std::vector<String> headers;
   while (true) {
-    auto const line = client.readStringUntil('\r');
+    auto const& line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");
       // digitalWrite(LED_GREEN, HIGH);

@@ -17,7 +17,7 @@ constexpr char const* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 
 WiFiServer web_server(80);
 
-auto lookup_wifi_status_to_cstr(wl_status_t const status) -> char const* {
+auto lookup_wifi_status_to_cstr(wl_status_t const& status) -> char const* {
   switch (status) {
     case WL_CONNECTED: return "connected";
     case WL_NO_SHIELD: return "no shield";
@@ -109,13 +109,13 @@ auto read_url_to_json_doc(char const* url, JsonDocument& json_doc) -> bool {
     Serial.printf("*** unable to connect to %s\n", url);
     return false;
   }
-  auto const http_code = http_client.GET();
+  auto const& http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
     Serial.printf("*** GET error: %d: %s\n", http_code, http_client.errorToString(http_code).c_str());
     http_client.end();
     return false;
   }
-  auto const json_error = deserializeJson(json_doc, http_client.getStream());
+  auto const& json_error = deserializeJson(json_doc, http_client.getStream());
   http_client.end();
   if (json_error) {
     Serial.printf("*** json parsing failed: %s\n", json_error.c_str());
@@ -239,9 +239,9 @@ auto handle_web_server_status(String const& path, String const& query, std::vect
 
 // serve "/rgbled"
 auto handle_web_server_rgbled(String const& path, String const& query, std::vector<String> const& headers, Stream& os) -> void {
-  bool const r = query.indexOf("r=1") != -1;
-  bool const g = query.indexOf("g=1") != -1;
-  bool const b = query.indexOf("b=1") != -1;
+  bool const& r = query.indexOf("r=1") != -1;
+  bool const& g = query.indexOf("g=1") != -1;
+  bool const& b = query.indexOf("b=1") != -1;
 
   digitalWrite(LED_RED, r ? LOW : HIGH);
   digitalWrite(LED_GREEN, g ? LOW : HIGH);
@@ -275,22 +275,22 @@ auto handle_web_server() -> bool {
   //  digitalWrite(LED_GREEN, LOW);  // turn on green led
 
   // read first request line
-  auto const method = client.readStringUntil(' ');
-  auto const uri = client.readStringUntil(' ');
-  auto const version = client.readStringUntil('\r');
+  auto const& method = client.readStringUntil(' ');
+  auto const& uri = client.readStringUntil(' ');
+  auto const& version = client.readStringUntil('\r');
   if (client.read() != '\n') {
     Serial.println("*** malformed http request");
     // digitalWrite(LED_GREEN, HIGH);
     return false;
   }
 
-  auto const query_start_ix = uri.indexOf("?");
-  auto const path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
-  auto const query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
+  auto const& query_start_ix = uri.indexOf("?");
+  auto const& path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
+  auto const& query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
 
   std::vector<String> headers;
   while (true) {
-    auto const line = client.readStringUntil('\r');
+    auto const& line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");
       // digitalWrite(LED_GREEN, HIGH);

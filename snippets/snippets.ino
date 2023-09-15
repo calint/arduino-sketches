@@ -57,8 +57,8 @@ auto setup() -> void {
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(secret_wifi_network, secret_wifi_password);
-  while (WiFi.status() != WL_CONNECTED) {
-    switch (WiFi.status()) {
+  for (auto sts = WiFi.status(); sts != WL_CONNECTED; sts = WiFi.status()) {
+    switch (sts) {
       case WL_CONNECT_FAILED:
         Serial.println("\n*** connection to wifi failed");
         hang();

@@ -13,14 +13,15 @@
 
 #define let auto const&
 #define var auto
+#define cstr char const*
 
-constexpr char const* url_time_server = "http://worldtimeapi.org/api/ip";
-constexpr char const* url_astros = "http://api.open-notify.org/astros.json";
-constexpr char const* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
+constexpr cstr url_time_server = "http://worldtimeapi.org/api/ip";
+constexpr cstr url_astros = "http://api.open-notify.org/astros.json";
+constexpr cstr url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 
 WiFiServer web_server(80);
 
-auto lookup_wifi_status_to_cstr(wl_status_t const& status) -> char const* {
+auto lookup_wifi_status_to_cstr(wl_status_t const& status) -> cstr {
   switch (status) {
     case WL_CONNECTED: return "connected";
     case WL_NO_SHIELD: return "no shield";
@@ -102,7 +103,7 @@ auto setup() -> void {
 }
 
 // returns true if request succeeded or false if something went wrong
-auto read_url_to_json_doc(char const* url, JsonDocument& json_doc) -> bool {
+auto read_url_to_json_doc(cstr url, JsonDocument& json_doc) -> bool {
   HTTPClient http_client;
   http_client.useHTTP10();
   http_client.setConnectTimeout(10000);
@@ -134,7 +135,7 @@ auto print_astronauts_in_space_right_now(Stream& os) -> void {
   digitalWrite(LED_BUILTIN, HIGH);
   let people = json_doc["people"].as<JsonArray>();
   for (let p : people) {
-    os.println(p["name"].as<char const*>());
+    os.println(p["name"].as<cstr>());
   }
 }
 
@@ -155,10 +156,10 @@ auto print_random_programming_joke(Stream& os) -> void {
   if (!read_url_to_json_doc(url_jokes, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
   if (json_doc["type"].as<String>() == "single") {
-    os.println(json_doc["joke"].as<char const*>());
+    os.println(json_doc["joke"].as<cstr>());
   } else {
-    os.println(json_doc["setup"].as<char const*>());
-    os.println(json_doc["delivery"].as<char const*>());
+    os.println(json_doc["setup"].as<cstr>());
+    os.println(json_doc["delivery"].as<cstr>());
   }
 }
 

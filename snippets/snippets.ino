@@ -13,6 +13,7 @@
 #define var auto
 #define cstr char const*
 #define fn auto
+#define lp while (true)
 
 #include "secrets.h"  // defines WiFi login info 'secret_wifi_network' and 'secret_wifi_password'
 
@@ -22,7 +23,7 @@ constexpr cstr url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 
 WiFiServer web_server(80);
 
-fn lookup_wifi_status_to_cstr(wl_status_t const& status) -> cstr {
+fn lookup_wifi_status_to_cstr(wl_status_t const& status)->cstr {
   switch (status) {
     case WL_CONNECTED: return "connected";
     case WL_NO_SHIELD: return "no shield";
@@ -36,22 +37,20 @@ fn lookup_wifi_status_to_cstr(wl_status_t const& status) -> cstr {
   }
 }
 
-fn hang() -> void {
-  while (true) delay(10000);
+fn hang()->void {
+  lp delay(10000);
 }
 
-fn loop1() -> void;
+fn loop1()->void;
 
 // code to run on second core
 TaskHandle_t task_second_core;
-fn func_second_core(void* vpParameter) -> void {
-  while (true) {
-    loop1();
-  }
+fn func_second_core(void* vpParameter)->void {
+  lp loop1();
 }
 
 // setup first core
-fn setup() -> void {
+fn setup()->void {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
   Serial.begin(115200);
@@ -104,7 +103,7 @@ fn setup() -> void {
 }
 
 // returns true if request succeeded or false if something went wrong
-fn read_url_to_json_doc(cstr url, JsonDocument& json_doc) -> bool {
+fn read_url_to_json_doc(cstr url, JsonDocument& json_doc)->bool {
   HTTPClient http_client;
   http_client.useHTTP10();
   http_client.setConnectTimeout(10000);
@@ -129,7 +128,7 @@ fn read_url_to_json_doc(cstr url, JsonDocument& json_doc) -> bool {
   return true;
 }
 
-fn print_astronauts_in_space_right_now(Stream& os) -> void {
+fn print_astronauts_in_space_right_now(Stream& os)->void {
   digitalWrite(LED_BUILTIN, LOW);
   DynamicJsonDocument json_doc(8 * 1024);
   if (!read_url_to_json_doc(url_astros, json_doc)) return;
@@ -140,7 +139,7 @@ fn print_astronauts_in_space_right_now(Stream& os) -> void {
   }
 }
 
-fn print_current_time_based_on_ip(Stream& os) -> void {
+fn print_current_time_based_on_ip(Stream& os)->void {
   digitalWrite(LED_BUILTIN, LOW);
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
   if (!read_url_to_json_doc(url_time_server, json_doc)) return;
@@ -151,7 +150,7 @@ fn print_current_time_based_on_ip(Stream& os) -> void {
   os.println(date_time);
 }
 
-fn print_random_programming_joke(Stream& os) -> void {
+fn print_random_programming_joke(Stream& os)->void {
   digitalWrite(LED_BUILTIN, LOW);
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
   if (!read_url_to_json_doc(url_jokes, json_doc)) return;
@@ -164,7 +163,7 @@ fn print_random_programming_joke(Stream& os) -> void {
   }
 }
 
-fn print_current_time_from_ntp(Stream& os) -> void {
+fn print_current_time_from_ntp(Stream& os)->void {
   WiFiUDP ntp_udp;
   NTPClient ntp_client(ntp_udp);  // default 'pool.ntp.org', 60 seconds update interval, no offset
   digitalWrite(LED_BUILTIN, LOW);
@@ -173,18 +172,18 @@ fn print_current_time_from_ntp(Stream& os) -> void {
   os.println(ntp_client.getFormattedTime());
 }
 
-fn print_web_server_ip(Stream& os) -> void {
+fn print_web_server_ip(Stream& os)->void {
   os.println(WiFi.localIP().toString().c_str());
 }
 
-fn print_wifi_status(Stream& os) -> void {
+fn print_wifi_status(Stream& os)->void {
   os.print(lookup_wifi_status_to_cstr(WiFi.status()));
   os.print(" ");
   os.print(WiFi.RSSI());
   os.println(" dBm");
 }
 
-fn print_heap_info(Stream& os) -> void {
+fn print_heap_info(Stream& os)->void {
   os.print("used: ");
   // os.printf("total: %u B\n", ESP.getHeapSize());
   // os.printf(" free: %u B\n", ESP.getFreeHeap());
@@ -193,7 +192,7 @@ fn print_heap_info(Stream& os) -> void {
   os.println(" B");
 }
 
-fn print_output_to_stream(Stream& os) -> void {
+fn print_output_to_stream(Stream& os)->void {
   os.println("\ncurrent time based on ip:");
   print_current_time_based_on_ip(os);
 
@@ -217,7 +216,7 @@ fn print_output_to_stream(Stream& os) -> void {
 }
 
 // serve "/"
-fn handle_web_server_root(String const& path, String const& query, std::vector<String> const& headers, Stream& os) -> void {
+fn handle_web_server_root(String const& path, String const& query, std::vector<String> const& headers, Stream& os)->void {
   os.print("<pre>path: ");
   os.println(path);
   os.print("query: ");
@@ -230,7 +229,7 @@ fn handle_web_server_root(String const& path, String const& query, std::vector<S
 }
 
 // serve "/status"
-fn handle_web_server_status(String const& path, String const& query, std::vector<String> const& headers, Stream& os) -> void {
+fn handle_web_server_status(String const& path, String const& query, std::vector<String> const& headers, Stream& os)->void {
   os.print("<pre>path: ");
   os.println(path);
   os.print("query: ");
@@ -243,7 +242,7 @@ fn handle_web_server_status(String const& path, String const& query, std::vector
 }
 
 // serve "/rgbled"
-fn handle_web_server_rgbled(String const& path, String const& query, std::vector<String> const& headers, Stream& os) -> void {
+fn handle_web_server_rgbled(String const& path, String const& query, std::vector<String> const& headers, Stream& os)->void {
   let r = query.indexOf("r=1") != -1;
   let g = query.indexOf("g=1") != -1;
   let b = query.indexOf("b=1") != -1;
@@ -272,7 +271,7 @@ fn handle_web_server_rgbled(String const& path, String const& query, std::vector
 }
 
 // returns true if a request was serviced or false if no client available
-fn handle_web_server() -> bool {
+fn handle_web_server()->bool {
   WiFiClient client = web_server.available();
   if (!client)
     return false;
@@ -294,7 +293,7 @@ fn handle_web_server() -> bool {
   let query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
 
   std::vector<String> headers;
-  while (true) {
+  lp {
     let line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");
@@ -330,13 +329,13 @@ fn handle_web_server() -> bool {
 }
 
 // loop on first core
-fn loop() -> void {
+fn loop()->void {
   print_output_to_stream(Serial);
   delay(10000);
 }
 
 // loop on second core
-fn loop1() -> void {
+fn loop1()->void {
   while (handle_web_server())
     ;
   delay(100);  // slightly less busy wait

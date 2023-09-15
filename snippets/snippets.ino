@@ -11,6 +11,9 @@
 
 #include "secrets.h"  // defines WiFi login info 'secret_wifi_network' and 'secret_wifi_password'
 
+#define let auto const&
+#define var auto
+
 constexpr char const* url_time_server = "http://worldtimeapi.org/api/ip";
 constexpr char const* url_astros = "http://api.open-notify.org/astros.json";
 constexpr char const* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
@@ -57,7 +60,7 @@ auto setup() -> void {
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(secret_wifi_network, secret_wifi_password);
-  for (auto sts = WiFi.status(); sts != WL_CONNECTED; sts = WiFi.status()) {
+  for (var sts = WiFi.status(); sts != WL_CONNECTED; sts = WiFi.status()) {
     switch (sts) {
       case WL_CONNECT_FAILED:
         Serial.println("\n*** connection to wifi failed");
@@ -85,7 +88,7 @@ auto setup() -> void {
 
   Preferences preferences;
   preferences.begin("store", false);
-  unsigned boot_count = preferences.getUInt("boot_count", 0);
+  var boot_count = preferences.getUInt("boot_count", 0);
   boot_count++;
   Serial.printf("boot count: %u\n", boot_count);
   preferences.putUInt("boot_count", boot_count);
@@ -109,13 +112,13 @@ auto read_url_to_json_doc(char const* url, JsonDocument& json_doc) -> bool {
     Serial.printf("*** unable to connect to %s\n", url);
     return false;
   }
-  auto const& http_code = http_client.GET();
+  let http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
     Serial.printf("*** GET error: %d: %s\n", http_code, http_client.errorToString(http_code).c_str());
     http_client.end();
     return false;
   }
-  auto const& json_error = deserializeJson(json_doc, http_client.getStream());
+  let json_error = deserializeJson(json_doc, http_client.getStream());
   http_client.end();
   if (json_error) {
     Serial.printf("*** json parsing failed: %s\n", json_error.c_str());
@@ -129,8 +132,8 @@ auto print_astronauts_in_space_right_now(Stream& os) -> void {
   DynamicJsonDocument json_doc(8 * 1024);
   if (!read_url_to_json_doc(url_astros, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
-  auto const& people = json_doc["people"].as<JsonArray>();
-  for (auto const& p : people) {
+  let people = json_doc["people"].as<JsonArray>();
+  for (let p : people) {
     os.println(p["name"].as<char const*>());
   }
 }
@@ -140,9 +143,9 @@ auto print_current_time_based_on_ip(Stream& os) -> void {
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
   if (!read_url_to_json_doc(url_time_server, json_doc)) return;
   digitalWrite(LED_BUILTIN, HIGH);
-  auto const& date_time_raw = json_doc["datetime"].as<String>();
+  let date_time_raw = json_doc["datetime"].as<String>();
   //  "2023-08-31T16:32:47.653086+02:00" to "2023-08-31 16:32:47"
-  auto const& date_time = date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19);
+  let date_time = date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19);
   os.println(date_time);
 }
 
@@ -217,7 +220,7 @@ auto handle_web_server_root(String const& path, String const& query, std::vector
   os.println(path);
   os.print("query: ");
   os.println(query);
-  for (auto const& s : headers) {
+  for (let s : headers) {
     os.println(s);
   }
 
@@ -230,7 +233,7 @@ auto handle_web_server_status(String const& path, String const& query, std::vect
   os.println(path);
   os.print("query: ");
   os.println(query);
-  for (auto const& s : headers) {
+  for (let s : headers) {
     os.println(s);
   }
 
@@ -239,9 +242,9 @@ auto handle_web_server_status(String const& path, String const& query, std::vect
 
 // serve "/rgbled"
 auto handle_web_server_rgbled(String const& path, String const& query, std::vector<String> const& headers, Stream& os) -> void {
-  bool const& r = query.indexOf("r=1") != -1;
-  bool const& g = query.indexOf("g=1") != -1;
-  bool const& b = query.indexOf("b=1") != -1;
+  let r = query.indexOf("r=1") != -1;
+  let g = query.indexOf("g=1") != -1;
+  let b = query.indexOf("b=1") != -1;
 
   digitalWrite(LED_RED, r ? LOW : HIGH);
   digitalWrite(LED_GREEN, g ? LOW : HIGH);
@@ -275,22 +278,22 @@ auto handle_web_server() -> bool {
   //  digitalWrite(LED_GREEN, LOW);  // turn on green led
 
   // read first request line
-  auto const& method = client.readStringUntil(' ');
-  auto const& uri = client.readStringUntil(' ');
-  auto const& version = client.readStringUntil('\r');
+  let method = client.readStringUntil(' ');
+  let uri = client.readStringUntil(' ');
+  let version = client.readStringUntil('\r');
   if (client.read() != '\n') {
     Serial.println("*** malformed http request");
     // digitalWrite(LED_GREEN, HIGH);
     return false;
   }
 
-  auto const& query_start_ix = uri.indexOf("?");
-  auto const& path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
-  auto const& query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
+  let query_start_ix = uri.indexOf("?");
+  let path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
+  let query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
 
   std::vector<String> headers;
   while (true) {
-    auto const& line = client.readStringUntil('\r');
+    let line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");
       // digitalWrite(LED_GREEN, HIGH);

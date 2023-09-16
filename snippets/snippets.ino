@@ -276,15 +276,12 @@ fn handle_web_server()->bool {
   if (!client)
     return false;
 
-  //  digitalWrite(LED_GREEN, LOW);  // turn on green led
-
   // read first request line
   let method = client.readStringUntil(' ');
   let uri = client.readStringUntil(' ');
   let version = client.readStringUntil('\r');
   if (client.read() != '\n') {
     Serial.println("*** malformed http request");
-    // digitalWrite(LED_GREEN, HIGH);
     return false;
   }
 
@@ -298,7 +295,6 @@ fn handle_web_server()->bool {
     let line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");
-      // digitalWrite(LED_GREEN, HIGH);
       return false;
     }
     if (line.length() == 0)
@@ -323,8 +319,6 @@ fn handle_web_server()->bool {
   }
 
   client.stop();
-
-  // digitalWrite(LED_GREEN, HIGH); // turn off green led
 
   return true;
 }

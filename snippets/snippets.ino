@@ -57,18 +57,18 @@ fn setup()->void {
   while (!Serial && millis() < 10000)
     delay(100);  // wait max 10 seconds for serial over usb
 
-  Serial.printf("\nconnecting to '%s' with '%s'\n", secret_wifi_network, secret_wifi_password);
+  Serial.printf("\r\nconnecting to '%s' with '%s'\n", secret_wifi_network, secret_wifi_password);
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(secret_wifi_network, secret_wifi_password);
   for (var sts = WiFi.status(); sts != WL_CONNECTED; sts = WiFi.status()) {
     switch (sts) {
       case WL_CONNECT_FAILED:
-        Serial.println("\n*** connection to wifi failed");
+        Serial.println("\r\n*** connection to wifi failed");
         hang();
         break;
       case WL_NO_SSID_AVAIL:
-        Serial.println("\n*** network not found or wrong password");
+        Serial.println("\r\n*** network not found or wrong password");
         hang();
         break;
       default: break;
@@ -76,7 +76,7 @@ fn setup()->void {
     Serial.print(".");
     delay(500);
   }
-  Serial.print("\nconnected\nip: ");
+  Serial.print("\r\nconnected\nip: ");
   Serial.println(WiFi.localIP().toString().c_str());
   Serial.print("signal strength: ");
   Serial.print(WiFi.RSSI());
@@ -193,25 +193,25 @@ fn print_heap_info(Stream& os)->void {
 }
 
 fn print_output_to_stream(Stream& os)->void {
-  os.println("\ncurrent time based on ip:");
+  os.println("\r\ncurrent time based on ip:");
   print_current_time_based_on_ip(os);
 
-  os.println("\ncurrent time in utc from ntp:");
+  os.println("\r\ncurrent time in utc from ntp:");
   print_current_time_from_ntp(os);
 
-  os.println("\nastronauts in space right now:");
+  os.println("\r\nastronauts in space right now:");
   print_astronauts_in_space_right_now(os);
 
-  os.println("\nprogramming joke:");
+  os.println("\r\nprogramming joke:");
   print_random_programming_joke(os);
 
-  os.println("\nweb server ip:");
+  os.println("\r\nweb server ip:");
   print_web_server_ip(os);
 
-  os.println("\nwifi status: ");
+  os.println("\r\nwifi status: ");
   print_wifi_status(os);
 
-  os.println("\nheap info:");
+  os.println("\r\nheap info:");
   print_heap_info(os);
 }
 
@@ -293,7 +293,8 @@ fn handle_web_server()->bool {
   let query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
 
   std::vector<String> headers;
-  lp {  // ? set a maximum number of headers condition
+  var nheaders = 32;  // maximum number of headers
+  while (nheaders--) {
     let line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");

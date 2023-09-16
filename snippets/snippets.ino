@@ -76,7 +76,7 @@ fn setup()->void {
     Serial.print(".");
     delay(500);
   }
-  Serial.print("\r\nconnected\nip: ");
+  Serial.print("\r\nconnected\r\nip: ");
   Serial.println(WiFi.localIP().toString().c_str());
   Serial.print("signal strength: ");
   Serial.print(WiFi.RSSI());

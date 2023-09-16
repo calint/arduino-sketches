@@ -1,6 +1,6 @@
 // intended for: Arduino Nano ESP32
 // developed in: Arduino IDE 2.2.1
-//        board: Arduino ESP32 Boards 2.0.12
+//        board: Arduino ESP32 Boards 2.0.13
 //    libraries: NTPClient 3.2.1
 //               ArduinoJson 6.21.3
 #include <WiFi.h>

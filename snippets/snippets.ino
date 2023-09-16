@@ -57,7 +57,7 @@ fn setup()->void {
   while (!Serial && millis() < 10000)
     delay(100);  // wait max 10 seconds for serial over usb
 
-  Serial.printf("\r\nconnecting to '%s' with '%s'\n", secret_wifi_network, secret_wifi_password);
+  Serial.printf("\r\nconnecting to '%s' with '%s'\r\n", secret_wifi_network, secret_wifi_password);
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(secret_wifi_network, secret_wifi_password);

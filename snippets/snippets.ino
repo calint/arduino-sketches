@@ -293,7 +293,7 @@ fn handle_web_server()->bool {
   let query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
 
   std::vector<String> headers;
-  lp {
+  lp { // ? set a maximum number of headers condition
     let line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");

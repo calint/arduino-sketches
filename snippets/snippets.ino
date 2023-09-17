@@ -11,7 +11,7 @@
 
 #define let auto const&
 #define var auto
-#define cstr char const*
+#define cstr const char*
 #define fn auto
 #define lp while (true)
 

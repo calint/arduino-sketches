@@ -290,8 +290,9 @@ fn handle_web_server()->bool {
   let query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
 
   std::vector<String> headers;
-  var nheaders = 32;  // maximum number of headers
-  while (nheaders--) {
+  // var nheaders = 32;  // maximum number of headers
+  // while (nheaders--) {
+  lp {
     let line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");

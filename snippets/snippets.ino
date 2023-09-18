@@ -150,7 +150,7 @@ fn print_current_time_based_on_ip(Stream& os)->void {
 
   // note. the line below results in an empty string. why?
   // let date_time = date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19);
-
+  
   let date_time = (date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19)).c_str();
   // let date_time = String(date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19));
   os.println(date_time);

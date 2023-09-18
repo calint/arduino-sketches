@@ -13,7 +13,6 @@
 #define var auto
 #define cstr const char*
 #define fn auto
-#define lp while (true)
 
 #include "secrets.h"  // defines WiFi login info 'secret_wifi_network' and 'secret_wifi_password'
 
@@ -23,7 +22,7 @@ constexpr cstr url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 
 WiFiServer web_server(80);
 
-fn lookup_wifi_status_to_cstr(wl_status_t const& status)->cstr {
+fn lookup_wifi_status_to_cstr(wl_status_t const status)->cstr {
   switch (status) {
     case WL_CONNECTED: return "connected";
     case WL_NO_SHIELD: return "no shield";
@@ -38,7 +37,8 @@ fn lookup_wifi_status_to_cstr(wl_status_t const& status)->cstr {
 }
 
 fn hang()->void {
-  lp delay(10000);
+  while (true)
+    delay(10000);
 }
 
 fn loop1()->void;
@@ -46,7 +46,8 @@ fn loop1()->void;
 // code to run on second core
 TaskHandle_t task_second_core;
 fn func_second_core(void* vpParameter)->void {
-  lp loop1();
+  while (true)
+    loop1();
 }
 
 // setup first core
@@ -146,7 +147,11 @@ fn print_current_time_based_on_ip(Stream& os)->void {
   digitalWrite(LED_BUILTIN, HIGH);
   let date_time_raw = json_doc["datetime"].as<String>();
   //  "2023-08-31T16:32:47.653086+02:00" to "2023-08-31 16:32:47"
-  let date_time = date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19);
+
+  // note. the line below results in an empty string. why?
+  // let date_time = date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19);
+
+  let date_time = String(date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19));
   os.println(date_time);
 }
 
@@ -292,7 +297,7 @@ fn handle_web_server()->bool {
   std::vector<String> headers;
   // var nheaders = 32;  // maximum number of headers
   // while (nheaders--) {
-  lp {
+  while (true) {
     let line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");

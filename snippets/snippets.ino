@@ -130,8 +130,10 @@ fn read_url_to_json_doc(cstr url, JsonDocument& json_doc)->bool {
 
 fn print_astronauts_in_space_right_now(Stream& os)->void {
   digitalWrite(LED_BUILTIN, LOW);
-  DynamicJsonDocument json_doc(8 * 1024);
-  if (!read_url_to_json_doc(url_astros, json_doc)) return;
+  // DynamicJsonDocument json_doc(8 * 1024);
+  StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
+  if (!read_url_to_json_doc(url_astros, json_doc))
+    return;
   digitalWrite(LED_BUILTIN, HIGH);
   let people = json_doc["people"].as<JsonArray>();
   for (let p : people) {
@@ -142,7 +144,8 @@ fn print_astronauts_in_space_right_now(Stream& os)->void {
 fn print_current_time_based_on_ip(Stream& os)->void {
   digitalWrite(LED_BUILTIN, LOW);
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
-  if (!read_url_to_json_doc(url_time_server, json_doc)) return;
+  if (!read_url_to_json_doc(url_time_server, json_doc))
+    return;
   digitalWrite(LED_BUILTIN, HIGH);
   let date_time_raw = json_doc["datetime"].as<String>();
   //  "2023-08-31T16:32:47.653086+02:00" to "2023-08-31 16:32:47"
@@ -158,7 +161,8 @@ fn print_current_time_based_on_ip(Stream& os)->void {
 fn print_random_programming_joke(Stream& os)->void {
   digitalWrite(LED_BUILTIN, LOW);
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
-  if (!read_url_to_json_doc(url_jokes, json_doc)) return;
+  if (!read_url_to_json_doc(url_jokes, json_doc))
+    return;
   digitalWrite(LED_BUILTIN, HIGH);
   if (json_doc["type"].as<String>() == "single") {
     os.println(json_doc["joke"].as<cstr>());

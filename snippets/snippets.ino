@@ -179,7 +179,7 @@ fn print_current_time_from_ntp(Stream& os)->void {
 }
 
 fn print_web_server_ip(Stream& os)->void {
-  os.println(WiFi.localIP().toString().c_str());
+  os.println(WiFi.localIP().toString());
 }
 
 fn print_wifi_status(Stream& os)->void {
@@ -278,7 +278,7 @@ fn handle_web_server_rgbled(String const& path, String const& query, std::vector
 
 // returns true if a request was serviced or false if no client available
 fn handle_web_server()->bool {
-  WiFiClient client = web_server.available();
+  var client = web_server.available();
   if (!client)
     return false;
 

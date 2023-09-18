@@ -58,18 +58,18 @@ fn setup()->void {
   while (!Serial && millis() < 10000)
     delay(100);  // wait max 10 seconds for serial over usb
 
-  Serial.printf("\r\nconnecting to '%s' with '%s'\r\n", secret_wifi_network, secret_wifi_password);
+  Serial.printf("\nconnecting to '%s' with '%s'\n", secret_wifi_network, secret_wifi_password);
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(secret_wifi_network, secret_wifi_password);
   for (var sts = WiFi.status(); sts != WL_CONNECTED; sts = WiFi.status()) {
     switch (sts) {
       case WL_CONNECT_FAILED:
-        Serial.println("\r\n*** connection to wifi failed");
+        Serial.println("\n*** connection to wifi failed");
         hang();
         break;
       case WL_NO_SSID_AVAIL:
-        Serial.println("\r\n*** network not found or wrong password");
+        Serial.println("\n*** network not found or wrong password");
         hang();
         break;
       default: break;
@@ -77,7 +77,7 @@ fn setup()->void {
     Serial.print(".");
     delay(500);
   }
-  Serial.print("\r\nconnected\r\nip: ");
+  Serial.print("\nconnected\nip: ");
   Serial.println(WiFi.localIP().toString());
   Serial.print("signal strength: ");
   Serial.print(WiFi.RSSI());
@@ -91,7 +91,8 @@ fn setup()->void {
   Preferences prefs;
   prefs.begin("store");
   let boot_count = prefs.getUInt("boot_count", 0) + 1;
-  Serial.printf("boot count: %u\n", boot_count);
+  Serial.print("boot count: ");
+  Serial.println(boot_count);
   prefs.putUInt("boot_count", boot_count);
   prefs.end();
 
@@ -214,28 +215,28 @@ fn print_boot_count(Stream& os)->void {
 }
 
 fn print_output_to_stream(Stream& os)->void {
-  os.println("\r\ncurrent time based on ip:");
+  os.println("\ncurrent time based on ip:");
   print_current_time_based_on_ip(os);
 
-  os.println("\r\ncurrent time in utc from ntp:");
+  os.println("\ncurrent time in utc from ntp:");
   print_current_time_from_ntp(os);
 
-  os.println("\r\nastronauts in space right now:");
+  os.println("\nastronauts in space right now:");
   print_astronauts_in_space_right_now(os);
 
-  os.println("\r\nprogramming joke:");
+  os.println("\nprogramming joke:");
   print_random_programming_joke(os);
 
-  os.println("\r\nweb server ip:");
+  os.println("\nweb server ip:");
   print_web_server_ip(os);
 
-  os.println("\r\nwifi status: ");
+  os.println("\nwifi status: ");
   print_wifi_status(os);
 
-  os.println("\r\nstored in flash:");
+  os.println("\nstored in flash:");
   print_boot_count(os);
 
-  os.println("\r\nheap info:");
+  os.println("\nheap info:");
   print_heap_info(os);
 }
 

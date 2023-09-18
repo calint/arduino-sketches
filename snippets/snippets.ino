@@ -100,7 +100,7 @@ fn setup()->void {
   web_server.begin();
 
   // start second core
-  xTaskCreatePinnedToCore(func_second_core, "core1", 64 * 1024, NULL, 1, &task_second_core, !ARDUINO_RUNNING_CORE);
+  xTaskCreatePinnedToCore(func_second_core, "core1", 32 * 1024, NULL, 1, &task_second_core, !ARDUINO_RUNNING_CORE);
 }
 
 // returns true if request succeeded or false if something went wrong

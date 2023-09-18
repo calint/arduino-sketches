@@ -78,7 +78,7 @@ fn setup()->void {
     delay(500);
   }
   Serial.print("\r\nconnected\r\nip: ");
-  Serial.println(WiFi.localIP().toString().c_str());
+  Serial.println(WiFi.localIP().toString());
   Serial.print("signal strength: ");
   Serial.print(WiFi.RSSI());
   Serial.println(" dBm");
@@ -115,7 +115,10 @@ fn read_url_to_json_doc(cstr url, JsonDocument& json_doc)->bool {
   }
   let http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
-    Serial.printf("*** GET error: %d: %s\n", http_code, http_client.errorToString(http_code).c_str());
+    Serial.print("*** GET error: ");
+    Serial.print(http_code);
+    Serial.print(": ");
+    Serial.println(http_client.errorToString(http_code));
     http_client.end();
     return false;
   }

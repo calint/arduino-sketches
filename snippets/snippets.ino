@@ -176,7 +176,8 @@ fn print_current_time_from_ntp(Stream& os)->void {
   WiFiUDP ntp_udp;
   NTPClient ntp_client(ntp_udp);  // default 'pool.ntp.org', 60 seconds update interval, no offset
   digitalWrite(LED_BUILTIN, LOW);
-  ntp_client.update();
+  if (!ntp_client.update())
+    os.println("*** failed to update ntp client");
   digitalWrite(LED_BUILTIN, HIGH);
   os.println(ntp_client.getFormattedTime());
 }

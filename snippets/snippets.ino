@@ -88,13 +88,12 @@ fn setup()->void {
   //       turning off wifi base station gives WL_NO_SSID_AVAIL
   digitalWrite(LED_BUILTIN, HIGH);
 
-  Preferences preferences;
-  preferences.begin("store", false);
-  var boot_count = preferences.getUInt("boot_count", 0);
-  boot_count++;
+  Preferences prefs;
+  prefs.begin("store");
+  let boot_count = prefs.getUInt("boot_count", 0) + 1;
   Serial.printf("boot count: %u\n", boot_count);
-  preferences.putUInt("boot_count", boot_count);
-  preferences.end();
+  prefs.putUInt("boot_count", boot_count);
+  prefs.end();
 
   // setup second core
   web_server.begin();
@@ -198,6 +197,14 @@ fn print_heap_info(Stream& os)->void {
   os.println(" B");
 }
 
+fn print_boot_count(Stream& os)->void {
+  Preferences prefs;
+  prefs.begin("store", true);
+  os.print("boot count: ");
+  os.println(prefs.getUInt("boot_count", 0));
+  prefs.end();
+}
+
 fn print_output_to_stream(Stream& os)->void {
   os.println("\r\ncurrent time based on ip:");
   print_current_time_based_on_ip(os);
@@ -216,6 +223,9 @@ fn print_output_to_stream(Stream& os)->void {
 
   os.println("\r\nwifi status: ");
   print_wifi_status(os);
+
+  os.println("\r\nstored in flash:");
+  print_boot_count(os);
 
   os.println("\r\nheap info:");
   print_heap_info(os);

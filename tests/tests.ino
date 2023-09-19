@@ -9,11 +9,12 @@ struct Bar {
 };
 
 void setup() {
-  auto const& str1 = String("hello") + "!";
-  auto const str2 = String("world");
   Serial.begin(115200);
   while (!Serial)
     ;
+
+  auto const& str1 = String("hello") + "!";
+  auto const str2 = String("world");
   Serial.println(str1);
   Serial.println(str2);
 

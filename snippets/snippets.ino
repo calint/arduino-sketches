@@ -135,7 +135,9 @@ auto print_astronauts_in_space_right_now(Stream& os) -> void {
     return;
   digitalWrite(LED_BUILTIN, HIGH);
   auto const people = json_doc["people"].as<JsonArrayConst>();
-  for (auto const& p : people) {
+  for (auto const p : people) {
+    // note. not "auto const&" due to example at:
+    //       https://arduinojson.org/v6/api/jsonarray/begin_end/
     os.println(p["name"].as<const char*>());
   }
 }

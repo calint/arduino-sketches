@@ -134,7 +134,7 @@ auto print_astronauts_in_space_right_now(Stream& os) -> void {
   if (!read_url_to_json_doc(url_astros, json_doc))
     return;
   digitalWrite(LED_BUILTIN, HIGH);
-  auto const people = json_doc["people"].as<JsonArray>();
+  auto const people = json_doc["people"].as<JsonArrayConst>();
   for (auto const& p : people) {
     os.println(p["name"].as<const char*>());
   }

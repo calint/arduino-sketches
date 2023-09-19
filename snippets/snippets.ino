@@ -10,8 +10,8 @@
 #include <Preferences.h>
 
 #define let auto const&
-#define cstr const char*
 #define var auto
+#define cstr const char*
 
 #include "secrets.h"  // defines WiFi login info 'secret_wifi_network' and 'secret_wifi_password'
 

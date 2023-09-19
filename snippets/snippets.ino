@@ -15,6 +15,15 @@ constexpr const char* url_time_server = "http://worldtimeapi.org/api/ip";
 constexpr const char* url_astros = "http://api.open-notify.org/astros.json";
 constexpr const char* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 
+auto loop1() -> void;
+
+// code to run on second core
+TaskHandle_t task_second_core;
+auto func_second_core(void* vpParameter) -> void {
+  while (true)
+    loop1();
+}
+
 WiFiServer web_server(80);
 
 auto lookup_wifi_status_to_cstr(wl_status_t const status) -> const char* {
@@ -31,27 +40,9 @@ auto lookup_wifi_status_to_cstr(wl_status_t const status) -> const char* {
   }
 }
 
-auto hang() -> void {
-  while (true)
-    delay(10000);
-}
-
-auto loop1() -> void;
-
-// code to run on second core
-TaskHandle_t task_second_core;
-auto func_second_core(void* vpParameter) -> void {
-  while (true)
-    loop1();
-}
-
-// setup first core
-auto setup() -> void {
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, LOW);
-  Serial.begin(115200);
-  while (!Serial && millis() < 10000)
-    delay(100);  // wait max 10 seconds for serial over usb
+auto connect_to_wifi_if_disconnected() -> bool {
+  if (WiFi.status() == WL_CONNECTED)
+    return true;
 
   Serial.printf("\nconnecting to '%s' with '%s'\n", secret_wifi_network, secret_wifi_password);
 
@@ -61,12 +52,10 @@ auto setup() -> void {
     switch (sts) {
       case WL_CONNECT_FAILED:
         Serial.println("\n*** connection to wifi failed");
-        hang();
-        break;
+        return false;
       case WL_NO_SSID_AVAIL:
         Serial.println("\n*** network not found or wrong password");
-        hang();
-        break;
+        return false;
       default: break;
     }
     Serial.print(".");
@@ -79,8 +68,19 @@ auto setup() -> void {
   Serial.println(" dBm");
   Serial.print("auto-reconnect: ");
   Serial.println(WiFi.getAutoReconnect() ? "yes" : "no");
-  // todo: check status and reconnect if not WL_CONNECTED
-  //       turning off wifi base station gives WL_NO_SSID_AVAIL
+  return true;
+}
+
+// setup first core
+auto setup() -> void {
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
+  Serial.begin(115200);
+  while (!Serial && millis() < 10000)
+    delay(100);  // wait max 10 seconds for serial over usb
+
+  connect_to_wifi_if_disconnected();
+
   digitalWrite(LED_BUILTIN, HIGH);
 
   Preferences prefs;
@@ -346,7 +346,9 @@ auto handle_web_server() -> bool {
 
 // loop on first core
 auto loop() -> void {
-  print_output_to_stream(Serial);
+  if (connect_to_wifi_if_disconnected()) {
+    print_output_to_stream(Serial);
+  }
   delay(10000);
 }
 

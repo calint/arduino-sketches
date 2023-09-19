@@ -1,2 +1,2 @@
-constexpr cstr secret_wifi_network = "network";
-constexpr cstr secret_wifi_password = "password";
+constexpr const char* secret_wifi_network = "network";
+constexpr const char* secret_wifi_password = "password";

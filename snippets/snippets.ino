@@ -9,20 +9,15 @@
 #include <ArduinoJson.h>
 #include <Preferences.h>
 
-#define let auto const&
-#define var auto
-#define cstr const char*
-#define fn auto
-
 #include "secrets.h"  // defines WiFi login info 'secret_wifi_network' and 'secret_wifi_password'
 
-constexpr cstr url_time_server = "http://worldtimeapi.org/api/ip";
-constexpr cstr url_astros = "http://api.open-notify.org/astros.json";
-constexpr cstr url_jokes = "https://v2.jokeapi.dev/joke/Programming";
+constexpr const char* url_time_server = "http://worldtimeapi.org/api/ip";
+constexpr const char* url_astros = "http://api.open-notify.org/astros.json";
+constexpr const char* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 
 WiFiServer web_server(80);
 
-fn lookup_wifi_status_to_cstr(wl_status_t const status)->cstr {
+auto lookup_wifi_status_to_cstr(wl_status_t const status) -> const char* {
   switch (status) {
     case WL_CONNECTED: return "connected";
     case WL_NO_SHIELD: return "no shield";
@@ -36,22 +31,22 @@ fn lookup_wifi_status_to_cstr(wl_status_t const status)->cstr {
   }
 }
 
-fn hang()->void {
+auto hang() -> void {
   while (true)
     delay(10000);
 }
 
-fn loop1()->void;
+auto loop1() -> void;
 
 // code to run on second core
 TaskHandle_t task_second_core;
-fn func_second_core(void* vpParameter)->void {
+auto func_second_core(void* vpParameter) -> void {
   while (true)
     loop1();
 }
 
 // setup first core
-fn setup()->void {
+auto setup() -> void {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
   Serial.begin(115200);
@@ -62,7 +57,7 @@ fn setup()->void {
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(secret_wifi_network, secret_wifi_password);
-  for (var sts = WiFi.status(); sts != WL_CONNECTED; sts = WiFi.status()) {
+  for (auto sts = WiFi.status(); sts != WL_CONNECTED; sts = WiFi.status()) {
     switch (sts) {
       case WL_CONNECT_FAILED:
         Serial.println("\n*** connection to wifi failed");
@@ -90,7 +85,7 @@ fn setup()->void {
 
   Preferences prefs;
   prefs.begin("store");
-  let boot_count = prefs.getUInt("boot_count", 0) + 1;
+  auto const boot_count = prefs.getUInt("boot_count", 0) + 1;
   Serial.print("boot count: ");
   Serial.println(boot_count);
   prefs.putUInt("boot_count", boot_count);
@@ -104,7 +99,7 @@ fn setup()->void {
 }
 
 // returns true if request succeeded or false if something went wrong
-fn read_url_to_json_doc(cstr url, JsonDocument& json_doc)->bool {
+auto read_url_to_json_doc(const char* url, JsonDocument& json_doc) -> bool {
   HTTPClient http_client;
   http_client.useHTTP10();
   http_client.setConnectTimeout(10000);
@@ -114,7 +109,7 @@ fn read_url_to_json_doc(cstr url, JsonDocument& json_doc)->bool {
     Serial.printf("*** unable to connect to %s\n", url);
     return false;
   }
-  let http_code = http_client.GET();
+  auto const http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
     Serial.print("*** GET error: ");
     Serial.print(http_code);
@@ -123,7 +118,7 @@ fn read_url_to_json_doc(cstr url, JsonDocument& json_doc)->bool {
     http_client.end();
     return false;
   }
-  let json_error = deserializeJson(json_doc, http_client.getStream());
+  auto const json_error = deserializeJson(json_doc, http_client.getStream());
   http_client.end();
   if (json_error) {
     Serial.printf("*** json parsing failed: %s\n", json_error.c_str());
@@ -132,51 +127,46 @@ fn read_url_to_json_doc(cstr url, JsonDocument& json_doc)->bool {
   return true;
 }
 
-fn print_astronauts_in_space_right_now(Stream& os)->void {
+auto print_astronauts_in_space_right_now(Stream& os) -> void {
   digitalWrite(LED_BUILTIN, LOW);
   // DynamicJsonDocument json_doc(8 * 1024);
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
   if (!read_url_to_json_doc(url_astros, json_doc))
     return;
   digitalWrite(LED_BUILTIN, HIGH);
-  let people = json_doc["people"].as<JsonArray>();
-  for (let p : people) {
-    os.println(p["name"].as<cstr>());
+  auto const people = json_doc["people"].as<JsonArray>();
+  for (auto const& p : people) {
+    os.println(p["name"].as<const char*>());
   }
 }
 
-fn print_current_time_based_on_ip(Stream& os)->void {
+auto print_current_time_based_on_ip(Stream& os) -> void {
   digitalWrite(LED_BUILTIN, LOW);
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
   if (!read_url_to_json_doc(url_time_server, json_doc))
     return;
   digitalWrite(LED_BUILTIN, HIGH);
-  let date_time_raw = json_doc["datetime"].as<String>();
+  auto const date_time_raw = json_doc["datetime"].as<String>();
   //  "2023-08-31T16:32:47.653086+02:00" to "2023-08-31 16:32:47"
-
-  // note. the line below results in an empty string. why?
-  // let date_time = date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19);
-
-  let date_time = (date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19)).c_str();
-  // let date_time = String(date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19));
+  auto const date_time = date_time_raw.substring(0, 10) + " " + date_time_raw.substring(11, 19);
   os.println(date_time);
 }
 
-fn print_random_programming_joke(Stream& os)->void {
+auto print_random_programming_joke(Stream& os) -> void {
   digitalWrite(LED_BUILTIN, LOW);
   StaticJsonDocument<1024> json_doc;  // memory allocated on the stack
   if (!read_url_to_json_doc(url_jokes, json_doc))
     return;
   digitalWrite(LED_BUILTIN, HIGH);
   if (json_doc["type"].as<String>() == "single") {
-    os.println(json_doc["joke"].as<cstr>());
+    os.println(json_doc["joke"].as<const char*>());
   } else {
-    os.println(json_doc["setup"].as<cstr>());
-    os.println(json_doc["delivery"].as<cstr>());
+    os.println(json_doc["setup"].as<const char*>());
+    os.println(json_doc["delivery"].as<const char*>());
   }
 }
 
-fn print_current_time_from_ntp(Stream& os)->void {
+auto print_current_time_from_ntp(Stream& os) -> void {
   WiFiUDP ntp_udp;
   NTPClient ntp_client(ntp_udp);  // default 'pool.ntp.org', 60 seconds update interval, no offset
   digitalWrite(LED_BUILTIN, LOW);
@@ -186,18 +176,18 @@ fn print_current_time_from_ntp(Stream& os)->void {
   os.println(ntp_client.getFormattedTime());
 }
 
-fn print_web_server_ip(Stream& os)->void {
+auto print_web_server_ip(Stream& os) -> void {
   os.println(WiFi.localIP().toString());
 }
 
-fn print_wifi_status(Stream& os)->void {
+auto print_wifi_status(Stream& os) -> void {
   os.print(lookup_wifi_status_to_cstr(WiFi.status()));
   os.print(" ");
   os.print(WiFi.RSSI());
   os.println(" dBm");
 }
 
-fn print_heap_info(Stream& os)->void {
+auto print_heap_info(Stream& os) -> void {
   os.print("used: ");
   // os.printf("total: %u B\n", ESP.getHeapSize());
   // os.printf(" free: %u B\n", ESP.getFreeHeap());
@@ -206,7 +196,7 @@ fn print_heap_info(Stream& os)->void {
   os.println(" B");
 }
 
-fn print_boot_count(Stream& os)->void {
+auto print_boot_count(Stream& os) -> void {
   Preferences prefs;
   prefs.begin("store", true);
   os.print("boot count: ");
@@ -214,7 +204,7 @@ fn print_boot_count(Stream& os)->void {
   prefs.end();
 }
 
-fn print_output_to_stream(Stream& os)->void {
+auto print_output_to_stream(Stream& os) -> void {
   os.println("\ncurrent time based on ip:");
   print_current_time_based_on_ip(os);
 
@@ -241,12 +231,12 @@ fn print_output_to_stream(Stream& os)->void {
 }
 
 // serve "/"
-fn handle_web_server_root(String const& path, String const& query, std::vector<String> const& headers, Stream& os)->void {
+auto handle_web_server_root(String const& path, String const& query, std::vector<String> const& headers, Stream& os) -> void {
   os.print("<pre>path: ");
   os.println(path);
   os.print("query: ");
   os.println(query);
-  for (let s : headers) {
+  for (auto const& s : headers) {
     os.println(s);
   }
 
@@ -254,12 +244,12 @@ fn handle_web_server_root(String const& path, String const& query, std::vector<S
 }
 
 // serve "/status"
-fn handle_web_server_status(String const& path, String const& query, std::vector<String> const& headers, Stream& os)->void {
+auto handle_web_server_status(String const& path, String const& query, std::vector<String> const& headers, Stream& os) -> void {
   os.print("<pre>path: ");
   os.println(path);
   os.print("query: ");
   os.println(query);
-  for (let s : headers) {
+  for (auto const& s : headers) {
     os.println(s);
   }
 
@@ -267,10 +257,10 @@ fn handle_web_server_status(String const& path, String const& query, std::vector
 }
 
 // serve "/rgbled"
-fn handle_web_server_rgbled(String const& path, String const& query, std::vector<String> const& headers, Stream& os)->void {
-  let r = query.indexOf("r=1") != -1;
-  let g = query.indexOf("g=1") != -1;
-  let b = query.indexOf("b=1") != -1;
+auto handle_web_server_rgbled(String const& path, String const& query, std::vector<String> const& headers, Stream& os) -> void {
+  auto const r = query.indexOf("r=1") != -1;
+  auto const g = query.indexOf("g=1") != -1;
+  auto const b = query.indexOf("b=1") != -1;
 
   digitalWrite(LED_RED, r ? LOW : HIGH);
   digitalWrite(LED_GREEN, g ? LOW : HIGH);
@@ -296,29 +286,29 @@ fn handle_web_server_rgbled(String const& path, String const& query, std::vector
 }
 
 // returns true if a request was serviced or false if no client available
-fn handle_web_server()->bool {
-  var client = web_server.available();
+auto handle_web_server() -> bool {
+  auto client = web_server.available();
   if (!client)
     return false;
 
   // read first request line
-  let method = client.readStringUntil(' ');
-  let uri = client.readStringUntil(' ');
-  let version = client.readStringUntil('\r');
+  auto const method = client.readStringUntil(' ');
+  auto const uri = client.readStringUntil(' ');
+  auto const version = client.readStringUntil('\r');
   if (client.read() != '\n') {
     Serial.println("*** malformed http request");
     return false;
   }
 
-  let query_start_ix = uri.indexOf("?");
-  let path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
-  let query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
+  auto const query_start_ix = uri.indexOf("?");
+  auto const path = query_start_ix == -1 ? uri : uri.substring(0, query_start_ix);
+  auto const query = query_start_ix == -1 ? "" : uri.substring(query_start_ix + 1);
 
   std::vector<String> headers;
   // var nheaders = 32;  // maximum number of headers
   // while (nheaders--) {
   while (true) {
-    let line = client.readStringUntil('\r');
+    auto const line = client.readStringUntil('\r');
     if (client.read() != '\n') {
       Serial.println("*** malformed http request");
       return false;
@@ -350,13 +340,13 @@ fn handle_web_server()->bool {
 }
 
 // loop on first core
-fn loop()->void {
+auto loop() -> void {
   print_output_to_stream(Serial);
   delay(10000);
 }
 
 // loop on second core
-fn loop1()->void {
+auto loop1() -> void {
   while (handle_web_server())
     ;
   delay(100);  // slightly less busy wait

@@ -9,6 +9,10 @@
 #include <ArduinoJson.h>
 #include <Preferences.h>
 
+#define let auto const&
+#define var auto
+#define cstr const char*
+
 #include "secrets.h"  // defines WiFi login info 'secret_wifi_network' and 'secret_wifi_password'
 
 constexpr const char* url_time_server = "http://worldtimeapi.org/api/ip";

@@ -19,6 +19,7 @@ constexpr const char* url_time_server = "http://worldtimeapi.org/api/ip";
 constexpr const char* url_astros = "http://api.open-notify.org/astros.json";
 constexpr const char* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 
+// second core loop
 auto loop1() -> void;
 
 // code to run on second core

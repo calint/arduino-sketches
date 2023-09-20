@@ -19,14 +19,20 @@ constexpr const char* url_time_server = "http://worldtimeapi.org/api/ip";
 constexpr const char* url_astros = "http://api.open-notify.org/astros.json";
 constexpr const char* url_jokes = "https://v2.jokeapi.dev/joke/Programming";
 
-// second core loop
+// task 1 on second core
+TaskHandle_t task1;
 auto loop1() -> void;
-
-// code to run on second core
-TaskHandle_t task_second_core;
-auto func_second_core(void* vpParameter) -> void {
+auto func1(void* vpParameter) -> void {
   while (true)
     loop1();
+}
+
+// task 2 on second core
+TaskHandle_t task2;
+auto loop2() -> void;
+auto func2(void* vpParameter) -> void {
+  while (true)
+    loop2();
 }
 
 WiFiServer web_server(80);
@@ -100,7 +106,8 @@ auto setup() -> void {
   web_server.begin();
 
   // start second core
-  xTaskCreatePinnedToCore(func_second_core, "core1", 32 * 1024, NULL, 1, &task_second_core, !ARDUINO_RUNNING_CORE);
+  xTaskCreatePinnedToCore(func1, "core1-task1", 32 * 1024, NULL, 1, &task1, !ARDUINO_RUNNING_CORE);
+  xTaskCreatePinnedToCore(func2, "core1-task2", 1 * 1024, NULL, 2, &task2, !ARDUINO_RUNNING_CORE);
 }
 
 // returns true if request succeeded or false if something went wrong
@@ -357,9 +364,17 @@ auto loop() -> void {
   delay(10000);
 }
 
-// loop on second core
+// task 1 on second core
 auto loop1() -> void {
   while (handle_web_server())
     ;
   delay(100);  // slightly less busy wait
+}
+
+// task 2 on second core
+auto loop2() -> void {
+  digitalWrite(LED_BLUE, HIGH);
+  delay(500);
+  digitalWrite(LED_BLUE, LOW);
+  delay(500);
 }

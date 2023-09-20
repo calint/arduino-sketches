@@ -106,8 +106,20 @@ auto setup() -> void {
   web_server.begin();
 
   // start second core
-  xTaskCreatePinnedToCore(func1, "core1-task1", 32 * 1024, NULL, 1, &task1, !ARDUINO_RUNNING_CORE);
-  xTaskCreatePinnedToCore(func2, "core1-task2", 1 * 1024, NULL, 2, &task2, !ARDUINO_RUNNING_CORE);
+  auto const res1 = xTaskCreatePinnedToCore(func1, "core1-task1", 32 * 1024, NULL, 1, &task1, !ARDUINO_RUNNING_CORE);
+  if (res1 == pdPASS) {
+    Serial.println("started task1 on core1");
+  } else {
+    Serial.print("*** error starting task1 on core1: ");
+    Serial.println(res1);
+  }
+  auto const res2 = xTaskCreatePinnedToCore(func2, "core1-task2", 1 * 1024, NULL, 2, &task2, !ARDUINO_RUNNING_CORE);
+  if (res2 == pdPASS) {
+    Serial.println("started task2 on core1");
+  } else {
+    Serial.print("*** error starting task2 on core1: ");
+    Serial.println(res2);
+  }
 }
 
 // returns true if request succeeded or false if something went wrong

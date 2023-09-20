@@ -62,10 +62,10 @@ auto connect_to_wifi_if_disconnected() -> bool {
   for (auto sts = WiFi.status(); sts != WL_CONNECTED; sts = WiFi.status()) {
     switch (sts) {
       case WL_CONNECT_FAILED:
-        Serial.println("\n*** connection to wifi failed");
+        Serial.println("\n!!! connection to wifi failed");
         return false;
       case WL_NO_SSID_AVAIL:
-        Serial.println("\n*** network not found or wrong password");
+        Serial.println("\n!!! network not found or wrong password");
         return false;
       default: break;
     }
@@ -105,20 +105,24 @@ auto setup() -> void {
   // setup second core
   web_server.begin();
 
+  Serial.print("FreeRTOS kernel version: ");
+  Serial.println(tskKERNEL_VERSION_NUMBER);
   // start second core
-  auto const res1 = xTaskCreatePinnedToCore(func1, "core1-task1", 32 * 1024, NULL, 1, &task1, !ARDUINO_RUNNING_CORE);
-  if (res1 == pdPASS) {
-    Serial.println("started task1 on core1");
-  } else {
-    Serial.print("*** error starting task1 on core1: ");
+  Serial.println("starting task1 on core1");
+  auto const res1 = xTaskCreatePinnedToCore(func1, "core1-task1", 16 * 1024, NULL, 1, &task1, !ARDUINO_RUNNING_CORE);
+  if (res1 != pdPASS) {
+    Serial.print("!!! error: ");
     Serial.println(res1);
+    while (true)
+      ;
   }
+  Serial.println("starting task2 on core1");
   auto const res2 = xTaskCreatePinnedToCore(func2, "core1-task2", 1 * 1024, NULL, 2, &task2, !ARDUINO_RUNNING_CORE);
-  if (res2 == pdPASS) {
-    Serial.println("started task2 on core1");
-  } else {
-    Serial.print("*** error starting task2 on core1: ");
+  if (res2 != pdPASS) {
+    Serial.print("!!! error: ");
     Serial.println(res2);
+    while (true)
+      ;
   }
 }
 
@@ -130,12 +134,12 @@ auto read_url_to_json_doc(const char* url, JsonDocument& json_doc) -> bool {
   http_client.setTimeout(10000);
 
   if (!http_client.begin(url)) {
-    Serial.printf("*** unable to connect to %s\n", url);
+    Serial.printf("!!! unable to connect to %s\n", url);
     return false;
   }
   auto const http_code = http_client.GET();
   if (http_code != HTTP_CODE_OK) {
-    Serial.print("*** GET error: ");
+    Serial.print("!!! GET error: ");
     Serial.print(http_code);
     Serial.print(": ");
     Serial.println(http_client.errorToString(http_code));
@@ -145,7 +149,7 @@ auto read_url_to_json_doc(const char* url, JsonDocument& json_doc) -> bool {
   auto const json_error = deserializeJson(json_doc, http_client.getStream());
   http_client.end();
   if (json_error) {
-    Serial.printf("*** json parsing failed: %s\n", json_error.c_str());
+    Serial.printf("!!! json parsing failed: %s\n", json_error.c_str());
     return false;
   }
   return true;
@@ -197,7 +201,7 @@ auto print_current_time_from_ntp(Stream& os) -> void {
   NTPClient ntp_client(ntp_udp);  // default 'pool.ntp.org', 60 seconds update interval, no offset
   digitalWrite(LED_BUILTIN, LOW);
   if (!ntp_client.update())
-    os.println("*** failed to update ntp client");
+    os.println("!!! failed to update ntp client");
   digitalWrite(LED_BUILTIN, HIGH);
   os.println(ntp_client.getFormattedTime());
 }
@@ -325,7 +329,7 @@ auto handle_web_server() -> bool {
   auto const uri = client.readStringUntil(' ');
   auto const version = client.readStringUntil('\r');
   if (client.read() != '\n') {
-    Serial.println("*** malformed http request");
+    Serial.println("!!! malformed http request");
     return false;
   }
 
@@ -339,7 +343,7 @@ auto handle_web_server() -> bool {
   while (true) {
     auto const line = client.readStringUntil('\r');
     if (client.read() != '\n') {
-      Serial.println("*** malformed http request");
+      Serial.println("!!! malformed http request");
       return false;
     }
     if (line.length() == 0)

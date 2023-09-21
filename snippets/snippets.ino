@@ -237,6 +237,12 @@ auto print_boot_count(Stream& os) -> void {
   prefs.end();
 }
 
+auto print_stack_info(Stream& os) -> void {
+  os.print("high water mark free: ");
+  os.print(uxTaskGetStackHighWaterMark(NULL));
+  os.println(" B");
+}
+
 auto print_output_to_stream(Stream& os) -> void {
   os.println("\ncurrent time based on ip:");
   print_current_time_based_on_ip(os);
@@ -261,6 +267,9 @@ auto print_output_to_stream(Stream& os) -> void {
 
   os.println("\nheap info:");
   print_heap_info(os);
+
+  os.println("\nstack info:");
+  print_stack_info(os);
 }
 
 // serve "/"

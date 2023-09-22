@@ -238,7 +238,7 @@ auto print_boot_count(Stream& os) -> void {
 }
 
 auto print_stack_info(Stream& os) -> void {
-  os.print("high water mark free: ");
+  os.print("lowest free: ");
   os.print(uxTaskGetStackHighWaterMark(NULL));
   os.println(" B");
 }

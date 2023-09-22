@@ -218,14 +218,14 @@ auto print_wifi_status(Stream& os) -> void {
 }
 
 auto print_heap_info(Stream& os) -> void {
-  // os.printf("total: %u B\n", ESP.getHeapSize());
-  // os.printf(" free: %u B\n", ESP.getFreeHeap());
-  // os.printf(" used: %u B\n", ESP.getHeapSize() - ESP.getFreeHeap());
   os.print("used: ");
   os.print(ESP.getHeapSize() - ESP.getFreeHeap());
   os.println(" B");
   os.print("free: ");
   os.print(ESP.getFreeHeap());
+  os.println(" B");
+  os.print("total: ");
+  os.print(ESP.getHeapSize());
   os.println(" B");
 }
 

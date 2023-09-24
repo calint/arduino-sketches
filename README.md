@@ -30,5 +30,5 @@ git config --global credential.helper cache
 git config --global credential.helper 'cache --timeout=36000'
 
 git add . && git commit -m "." && git push
-TAG=2023-08-19--1 && git tag $TAG && git push origin $TAG
+TAG=$(date "+%Y-%m-%d--%H-%M") && git tag $TAG && git push origin $TAG
 ```

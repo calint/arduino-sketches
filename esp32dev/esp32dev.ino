@@ -27,14 +27,14 @@
 static TFT_eSPI tft{};  // Invoke library, pins defined in User_Setup.h
 
 static constexpr uint16_t frame_width = 320;
-static constexpr uint16_t frame_height = 165;
+static constexpr uint16_t frame_height = 160;
 static uint16_t frame[frame_width * frame_height];
 static uint16_t color = 0;
 
-static int32_t vp_x;
-static int32_t vp_y;
-static int32_t vp_w;
-static int32_t vp_h;
+static int32_t viewport_x;
+static int32_t viewport_y;
+static int32_t viewport_w;
+static int32_t viewport_h;
 
 auto print_heap_info(Stream& os) -> void {
   os.print("used: ");
@@ -54,21 +54,13 @@ void setup(void) {
     ;  // wait for serial port to connect. Needed for native USB port only
 
   print_heap_info(Serial);
-  // frame = new uint16_t[frame_width * frame_height];
-  // if (frame == nullptr) {
-  //   Serial.printf("!!! could not allocate frame buffer\n");
-  //   while (true) sleep(1000);
-  // } else {
-  //   Serial.printf("frame buffer: %d x %d\n", frame_width, frame_height);
-  // }
-  // print_heap_info(Serial);
   tft.init();
   tft.setRotation(1);
-  vp_x = tft.getViewportX();
-  vp_y = tft.getViewportY();
-  vp_w = tft.getViewportWidth();
-  vp_h = tft.getViewportHeight();
-  Serial.printf("viewport: x=%d, y=%d, w=%d, h=%d\n", vp_x, vp_y, vp_w, vp_h);
+  viewport_x = tft.getViewportX();
+  viewport_y = tft.getViewportY();
+  viewport_w = tft.getViewportWidth();
+  viewport_h = tft.getViewportHeight();
+  Serial.printf("viewport: x=%d, y=%d, w=%d, h=%d\n", viewport_x, viewport_y, viewport_w, viewport_h);
 }
 
 void loop() {
@@ -80,7 +72,7 @@ void loop() {
 
   unsigned long t0 = millis();
   tft.startWrite();
-  tft.setAddrWindow(vp_x, vp_y, vp_w, vp_h);
+  tft.setAddrWindow(viewport_x, viewport_y, viewport_w, viewport_h);
   tft.pushPixels(frame, frame_width * frame_height);
   tft.endWrite();
   unsigned long t1 = millis();

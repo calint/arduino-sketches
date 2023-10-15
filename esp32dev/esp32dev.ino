@@ -31,7 +31,9 @@ static constexpr uint16_t frame_height = 160;
 static uint16_t frame_buf[frame_width * frame_height];  // RGB565
 static uint16_t color;
 
-// static uint16_t frame2_buf[187];
+static unsigned fps_frame_num;
+static unsigned long fps_t0;
+static unsigned fps_current;
 
 static int32_t viewport_x;
 static int32_t viewport_y;
@@ -54,7 +56,7 @@ void setup(void) {
   Serial.begin(115200);
   while (!Serial)
     ;  // wait for serial port to connect. Needed for native USB port only
-
+  Serial.printf("heap info:\n");
   print_heap_info(Serial);
 
   tft.init();
@@ -64,10 +66,13 @@ void setup(void) {
   viewport_y = tft.getViewportY();
   viewport_w = tft.getViewportWidth();
   viewport_h = tft.getViewportHeight();
+
   Serial.printf("viewport: x=%d, y=%d, w=%d, h=%d\n", viewport_x, viewport_y, viewport_w, viewport_h);
 }
 
 void loop() {
+  fps_frame_num++;
+
   uint16_t color_px = color;
   uint16_t* bufptr = frame_buf;
   constexpr unsigned n = frame_width * frame_height;
@@ -76,13 +81,19 @@ void loop() {
   }
   color++;
 
-  unsigned long t0 = millis();
   tft.startWrite();
   tft.setAddrWindow(viewport_x, viewport_y, viewport_w, viewport_h);
   tft.pushPixels(frame_buf, frame_width * frame_height);
   tft.endWrite();
-  unsigned long t1 = millis();
 
   // delay(2000);
-  Serial.printf("blit: %lu ms color: %x\n", t1 - t0, color);
+  // (t1 - t0);
+  const unsigned long now = millis();
+  const unsigned long dt = now - fps_t0;
+  if (dt > 1000) {
+    fps_current = fps_frame_num * 1000 / dt;
+    fps_frame_num = 0;
+    fps_t0 = now;
+    Serial.printf("t=%lu  fps=%d\n", now, fps_current);
+  }
 }

@@ -28,8 +28,8 @@ static TFT_eSPI tft{};  // Invoke library, pins defined in User_Setup.h
 
 static constexpr uint16_t frame_width = 320;
 static constexpr uint16_t frame_height = 160;
-static uint16_t frame[frame_width * frame_height];
-static uint16_t color = 0;
+static uint16_t frame_buf[frame_width * frame_height];
+static uint16_t color;
 
 static int32_t viewport_x;
 static int32_t viewport_y;
@@ -54,8 +54,10 @@ void setup(void) {
     ;  // wait for serial port to connect. Needed for native USB port only
 
   print_heap_info(Serial);
+
   tft.init();
   tft.setRotation(1);
+
   viewport_x = tft.getViewportX();
   viewport_y = tft.getViewportY();
   viewport_w = tft.getViewportWidth();
@@ -64,18 +66,18 @@ void setup(void) {
 }
 
 void loop() {
-  uint16_t* frame_ptr = frame;
+  uint16_t* bufptr = frame_buf;
   const unsigned n = frame_width * frame_height;
   uint16_t color_px = color;
   for (unsigned i = 0; i < n; i++) {
-    *frame_ptr++ = color_px++;
+    *bufptr++ = color_px++;
   }
   color++;
 
   unsigned long t0 = millis();
   tft.startWrite();
   tft.setAddrWindow(viewport_x, viewport_y, viewport_w, viewport_h);
-  tft.pushPixels(frame, frame_width * frame_height);
+  tft.pushPixels(frame_buf, frame_width * frame_height);
   tft.endWrite();
   unsigned long t1 = millis();
 

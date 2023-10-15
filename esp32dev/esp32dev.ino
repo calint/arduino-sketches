@@ -77,14 +77,26 @@ void setup(void) {
   while (!Serial)
     ;  // wait for serial port to connect. needed for native usb port only
 
+  Serial.printf("------------------------------------------------------------------------------\n");
   Serial.printf("        chip model: %s\n", ESP.getChipModel());
   Serial.printf("largest free block: %d\n", ESP.getMaxAllocHeap());
+  Serial.printf("------------------------------------------------------------------------------\n");
 
-  // uint8_t* alloc = new uint8_t[ESP.getMaxAllocHeap()];
-  // if (alloc) {
-  //   alloc[0] = 'A';
+  // uint32_t total = 0;
+  // while (true) {
+  //   // heap_caps_print_heap_info(MALLOC_CAP_DEFAULT);
+  //   const uint32_t n = heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT);
+  //   if (n == 0) {
+  //     break;
+  //   }
+  //   void* buf = malloc(n);
+  //   if (buf == nullptr) {
+  //     break;
+  //   }
+  //   total += n;
+  //   Serial.printf("address: %p   allocated: %d\n", buf, n);
   // }
-  // Serial.printf("%p\nlargest free block: %d\n", alloc, ESP.getMaxAllocHeap());
+  // Serial.printf("total allocated bytes: %d\n", total);
 
   Serial.printf("heap info:\n");
   print_heap_info(Serial);
@@ -103,7 +115,7 @@ void setup(void) {
 void loop() {
   const unsigned long now = millis();
   if (fps.on_frame(now)) {
-    Serial.printf("t=%lu  fps=%d\n", now, fps.get());
+    // Serial.printf("t=%lu  fps=%d\n", now, fps.get());
   }
 
   uint16_t color_px = color;

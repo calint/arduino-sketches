@@ -31,16 +31,36 @@ static constexpr uint16_t frame_height = 160;
 static uint16_t frame_buf[frame_width * frame_height];  // RGB565
 static uint16_t color;
 
-static unsigned fps_frame_num;
-static unsigned long fps_t0;
-static unsigned fps_current;
+class fps {
+  unsigned frames_rendered = 0;
+  unsigned long last_update_ms = 0;
+  unsigned current_fps = 0;
+
+public:
+  auto on_frame(const unsigned long now) -> bool {
+    frames_rendered++;
+    const unsigned long dt = now - last_update_ms;
+    if (dt > 1000) {
+      current_fps = frames_rendered * 1000 / dt;
+      frames_rendered = 0;
+      last_update_ms = now;
+      return true;
+    }
+    return false;
+  }
+
+  inline auto get() -> unsigned {
+    return current_fps;
+  }
+
+} fps{};
 
 static int32_t viewport_x;
 static int32_t viewport_y;
 static int32_t viewport_w;
 static int32_t viewport_h;
 
-auto print_heap_info(Stream& os) -> void {
+void print_heap_info(Stream& os) {
   os.print("used: ");
   os.print(ESP.getHeapSize() - ESP.getFreeHeap());
   os.println(" B");
@@ -71,7 +91,10 @@ void setup(void) {
 }
 
 void loop() {
-  fps_frame_num++;
+  const unsigned long now = millis();
+  if (fps.on_frame(now)) {
+    Serial.printf("t=%lu  fps=%d\n", now, fps.get());
+  }
 
   uint16_t color_px = color;
   uint16_t* bufptr = frame_buf;
@@ -85,15 +108,4 @@ void loop() {
   tft.setAddrWindow(viewport_x, viewport_y, viewport_w, viewport_h);
   tft.pushPixels(frame_buf, frame_width * frame_height);
   tft.endWrite();
-
-  // delay(2000);
-  // (t1 - t0);
-  const unsigned long now = millis();
-  const unsigned long dt = now - fps_t0;
-  if (dt > 1000) {
-    fps_current = fps_frame_num * 1000 / dt;
-    fps_frame_num = 0;
-    fps_t0 = now;
-    Serial.printf("t=%lu  fps=%d\n", now, fps_current);
-  }
 }

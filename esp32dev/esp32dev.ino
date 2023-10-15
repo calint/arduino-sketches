@@ -9,7 +9,7 @@
 // additional boards: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 //    install boards: esp32 by Espressif
 //   install library: TFT_eSPI by Bodmer
-//     setup library: User_Setup.h in libraries/TFT_eSPI with provided file
+//     setup library: replace User_Setup.h in libraries/TFT_eSPI/ with provided file
 //
 // in arduino ide, in Tools menu select:
 //             Board: ESP32 Dev Module

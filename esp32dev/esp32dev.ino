@@ -66,9 +66,11 @@ void setup(void) {
 void loop() {
   uint16_t* frame_ptr = frame;
   const unsigned n = frame_width * frame_height;
+  uint16_t color_px = color;
   for (unsigned i = 0; i < n; i++) {
-    *frame_ptr++ = color;
+    *frame_ptr++ = color_px++;
   }
+  color++;
 
   unsigned long t0 = millis();
   tft.startWrite();
@@ -76,7 +78,7 @@ void loop() {
   tft.pushPixels(frame, frame_width * frame_height);
   tft.endWrite();
   unsigned long t1 = millis();
+
   // delay(2000);
-  color += 32;
   Serial.printf("blit: %lu ms color: %x\n", t1 - t0, color);
 }

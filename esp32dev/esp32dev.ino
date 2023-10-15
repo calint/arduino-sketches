@@ -75,7 +75,17 @@ void print_heap_info(Stream& os) {
 void setup(void) {
   Serial.begin(115200);
   while (!Serial)
-    ;  // wait for serial port to connect. Needed for native USB port only
+    ;  // wait for serial port to connect. needed for native usb port only
+
+  Serial.printf("        chip model: %s\n", ESP.getChipModel());
+  Serial.printf("largest free block: %d\n", ESP.getMaxAllocHeap());
+
+  // uint8_t* alloc = new uint8_t[ESP.getMaxAllocHeap()];
+  // if (alloc) {
+  //   alloc[0] = 'A';
+  // }
+  // Serial.printf("%p\nlargest free block: %d\n", alloc, ESP.getMaxAllocHeap());
+
   Serial.printf("heap info:\n");
   print_heap_info(Serial);
 

@@ -24,12 +24,14 @@
 #include <TFT_eSPI.h>  // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
 
-static TFT_eSPI tft{};  // Invoke library, pins defined in User_Setup.h
+static TFT_eSPI tft;  // Invoke library, pins defined in User_Setup.h
 
 static constexpr uint16_t frame_width = 320;
 static constexpr uint16_t frame_height = 160;
-static uint16_t frame_buf[frame_width * frame_height];
+static uint16_t frame_buf[frame_width * frame_height];  // RGB565
 static uint16_t color;
+
+// static uint16_t frame2_buf[187];
 
 static int32_t viewport_x;
 static int32_t viewport_y;
@@ -66,9 +68,9 @@ void setup(void) {
 }
 
 void loop() {
-  uint16_t* bufptr = frame_buf;
-  const unsigned n = frame_width * frame_height;
   uint16_t color_px = color;
+  uint16_t* bufptr = frame_buf;
+  constexpr unsigned n = frame_width * frame_height;
   for (unsigned i = 0; i < n; i++) {
     *bufptr++ = color_px++;
   }

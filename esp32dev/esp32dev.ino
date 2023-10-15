@@ -1,35 +1,34 @@
 //
-// intended for: 
+// intended for:
 //    ESP32 Arduino LVGL WIFI&Bluetooth Development Board 2.8"'
-//    240*320 Smart Display Screen 2.8inch LCD TFT Module With Touch WROOM 
+//    240*320 Smart Display Screen 2.8inch LCD TFT Module With Touch WROOM
 //
 //          from: http://http://www.jczn1688.com/
 //  purchased at: https://www.aliexpress.com/item/1005004502250619.html
 //
-// in arduino ide, in Tools menu select:
-//  Board: ESP32 Dev Module
-//  Upload Speed: 921600
-//  Flash Frequency: 80MHz
-//  Flash Mode: DIO
-//  Flash Size: 4MB (32Mb)
-//  Partition Scheme: Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
-//  Programmer: Esptool
+// additional boards: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+//    install boards: esp32 by Espressif
+//   install library: TFT_eSPI by Bodmer
+//     setup library: User_Setup.h in libraries/TFT_eSPI with provided file
 //
-/*
-  #########################################################################
-  ###### DON'T FORGET TO UPDATE THE User_Setup.h FILE IN THE LIBRARY ######
-  #########################################################################
-*/
+// in arduino ide, in Tools menu select:
+//             Board: ESP32 Dev Module
+//      Upload Speed: 921600
+//   Flash Frequency: 80MHz
+//        Flash Mode: DIO
+//        Flash Size: 4MB (32Mb)
+//  Partition Scheme: Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+//        Programmer: Esptool
+//
 
 #include <TFT_eSPI.h>  // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
 
 static TFT_eSPI tft{};  // Invoke library, pins defined in User_Setup.h
 
-// static uint16_t frame[320 * 100];
-static uint16_t* frame;
-static uint16_t frame_width = 320;
-static uint16_t frame_height = 175;
+static constexpr uint16_t frame_width = 320;
+static constexpr uint16_t frame_height = 165;
+static uint16_t frame[frame_width * frame_height];
 static uint16_t color = 0;
 
 static int32_t vp_x;
@@ -55,14 +54,14 @@ void setup(void) {
     ;  // wait for serial port to connect. Needed for native USB port only
 
   print_heap_info(Serial);
-  frame = new uint16_t[frame_width * frame_height];
-  if (frame == nullptr) {
-    Serial.printf("!!! could not allocate frame buffer\n");
-    while (true) sleep(1000);
-  } else {
-    Serial.printf("frame buffer: %d x %d\n", frame_width, frame_height);
-  }
-  print_heap_info(Serial);
+  // frame = new uint16_t[frame_width * frame_height];
+  // if (frame == nullptr) {
+  //   Serial.printf("!!! could not allocate frame buffer\n");
+  //   while (true) sleep(1000);
+  // } else {
+  //   Serial.printf("frame buffer: %d x %d\n", frame_width, frame_height);
+  // }
+  // print_heap_info(Serial);
   tft.init();
   tft.setRotation(1);
   vp_x = tft.getViewportX();

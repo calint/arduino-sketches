@@ -79,8 +79,11 @@ void setup(void) {
 
   Serial.printf("------------------------------------------------------------------------------\n");
   Serial.printf("        chip model: %s\n", ESP.getChipModel());
-  Serial.printf("largest free block: %d\n", ESP.getMaxAllocHeap());
+  Serial.printf("largest free block: %d B\n", ESP.getMaxAllocHeap());
+  // Serial.printf("largest free block: %d\n", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
   Serial.printf("------------------------------------------------------------------------------\n");
+
+  // heap_caps_print_heap_info(MALLOC_CAP_8BIT);
 
   // uint32_t total = 0;
   // while (true) {
@@ -98,8 +101,8 @@ void setup(void) {
   // }
   // Serial.printf("total allocated bytes: %d\n", total);
 
-  Serial.printf("heap info:\n");
-  print_heap_info(Serial);
+  // Serial.printf("heap info:\n");
+  // print_heap_info(Serial);
 
   tft.init();
   tft.setRotation(1);

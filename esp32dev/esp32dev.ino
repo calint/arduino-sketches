@@ -3,7 +3,7 @@
 //    ESP32 Arduino LVGL WIFI&Bluetooth Development Board 2.8"'
 //    240*320 Smart Display Screen 2.8inch LCD TFT Module With Touch WROOM
 //
-//          from: http://http://www.jczn1688.com/
+//          from: http://www.jczn1688.com/
 //  purchased at: https://www.aliexpress.com/item/1005004502250619.html
 //
 //                    Arduino IDE 2.2.1

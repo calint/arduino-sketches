@@ -42,22 +42,24 @@ static TFT_eSPI tft;  // Invoke library, pins defined in User_Setup.h
 
 static constexpr uint16_t frame_width = 320;
 static constexpr uint16_t frame_height = 160;
+// static uint16_t* frame_buf = nullptr;
 static uint16_t frame_buf[frame_width * frame_height];  // RGB565
 static uint16_t color;
 
 class fps {
-  unsigned frames_rendered = 0;
+  unsigned dt_intervall_ms = 5000;
+  unsigned frames_rendered_in_intervall = 0;
   unsigned long last_update_ms = 0;
   unsigned current_fps = 0;
 
 public:
-  auto on_frame(const unsigned long now) -> bool {
-    frames_rendered++;
-    const unsigned long dt = now - last_update_ms;
-    if (dt > 1000) {
-      current_fps = frames_rendered * 1000 / dt;
-      frames_rendered = 0;
-      last_update_ms = now;
+  auto on_frame(const unsigned long now_ms) -> bool {
+    frames_rendered_in_intervall++;
+    const unsigned long dt_ms = now_ms - last_update_ms;
+    if (dt_ms >= dt_intervall_ms) {
+      current_fps = frames_rendered_in_intervall * 1000 / dt_ms;
+      frames_rendered_in_intervall = 0;
+      last_update_ms = now_ms;
       return true;
     }
     return false;
@@ -88,13 +90,13 @@ void print_heap_info(Stream& os) {
 
 void setup(void) {
   Serial.begin(115200);
+  sleep(1);  // arbitrary wait 1 second for serial to connect
   while (!Serial)
     ;  // wait for serial port to connect. needed for native usb port only
-
-  Serial.printf("------------------------------------------------------------------------------\n");
+  Serial.printf("\n------------------------------------------------------------------------------\n");
   Serial.printf("        chip model: %s\n", ESP.getChipModel());
   Serial.printf("largest free block: %d B\n", ESP.getMaxAllocHeap());
-  // Serial.printf("largest free block: %d\n", heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+  // Serial.printf("largest free block: %d B\n", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
   Serial.printf("------------------------------------------------------------------------------\n");
 
   // heap_caps_print_heap_info(MALLOC_CAP_8BIT);
@@ -144,9 +146,9 @@ void setup(void) {
 }
 
 void loop() {
-  const unsigned long now = millis();
-  if (fps.on_frame(now)) {
-    Serial.printf("t=%lu  fps=%d\n", now, fps.get());
+  const unsigned long now_ms = millis();
+  if (fps.on_frame(now_ms)) {
+    Serial.printf("t=%lu  fps=%d\n", now_ms, fps.get());
   }
 
   uint16_t color_px = color;

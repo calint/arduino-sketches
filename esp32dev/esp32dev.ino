@@ -47,18 +47,18 @@ static uint16_t frame_buf[frame_width * frame_height];  // RGB565
 static uint16_t color;
 
 class fps {
-  unsigned dt_intervall_ms = 5000;
-  unsigned frames_rendered_in_intervall = 0;
+  unsigned interval_ms = 5000;
+  unsigned frames_rendered_in_interval = 0;
   unsigned long last_update_ms = 0;
   unsigned current_fps = 0;
 
 public:
   auto on_frame(const unsigned long now_ms) -> bool {
-    frames_rendered_in_intervall++;
+    frames_rendered_in_interval++;
     const unsigned long dt_ms = now_ms - last_update_ms;
-    if (dt_ms >= dt_intervall_ms) {
-      current_fps = frames_rendered_in_intervall * 1000 / dt_ms;
-      frames_rendered_in_intervall = 0;
+    if (dt_ms >= interval_ms) {
+      current_fps = frames_rendered_in_interval * 1000 / dt_ms;
+      frames_rendered_in_interval = 0;
       last_update_ms = now_ms;
       return true;
     }

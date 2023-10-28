@@ -6,23 +6,37 @@
 //          from: http://http://www.jczn1688.com/
 //  purchased at: https://www.aliexpress.com/item/1005004502250619.html
 //
+//                    Arduino IDE 2.2.1
 // additional boards: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-//    install boards: esp32 by Espressif
-//   install library: TFT_eSPI by Bodmer
+//    install boards: esp32 by Espressif 2.0.14
+//   install library: TFT_eSPI by Bodmer 2.5.31
 //     setup library: replace User_Setup.h in libraries/TFT_eSPI/ with provided file
 //
-// in arduino ide, in Tools menu select:
-//             Board: ESP32 Dev Module
-//      Upload Speed: 921600
-//   Flash Frequency: 80MHz
-//        Flash Mode: DIO
-//        Flash Size: 4MB (32Mb)
-//  Partition Scheme: Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
-//        Programmer: Esptool
+//   Arduino IDE, Tools menu and select:
+//                                Board: ESP32 Dev Module
+//                        CPU Frequency: 240MHz (WiFi/BT)
+//                     Core Debug Level: None
+// Erase All Flash Before Sketch Upload: Disabled
+//                       Events Runs On: Core 1
+//                      Flash Frequency: 80MHz
+//                           Flash Mode: DIO
+//                           Flash Size: 4MB (32Mb)
+//                         JTAG Adapter: Disabled
+//                      Arduino Runs On: Core 1
+//                     Partition Scheme: Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+//                                PSRAM: Disabled
+//                         Upload Speed: 921600
+//                           Programmer: Esptool
 //
 
 #include <TFT_eSPI.h>  // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
+
+//#define INIT_WIFI
+#ifdef INIT_WIFI
+#include "WiFi.h"
+#include "secrets.h"
+#endif
 
 static TFT_eSPI tft;  // Invoke library, pins defined in User_Setup.h
 
@@ -113,12 +127,26 @@ void setup(void) {
   viewport_h = tft.getViewportHeight();
 
   Serial.printf("viewport: x=%d, y=%d, w=%d, h=%d\n", viewport_x, viewport_y, viewport_w, viewport_h);
+
+#ifdef INIT_WIFI
+  WiFi.begin(SECRET_WIFI_NETWORK, SECRET_WIFI_PASSWORD);
+  WiFi.setAutoReconnect(true);
+  Serial.print("Connecting to ");
+  Serial.print(SECRET_WIFI_NETWORK);
+  Serial.flush();
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    sleep(1);
+  }
+  Serial.print("\nConnected\nIP: ");
+  Serial.println(WiFi.localIP());
+#endif
 }
 
 void loop() {
   const unsigned long now = millis();
   if (fps.on_frame(now)) {
-    // Serial.printf("t=%lu  fps=%d\n", now, fps.get());
+    Serial.printf("t=%lu  fps=%d\n", now, fps.get());
   }
 
   uint16_t color_px = color;

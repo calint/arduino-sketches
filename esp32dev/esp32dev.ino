@@ -42,12 +42,6 @@
 
 static TFT_eSPI tft;  // Invoke library, pins defined in User_Setup.h
 
-static constexpr uint16_t frame_width = 320;
-static constexpr uint16_t frame_height = 120;
-// static uint16_t* frame_buf = nullptr;
-static uint16_t frame_buf[frame_width * frame_height];  // RGB565
-static uint16_t color;
-
 class fps {
   unsigned interval_ms = 5000;
   unsigned frames_rendered_in_interval = 0;
@@ -72,6 +66,77 @@ public:
   }
 
 } fps{};
+
+static constexpr uint16_t frame_width = 320;
+static constexpr uint16_t frame_height = 240;
+
+static constexpr uint8_t tile_width = 8;
+static constexpr uint8_t tile_height = 8;
+struct tile {
+  uint16_t data[tile_width * tile_height];
+} tiles[4]{
+  { 0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+    0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff },
+
+  { 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+    0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
+    0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
+    0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
+    0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
+    0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
+    0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
+    0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff },
+
+  { 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+    0xffff, 0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
+    0xffff, 0x0000, 0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
+    0xffff, 0x0000, 0x0000, 0xffff, 0x0000, 0x0000, 0x0000, 0xffff,
+    0xffff, 0x0000, 0x0000, 0x0000, 0xffff, 0x0000, 0x0000, 0xffff,
+    0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff, 0x0000, 0xffff,
+    0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff, 0xffff,
+    0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff },
+
+  { 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
+    0xffff, 0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff, 0xffff,
+    0xffff, 0x0000, 0xffff, 0x0000, 0x0000, 0xffff, 0x0000, 0xffff,
+    0xffff, 0x0000, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000, 0xffff,
+    0xffff, 0x0000, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000, 0xffff,
+    0xffff, 0x0000, 0xffff, 0x0000, 0x0000, 0xffff, 0x0000, 0xffff,
+    0xffff, 0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff, 0xffff,
+    0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff },
+};
+
+// static constexpr uint8_t tile_map_width = 4;
+// static constexpr uint8_t tile_map_height = 4;
+
+// struct tile_map {
+//   uint8_t tiles[tile_map_width * tile_map_height];
+// } tile_map{
+//   {
+//     0,
+//     1,
+//     2,
+//     3,
+//     1,
+//     2,
+//     3,
+//     0,
+//     2,
+//     3,
+//     0,
+//     1,
+//     3,
+//     0,
+//     1,
+//     2,
+//   }
+// };
 
 static int32_t viewport_x;
 static int32_t viewport_y;
@@ -156,26 +221,69 @@ void setup(void) {
 #endif
 }
 
+static uint16_t line_buf_1[frame_width * tile_height];
+static uint16_t line_buf_2[frame_width * tile_height];
+
 void loop() {
   const unsigned long now_ms = millis();
   if (fps.on_frame(now_ms)) {
     Serial.printf("t=%lu  fps=%d\n", now_ms, fps.get());
   }
 
-  uint16_t color_px = color;
-  uint16_t* bufptr = frame_buf;
-  constexpr unsigned n = frame_width * frame_height;
-  for (unsigned i = 0; i < n; i++) {
-    *bufptr++ = color_px++;
-  }
-  color++;
-
   tft.startWrite();
-  tft.setAddrWindow(viewport_x, viewport_y, viewport_w, viewport_h);
-#ifdef USE_DMA
-  tft.pushPixelsDMA(frame_buf, frame_width * frame_height);
-#else
-  tft.pushPixels(frame_buf, frame_width * frame_height);
-#endif
+
+  // fps 31
+  bool line_buf_first = true;
+  for (unsigned y = 0; y < frame_height; y += tile_height) {
+    // swap between two line buffers to not overwrite DMA accessed buffer
+    uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
+    uint16_t* line_buf_ptr_dma = line_buf_ptr;
+    line_buf_first = !line_buf_first;
+    for (unsigned ty = 0; ty < tile_height; ty++) {
+      for (unsigned tx = 0; tx < frame_width / tile_width; tx++) {
+        uint16_t* tile_data_ptr = tiles[2].data + (ty * tile_height);
+        memcpy(line_buf_ptr, tile_data_ptr, tile_width * sizeof(uint16_t));
+        line_buf_ptr += tile_width;
+      }
+    }
+    tft.setAddrWindow(viewport_x, viewport_y + y, viewport_w, tile_height);
+    tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w * tile_height);
+  }
+
+  // 25 fps
+  // uint16_t line_buf_1[viewport_w];
+  // uint16_t line_buf_2[viewport_w];
+  // bool line_buf_first = true;
+  // uint8_t tile_y = 0;
+  // for (unsigned y = 0; y < frame_height; y++) {
+  //   // swap between two line buffers to not overwrite DMA accessed buffer
+  //   uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
+  //   uint16_t* line_buf_ptr_dma = line_buf_ptr;
+  //   line_buf_first = !line_buf_first;
+  //   for (unsigned x = 0; x < frame_width / tile_width; x++) {
+  //     uint16_t* tile_data_ptr = tiles[2].data + (tile_y * tile_height);
+  //     memcpy(line_buf_ptr, tile_data_ptr, tile_width * sizeof(uint16_t));
+  //     line_buf_ptr += tile_width;
+  //   }
+  //   tile_y++;
+  //   if (tile_y >= tile_height) {
+  //     tile_y = 0;
+  //   }
+  //   tft.setAddrWindow(viewport_x, viewport_y + y, viewport_w, 1);
+  //   tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w);
+  // }
+
+  // 25 fps
+  // uint8_t tile_id = 0;
+  // for (unsigned y = 0; y < frame_height; y += tile_height) {
+  //   for (unsigned x = 0; x < frame_width; x += tile_width) {
+  //     tft.setAddrWindow(viewport_x + x, viewport_y + y, tile_width, tile_height);
+  //     tft.pushPixels(tiles[tile_id].data, tile_width * tile_height);
+  //     tile_id++;
+  //     if (tile_id > 3) {
+  //       tile_id = 0;
+  //     }
+  //   }
+  // }
   tft.endWrite();
 }

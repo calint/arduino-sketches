@@ -201,8 +201,18 @@ void setup(void) {
   fps.init(millis());
 }
 
+// one scan line buffer
+// static uint16_t line_buf_1[frame_width];
+// static uint16_t line_buf_2[frame_width];
+
+// one tile height buffer
 static uint16_t line_buf_1[frame_width * tile_height];
 static uint16_t line_buf_2[frame_width * tile_height];
+
+// four tile heights buffers
+// static uint16_t line_buf_1[frame_width * tile_height * 4];
+// static uint16_t line_buf_2[frame_width * tile_height * 4];
+
 static unsigned tile_dx;
 
 void loop() {
@@ -212,15 +222,55 @@ void loop() {
   }
 
   tft.startWrite();
+
+  // one scan line buffer
+  // fps: 25
+  // bool line_buf_first = true;  // selects buffer to write while dma reads the other
+  // const unsigned tile_dx_shifted = tile_dx;
+  // const unsigned tile_width_minus_dx = tile_width - tile_dx_shifted;
+  // for (unsigned y = 0; y < frame_height; y += tile_height) {
+  //   for (unsigned ty = 0; ty < tile_height; ty++) {
+  //     // swap between two line buffers to not overwrite DMA accessed buffer
+  //     uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
+  //     uint16_t* line_buf_ptr_dma = line_buf_ptr;
+  //     line_buf_first = not line_buf_first;
+  //     if (tile_width_minus_dx) {
+  //       // render first partial tile
+  //       uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height) + tile_dx_shifted;
+  //       memcpy(line_buf_ptr, tile_data_ptr, tile_width_minus_dx * sizeof(uint16_t));
+  //       line_buf_ptr += tile_width_minus_dx;
+  //     }
+  //     // render full tiles
+  //     for (unsigned tx = 1; tx < frame_width / tile_width; tx++) {
+  //       uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
+  //       memcpy(line_buf_ptr, tile_data_ptr, tile_width * sizeof(uint16_t));
+  //       line_buf_ptr += tile_width;
+  //     }
+  //     if (tile_dx_shifted) {
+  //       // render last partial tile
+  //       uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
+  //       memcpy(line_buf_ptr, tile_data_ptr, tile_dx_shifted * sizeof(uint16_t));
+  //       line_buf_ptr += tile_dx_shifted;
+  //     }
+  //     tft.setAddrWindow(viewport_x, viewport_y + y + ty, viewport_w, 1);
+  //     tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w);
+  //   }
+  // }
+  // tile_dx++;
+  // if (tile_dx == tile_width) {
+  //   tile_dx = 0;
+  // }
+
+  // one tile height buffer
   // fps 31
   bool line_buf_first = true;  // selects buffer to write while dma reads the other
+  const unsigned tile_dx_shifted = tile_dx;
+  const unsigned tile_width_minus_dx = tile_width - tile_dx_shifted;
   for (unsigned y = 0; y < frame_height; y += tile_height) {
     // swap between two line buffers to not overwrite DMA accessed buffer
     uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
     uint16_t* line_buf_ptr_dma = line_buf_ptr;
     line_buf_first = not line_buf_first;
-    const unsigned tile_dx_shifted = tile_dx;
-    const unsigned tile_width_minus_dx = tile_width - tile_dx_shifted;
     for (unsigned ty = 0; ty < tile_height; ty++) {
       if (tile_width_minus_dx) {
         // render first partial tile
@@ -242,9 +292,6 @@ void loop() {
       }
     }
     tft.setAddrWindow(viewport_x, viewport_y + y, viewport_w, tile_height);
-    if (tft.dmaBusy()) {
-      Serial.println("dma busy");
-    }
     tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w * tile_height);
   }
   tile_dx++;
@@ -252,6 +299,48 @@ void loop() {
     tile_dx = 0;
   }
 
+  // four tile heights buffers
+  // fps 30
+  // bool line_buf_first = true;  // selects buffer to write while dma reads the other
+  // uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
+  // uint16_t* line_buf_ptr_dma = line_buf_ptr;
+  // line_buf_first = not line_buf_first;
+  // const unsigned tile_dx_shifted = tile_dx;
+  // const unsigned tile_width_minus_dx = tile_width - tile_dx_shifted;
+  // for (unsigned y = 0; y < frame_height; y += tile_height) {
+  //   for (unsigned ty = 0; ty < tile_height; ty++) {
+  //     if (tile_width_minus_dx) {
+  //       // render first partial tile
+  //       uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height) + tile_dx_shifted;
+  //       memcpy(line_buf_ptr, tile_data_ptr, tile_width_minus_dx * sizeof(uint16_t));
+  //       line_buf_ptr += tile_width_minus_dx;
+  //     }
+  //     // render full tiles
+  //     for (unsigned tx = 1; tx < frame_width / tile_width; tx++) {
+  //       uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
+  //       memcpy(line_buf_ptr, tile_data_ptr, tile_width * sizeof(uint16_t));
+  //       line_buf_ptr += tile_width;
+  //     }
+  //     if (tile_dx_shifted) {
+  //       // render last partial tile
+  //       uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
+  //       memcpy(line_buf_ptr, tile_data_ptr, tile_dx_shifted * sizeof(uint16_t));
+  //       line_buf_ptr += tile_dx_shifted;
+  //     }
+  //   }
+  //   if (y % (tile_height * 4) == 0) {
+  //     tft.setAddrWindow(viewport_x, viewport_y + y, viewport_w, tile_height * 4);
+  //     tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w * tile_height * 4);
+  //     // swap between two line buffers to not overwrite DMA accessed buffer
+  //     line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
+  //     line_buf_ptr_dma = line_buf_ptr;
+  //     line_buf_first = not line_buf_first;
+  //   }
+  // }
+  // tile_dx++;
+  // if (tile_dx == tile_width) {
+  //   tile_dx = 0;
+  // }
 
   // fps 31
   // bool line_buf_first = true;

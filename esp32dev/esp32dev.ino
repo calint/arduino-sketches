@@ -346,6 +346,7 @@ void loop() {
     }
   }
 #endif
+
   tile_dx++;
   if (tile_dx == tile_width) {
     tile_dx = 0;

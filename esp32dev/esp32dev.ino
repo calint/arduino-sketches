@@ -342,16 +342,14 @@ void loop() {
   }
 
   tft.startWrite();
-
   // render_using_one_scan_line_buffer(tile_dx);
   render_using_one_tile_height_buffer(tile_dx);
   // render_using_four_tile_height_buffer(tile_dx);
   // render_using_no_buffers(tile_dx);
+  tft.endWrite();
 
   tile_dx++;
   if (tile_dx == tile_width) {
     tile_dx = 0;
   }
-
-  tft.endWrite();
 }

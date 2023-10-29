@@ -33,12 +33,6 @@
 #include <SPI.h>
 
 // #define USE_WIFI
-#define USE_DMA
-
-// DMA buffer size options
-// #define USE_ONE_SCAN_LINE_BUFFER
-#define USE_ONE_TILE_HEIGHT_BUFFER
-// #define USE_FOUR_TILE_HEIGHT_BUFFER
 
 #ifdef USE_WIFI
 #include "WiFi.h"
@@ -146,9 +140,6 @@ void setup(void) {
   Serial.printf("\n------------------------------------------------------------------------------\n");
   Serial.printf("        chip model: %s\n", ESP.getChipModel());
   Serial.printf("largest free block: %d B\n", ESP.getMaxAllocHeap());
-#ifdef USE_DMA
-  Serial.printf("using DMA\n");
-#endif
 #ifdef USE_WIFI
   Serial.printf("using WiFi\n");
 #endif
@@ -178,9 +169,7 @@ void setup(void) {
 
   tft.init();
   tft.setRotation(1);
-#ifdef USE_DMA
   tft.initDMA(true);
-#endif
 
   viewport_x = tft.getViewportX();
   viewport_y = tft.getViewportY();
@@ -206,73 +195,14 @@ void setup(void) {
   fps.init(millis());
 }
 
-#ifdef USE_ONE_SCAN_LINE_BUFFER
-// one scan line buffer
-static uint16_t line_buf_1[frame_width];
-static uint16_t line_buf_2[frame_width];
-#endif
-
-#ifdef USE_ONE_TILE_HEIGHT_BUFFER
-// one tile height buffer
-static uint16_t line_buf_1[frame_width * tile_height];
-static uint16_t line_buf_2[frame_width * tile_height];
-#endif
-
-#ifdef USE_FOUR_TILE_HEIGHT_BUFFER
-// four tile heights buffers
-static uint16_t line_buf_1[frame_width * tile_height * 4];
-static uint16_t line_buf_2[frame_width * tile_height * 4];
-#endif
-
 static unsigned tile_dx;
 
-void loop() {
-  const unsigned long now_ms = millis();
-  if (fps.on_frame(now_ms)) {
-    Serial.printf("t=%lu  fps=%d\n", now_ms, fps.get());
-  }
+// one tile height buffer
+// 31 fps
+void render_using_one_tile_height_buffer(const unsigned tile_dx) {
+  static uint16_t line_buf_1[frame_width * tile_height];
+  static uint16_t line_buf_2[frame_width * tile_height];
 
-  tft.startWrite();
-
-#ifdef USE_ONE_SCAN_LINE_BUFFER
-  // one scan line buffer
-  // 25 fps
-  bool line_buf_first = true;  // selects buffer to write while dma reads the other
-  const unsigned tile_dx_shifted = tile_dx;
-  const unsigned tile_width_minus_dx = tile_width - tile_dx_shifted;
-  for (unsigned y = 0; y < frame_height; y += tile_height) {
-    for (unsigned ty = 0; ty < tile_height; ty++) {
-      // swap between two line buffers to not overwrite DMA accessed buffer
-      uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
-      uint16_t* line_buf_ptr_dma = line_buf_ptr;
-      line_buf_first = not line_buf_first;
-      if (tile_width_minus_dx) {
-        // render first partial tile
-        uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height) + tile_dx_shifted;
-        memcpy(line_buf_ptr, tile_data_ptr, tile_width_minus_dx * sizeof(uint16_t));
-        line_buf_ptr += tile_width_minus_dx;
-      }
-      // render full tiles
-      for (unsigned tx = 1; tx < frame_width / tile_width; tx++) {
-        uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
-        memcpy(line_buf_ptr, tile_data_ptr, tile_width * sizeof(uint16_t));
-        line_buf_ptr += tile_width;
-      }
-      if (tile_dx_shifted) {
-        // render last partial tile
-        uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
-        memcpy(line_buf_ptr, tile_data_ptr, tile_dx_shifted * sizeof(uint16_t));
-        line_buf_ptr += tile_dx_shifted;
-      }
-      tft.setAddrWindow(viewport_x, viewport_y + y + ty, viewport_w, 1);
-      tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w);
-    }
-  }
-#endif
-
-#ifdef USE_ONE_TILE_HEIGHT_BUFFER
-  // one tile height buffer
-  // 31 fps
   bool line_buf_first = true;  // selects buffer to write while dma reads the other
   const unsigned tile_dx_shifted = tile_dx;
   const unsigned tile_width_minus_dx = tile_width - tile_dx_shifted;
@@ -304,11 +234,53 @@ void loop() {
     tft.setAddrWindow(viewport_x, viewport_y + y, viewport_w, tile_height);
     tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w * tile_height);
   }
-#endif
+}
 
-#ifdef USE_FOUR_TILE_HEIGHT_BUFFER
-  // four tile heights buffers
-  // 30 fps
+// one scan line buffer
+// 25 fps
+void render_using_one_scan_line_buffer(const unsigned tile_dx) {
+  static uint16_t line_buf_1[frame_width];
+  static uint16_t line_buf_2[frame_width];
+
+  bool line_buf_first = true;  // selects buffer to write while dma reads the other
+  const unsigned tile_dx_shifted = tile_dx;
+  const unsigned tile_width_minus_dx = tile_width - tile_dx_shifted;
+  for (unsigned y = 0; y < frame_height; y += tile_height) {
+    for (unsigned ty = 0; ty < tile_height; ty++) {
+      // swap between two line buffers to not overwrite DMA accessed buffer
+      uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
+      uint16_t* line_buf_ptr_dma = line_buf_ptr;
+      line_buf_first = not line_buf_first;
+      if (tile_width_minus_dx) {
+        // render first partial tile
+        uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height) + tile_dx_shifted;
+        memcpy(line_buf_ptr, tile_data_ptr, tile_width_minus_dx * sizeof(uint16_t));
+        line_buf_ptr += tile_width_minus_dx;
+      }
+      // render full tiles
+      for (unsigned tx = 1; tx < frame_width / tile_width; tx++) {
+        uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
+        memcpy(line_buf_ptr, tile_data_ptr, tile_width * sizeof(uint16_t));
+        line_buf_ptr += tile_width;
+      }
+      if (tile_dx_shifted) {
+        // render last partial tile
+        uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
+        memcpy(line_buf_ptr, tile_data_ptr, tile_dx_shifted * sizeof(uint16_t));
+        line_buf_ptr += tile_dx_shifted;
+      }
+      tft.setAddrWindow(viewport_x, viewport_y + y + ty, viewport_w, 1);
+      tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w);
+    }
+  }
+}
+
+// four tile heights buffers
+// 30 fps
+void render_using_four_tile_height_buffer(const unsigned tile_dx) {
+  static uint16_t line_buf_1[frame_width * tile_height * 4];
+  static uint16_t line_buf_2[frame_width * tile_height * 4];
+
   bool line_buf_first = true;  // selects buffer to write while dma reads the other
   uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
   uint16_t* line_buf_ptr_dma = line_buf_ptr;
@@ -345,69 +317,41 @@ void loop() {
       line_buf_first = not line_buf_first;
     }
   }
-#endif
+}
+
+// 13 fps with dma
+// 25 fps without dma
+void render_using_no_buffers(const unsigned tile_dx) {
+  uint8_t tile_id = 0;
+  for (unsigned y = 0; y < frame_height; y += tile_height) {
+    for (unsigned x = 0; x < frame_width; x += tile_width) {
+      tft.setAddrWindow(viewport_x + x, viewport_y + y, tile_width, tile_height);
+      tft.pushPixels(tiles[tile_id].data, tile_width * tile_height);
+      tile_id++;
+      if (tile_id > 3) {
+        tile_id = 0;
+      }
+    }
+  }
+}
+
+void loop() {
+  const unsigned long now_ms = millis();
+  if (fps.on_frame(now_ms)) {
+    Serial.printf("t=%lu  fps=%d\n", now_ms, fps.get());
+  }
+
+  tft.startWrite();
+
+  // render_using_one_scan_line_buffer(tile_dx);
+  render_using_one_tile_height_buffer(tile_dx);
+  // render_using_four_tile_height_buffer(tile_dx);
+  // render_using_no_buffers(tile_dx);
 
   tile_dx++;
   if (tile_dx == tile_width) {
     tile_dx = 0;
   }
-
-  // one tile height buffer, no displacement
-  // 31 fps
-  // bool line_buf_first = true;
-  // for (unsigned y = 0; y < frame_height; y += tile_height) {
-  //   // swap between two line buffers to not overwrite DMA accessed buffer
-  //   uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
-  //   uint16_t* line_buf_ptr_dma = line_buf_ptr;
-  //   line_buf_first = !line_buf_first;
-  //   for (unsigned ty = 0; ty < tile_height; ty++) {
-  //     for (unsigned tx = 0; tx < frame_width / tile_width; tx++) {
-  //       uint16_t* tile_data_ptr = tiles[3].data + (ty * tile_height);
-  //       memcpy(line_buf_ptr, tile_data_ptr, tile_width * sizeof(uint16_t));
-  //       line_buf_ptr += tile_width;
-  //     }
-  //   }
-  //   tft.setAddrWindow(viewport_x, viewport_y + y, viewport_w, tile_height);
-  //   tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w * tile_height);
-  // }
-
-  // one scan line buffer, no displacement
-  // 25 fps
-  // uint16_t line_buf_1[viewport_w];
-  // uint16_t line_buf_2[viewport_w];
-  // bool line_buf_first = true;
-  // uint8_t tile_y = 0;
-  // for (unsigned y = 0; y < frame_height; y++) {
-  //   // swap between two line buffers to not overwrite DMA accessed buffer
-  //   uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
-  //   uint16_t* line_buf_ptr_dma = line_buf_ptr;
-  //   line_buf_first = !line_buf_first;
-  //   for (unsigned x = 0; x < frame_width / tile_width; x++) {
-  //     uint16_t* tile_data_ptr = tiles[2].data + (tile_y * tile_height);
-  //     memcpy(line_buf_ptr, tile_data_ptr, tile_width * sizeof(uint16_t));
-  //     line_buf_ptr += tile_width;
-  //   }
-  //   tile_y++;
-  //   if (tile_y >= tile_height) {
-  //     tile_y = 0;
-  //   }
-  //   tft.setAddrWindow(viewport_x, viewport_y + y, viewport_w, 1);
-  //   tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w);
-  // }
-
-  // 13 fps with dma
-  // 25 fps without dma
-  // uint8_t tile_id = 0;
-  // for (unsigned y = 0; y < frame_height; y += tile_height) {
-  //   for (unsigned x = 0; x < frame_width; x += tile_width) {
-  //     tft.setAddrWindow(viewport_x + x, viewport_y + y, tile_width, tile_height);
-  //     tft.pushPixels(tiles[tile_id].data, tile_width * tile_height);
-  //     tile_id++;
-  //     if (tile_id > 3) {
-  //       tile_id = 0;
-  //     }
-  //   }
-  // }
 
   tft.endWrite();
 }

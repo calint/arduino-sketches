@@ -32,8 +32,10 @@
 #include <TFT_eSPI.h>  // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
 
-//#define INIT_WIFI
-#ifdef INIT_WIFI
+// #define USE_WIFI
+#define USE_DMA
+
+#ifdef USE_WIFI
 #include "WiFi.h"
 #include "secrets.h"
 #endif
@@ -41,7 +43,7 @@
 static TFT_eSPI tft;  // Invoke library, pins defined in User_Setup.h
 
 static constexpr uint16_t frame_width = 320;
-static constexpr uint16_t frame_height = 160;
+static constexpr uint16_t frame_height = 120;
 // static uint16_t* frame_buf = nullptr;
 static uint16_t frame_buf[frame_width * frame_height];  // RGB565
 static uint16_t color;
@@ -96,6 +98,12 @@ void setup(void) {
   Serial.printf("\n------------------------------------------------------------------------------\n");
   Serial.printf("        chip model: %s\n", ESP.getChipModel());
   Serial.printf("largest free block: %d B\n", ESP.getMaxAllocHeap());
+#ifdef USE_DMA
+  Serial.printf("using DMA\n");
+#endif
+#ifdef USE_WIFI
+  Serial.printf("using WiFi\n");
+#endif
   // Serial.printf("largest free block: %d B\n", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
   Serial.printf("------------------------------------------------------------------------------\n");
 
@@ -122,6 +130,9 @@ void setup(void) {
 
   tft.init();
   tft.setRotation(1);
+#ifdef USE_DMA
+  tft.initDMA(true);
+#endif
 
   viewport_x = tft.getViewportX();
   viewport_y = tft.getViewportY();
@@ -130,7 +141,7 @@ void setup(void) {
 
   Serial.printf("viewport: x=%d, y=%d, w=%d, h=%d\n", viewport_x, viewport_y, viewport_w, viewport_h);
 
-#ifdef INIT_WIFI
+#ifdef USE_WIFI
   WiFi.begin(SECRET_WIFI_NETWORK, SECRET_WIFI_PASSWORD);
   WiFi.setAutoReconnect(true);
   Serial.print("Connecting to ");
@@ -161,6 +172,10 @@ void loop() {
 
   tft.startWrite();
   tft.setAddrWindow(viewport_x, viewport_y, viewport_w, viewport_h);
+#ifdef USE_DMA
+  tft.pushPixelsDMA(frame_buf, frame_width * frame_height);
+#else
   tft.pushPixels(frame_buf, frame_width * frame_height);
+#endif
   tft.endWrite();
 }

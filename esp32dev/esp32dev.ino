@@ -1,7 +1,7 @@
 //
 // intended for:
-//    ESP32 Arduino LVGL WIFI&Bluetooth Development Board 2.8"'
-//    240*320 Smart Display Screen 2.8inch LCD TFT Module With Touch WROOM
+//    ESP32 Arduino LVGL WIFI & Bluetooth Development Board 2.8"
+//    240 * 320 Smart Display Screen 2.8 inch LCD TFT Module With Touch WROOM
 //
 //          from: http://www.jczn1688.com/
 //  purchased at: https://www.aliexpress.com/item/1005004502250619.html
@@ -197,45 +197,6 @@ void setup(void) {
 
 static unsigned tile_dx;
 
-// one tile height buffer
-// 31 fps
-void render_using_one_tile_height_buffer(const unsigned tile_dx) {
-  static uint16_t line_buf_1[frame_width * tile_height];
-  static uint16_t line_buf_2[frame_width * tile_height];
-
-  bool line_buf_first = true;  // selects buffer to write while dma reads the other
-  const unsigned tile_dx_shifted = tile_dx;
-  const unsigned tile_width_minus_dx = tile_width - tile_dx_shifted;
-  for (unsigned y = 0; y < frame_height; y += tile_height) {
-    // swap between two line buffers to not overwrite DMA accessed buffer
-    uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
-    uint16_t* line_buf_ptr_dma = line_buf_ptr;
-    line_buf_first = not line_buf_first;
-    for (unsigned ty = 0; ty < tile_height; ty++) {
-      if (tile_width_minus_dx) {
-        // render first partial tile
-        uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height) + tile_dx_shifted;
-        memcpy(line_buf_ptr, tile_data_ptr, tile_width_minus_dx * sizeof(uint16_t));
-        line_buf_ptr += tile_width_minus_dx;
-      }
-      // render full tiles
-      for (unsigned tx = 1; tx < frame_width / tile_width; tx++) {
-        uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
-        memcpy(line_buf_ptr, tile_data_ptr, tile_width * sizeof(uint16_t));
-        line_buf_ptr += tile_width;
-      }
-      if (tile_dx_shifted) {
-        // render last partial tile
-        uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
-        memcpy(line_buf_ptr, tile_data_ptr, tile_dx_shifted * sizeof(uint16_t));
-        line_buf_ptr += tile_dx_shifted;
-      }
-    }
-    tft.setAddrWindow(viewport_x, viewport_y + y, viewport_w, tile_height);
-    tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w * tile_height);
-  }
-}
-
 // one scan line buffer
 // 25 fps
 void render_using_one_scan_line_buffer(const unsigned tile_dx) {
@@ -272,6 +233,45 @@ void render_using_one_scan_line_buffer(const unsigned tile_dx) {
       tft.setAddrWindow(viewport_x, viewport_y + y + ty, viewport_w, 1);
       tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w);
     }
+  }
+}
+
+// one tile height buffer
+// 31 fps
+void render_using_one_tile_height_buffer(const unsigned tile_dx) {
+  static uint16_t line_buf_1[frame_width * tile_height];
+  static uint16_t line_buf_2[frame_width * tile_height];
+
+  bool line_buf_first = true;  // selects buffer to write while dma reads the other
+  const unsigned tile_dx_shifted = tile_dx;
+  const unsigned tile_width_minus_dx = tile_width - tile_dx_shifted;
+  for (unsigned y = 0; y < frame_height; y += tile_height) {
+    // swap between two line buffers to not overwrite DMA accessed buffer
+    uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
+    uint16_t* line_buf_ptr_dma = line_buf_ptr;
+    line_buf_first = not line_buf_first;
+    for (unsigned ty = 0; ty < tile_height; ty++) {
+      if (tile_width_minus_dx) {
+        // render first partial tile
+        uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height) + tile_dx_shifted;
+        memcpy(line_buf_ptr, tile_data_ptr, tile_width_minus_dx * sizeof(uint16_t));
+        line_buf_ptr += tile_width_minus_dx;
+      }
+      // render full tiles
+      for (unsigned tx = 1; tx < frame_width / tile_width; tx++) {
+        uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
+        memcpy(line_buf_ptr, tile_data_ptr, tile_width * sizeof(uint16_t));
+        line_buf_ptr += tile_width;
+      }
+      if (tile_dx_shifted) {
+        // render last partial tile
+        uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
+        memcpy(line_buf_ptr, tile_data_ptr, tile_dx_shifted * sizeof(uint16_t));
+        line_buf_ptr += tile_dx_shifted;
+      }
+    }
+    tft.setAddrWindow(viewport_x, viewport_y + y, viewport_w, tile_height);
+    tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w * tile_height);
   }
 }
 

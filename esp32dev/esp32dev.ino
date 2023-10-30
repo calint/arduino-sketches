@@ -116,7 +116,7 @@ static constexpr uint8_t tile_height = 8;
 // };
 
 struct tile8bit {
-  uint8_t data[tile_width * tile_height];
+  const uint8_t data[tile_width * tile_height];
 } static constexpr tiles8bit[] PROGMEM{
   { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
     0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,

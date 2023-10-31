@@ -163,8 +163,8 @@ static void render_tile_map(const unsigned tile_x, const unsigned tile_dx) {
     line_buf_first = not line_buf_first;
     for (unsigned ty = 0; ty < tile_height; ty++) {
       if (tile_width_minus_dx) {
-        const uint8_t tile_ix = tiles_map.cell[y][tile_x];
         // render first partial tile
+        const uint8_t tile_ix = tiles_map.cell[y][tile_x];
         const uint8_t* tile_data_ptr = tiles[tile_ix].data + (ty * tile_height) + tile_dx;
         for (unsigned i = tile_dx; i < tile_width; i++) {
           *line_buf_ptr++ = palette[*tile_data_ptr++];
@@ -179,8 +179,8 @@ static void render_tile_map(const unsigned tile_x, const unsigned tile_dx) {
         }
       }
       if (tile_dx) {
-        const uint8_t tile_ix = tiles_map.cell[y][tile_x + 40];
         // render last partial tile
+        const uint8_t tile_ix = tiles_map.cell[y][tile_x + frame_width / tile_width];
         const uint8_t* tile_data_ptr = tiles[tile_ix].data + (ty * tile_height);
         for (unsigned i = 0; i < tile_dx; i++) {
           *line_buf_ptr++ = palette[*tile_data_ptr++];

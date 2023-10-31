@@ -107,6 +107,10 @@ static constexpr uint16_t palette[256]{
   0b1111111111111111,  // white
 };
 
+static float x = 0;
+static float dx_per_s = 80;
+static unsigned long t0_ms;
+
 static TFT_eSPI tft;  // invoke library, pins defined in User_Setup.h
 
 void setup(void) {
@@ -142,6 +146,7 @@ void setup(void) {
 #endif
 
   fps.init(millis());
+  t0_ms = millis();
 }
 
 // one tile height buffer, paletted 8 bit tiles in tiles map
@@ -191,25 +196,25 @@ static void tiles_map_render(const unsigned x) {
   }
 }
 
-static int x = 0;
-static int dx = 1;
-
 void loop() {
   const unsigned long now_ms = millis();
+  const float dt_s = (now_ms - t0_ms) / 1000.0f;
+  t0_ms = now_ms;
+
   if (fps.on_frame(now_ms)) {
     Serial.printf("t=%lu  fps=%d\n", now_ms, fps.get());
   }
 
   tft.startWrite();
-  tiles_map_render(x);
+  tiles_map_render(unsigned(x));
   tft.endWrite();
 
-  x += dx;
+  x += dx_per_s * dt_s;
   if (x < 0) {
     x = 0;
-    dx = 1;
+    dx_per_s = -dx_per_s;
   } else if (x > (tiles_map_width * tile_width - frame_width)) {
     x = tiles_map_width * tile_width - frame_width;
-    dx = -1;
+    dx_per_s = -dx_per_s;
   }
 }

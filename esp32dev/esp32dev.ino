@@ -72,6 +72,8 @@ static constexpr uint16_t frame_width = 320;
 static constexpr uint16_t frame_height = 240;
 
 static constexpr uint8_t tile_width = 8;
+static constexpr uint8_t tile_width_shift = 3;
+static constexpr uint8_t tile_width_and = 7;
 static constexpr uint8_t tile_height = 8;
 struct tile {
   const uint8_t data[tile_width * tile_height];
@@ -150,7 +152,9 @@ void setup(void) {
 
 // one tile height buffer, paletted 8 bit tiles
 // 31 fps
-static void render_tile_map(const unsigned tile_x, const unsigned tile_dx) {
+static void render_tile_map(const unsigned x) {
+  const unsigned tile_x = x >> tile_width_shift;
+  const unsigned tile_dx = x & tile_width_and;
   static uint16_t line_buf_1[frame_width * tile_height];
   static uint16_t line_buf_2[frame_width * tile_height];
 
@@ -192,9 +196,8 @@ static void render_tile_map(const unsigned tile_x, const unsigned tile_dx) {
   }
 }
 
-static int tile_x = 0;
-static int tile_dx = 0;
-static int tile_dx_inc = 1;
+static int x = 0;
+static int dx_inc = 1;
 
 void loop() {
   const unsigned long now_ms = millis();
@@ -203,27 +206,15 @@ void loop() {
   }
 
   tft.startWrite();
-  render_tile_map(tile_x, tile_dx);
+  render_tile_map(x);
   tft.endWrite();
 
-  tile_dx += tile_dx_inc;
-  if (tile_dx_inc > 0) {
-    if (tile_dx == tile_width) {
-      tile_dx = 0;
-      tile_x++;
-      if (tile_x == tiles_map_width - frame_width / tile_width) {
-        tile_dx_inc = -1;
-      }
-    }
-  } else {
-    if (tile_dx < 0) {
-      tile_dx = tile_width - 1;
-      tile_x--;
-      if (tile_x < 0) {
-        tile_x = 0;
-        tile_dx = 0;
-        tile_dx_inc = 1;
-      }
-    }
+  x += dx_inc;
+  if (x > (int)(tiles_map_width * tile_width - frame_width)) {
+    x = tiles_map_width * tile_width - frame_width;
+    dx_inc = -1;
+  } else if (x < 0) {
+    x = 0;
+    dx_inc = 1;
   }
 }

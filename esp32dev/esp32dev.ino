@@ -203,7 +203,7 @@ static void render_tile_map(const unsigned x) {
 }
 
 static int x = 0;
-static int dx_inc = 1;
+static int dx = 1;
 
 void loop() {
   const unsigned long now_ms = millis();
@@ -215,12 +215,12 @@ void loop() {
   render_tile_map(x);
   tft.endWrite();
 
-  x += dx_inc;
+  x += dx;
   if (x < 0) {
     x = 0;
-    dx_inc = 1;
+    dx = 1;
   } else if (x > (tiles_map_width * tile_width - frame_width)) {
     x = tiles_map_width * tile_width - frame_width;
-    dx_inc = -1;
+    dx = -1;
   }
 }

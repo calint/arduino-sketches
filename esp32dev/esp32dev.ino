@@ -96,7 +96,7 @@ static constexpr uint8_t tile_width_and = 7;
 
 struct tile {
   const uint8_t data[tile_width * tile_height];
-} static constexpr tiles[] PROGMEM{
+} static constexpr tiles[]{
 #include "tiles.h"
 };
 
@@ -219,10 +219,10 @@ void loop() {
 
   x += dx_per_s * fps.dt_s();
   if (x < 0) {
-    x = 0;
+    x = 0;  //? += dx_per_s
     dx_per_s = -dx_per_s;
   } else if (x > (tiles_map_width * tile_width - frame_width)) {
-    x = tiles_map_width * tile_width - frame_width;
+    x = tiles_map_width * tile_width - frame_width;  //? -= dx_per_s
     dx_per_s = -dx_per_s;
   }
 }

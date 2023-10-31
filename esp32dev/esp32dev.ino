@@ -146,7 +146,7 @@ void setup(void) {
 
 // one tile height buffer, paletted 8 bit tiles in tiles map
 // 31 fps
-static void tile_map_render(const unsigned x) {
+static void tiles_map_render(const unsigned x) {
   static uint16_t line_buf_1[frame_width * tile_height];
   static uint16_t line_buf_2[frame_width * tile_height];
 
@@ -201,7 +201,7 @@ void loop() {
   }
 
   tft.startWrite();
-  tile_map_render(x);
+  tiles_map_render(x);
   tft.endWrite();
 
   x += dx;

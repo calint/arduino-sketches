@@ -163,10 +163,10 @@ static void render_tile_map(const unsigned x) {
 
   const unsigned tile_x = x >> tile_width_shift;
   const unsigned tile_dx = x & tile_width_and;
+  const unsigned tile_width_minus_dx = tile_width - tile_dx;
 
   bool line_buf_first = true;  // selects buffer to write while dma reads the other
-  const unsigned tile_width_minus_dx = tile_width - tile_dx;
-  for (unsigned y = 0; y < tiles_map_height; y++) {
+  for (unsigned tile_y = 0; tile_y < tiles_map_height; tile_y++) {
     // swap between two line buffers to not overwrite DMA accessed buffer
     uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
     uint16_t* line_buf_ptr_dma = line_buf_ptr;
@@ -174,7 +174,7 @@ static void render_tile_map(const unsigned x) {
     for (unsigned ty = 0; ty < tile_height; ty++) {
       if (tile_width_minus_dx) {
         // render first partial tile
-        const uint8_t tile_ix = tiles_map.cell[y][tile_x];
+        const uint8_t tile_ix = tiles_map.cell[tile_y][tile_x];
         const uint8_t* tile_data_ptr = tiles[tile_ix].data + (ty * tile_height) + tile_dx;
         for (unsigned i = tile_dx; i < tile_width; i++) {
           *line_buf_ptr++ = palette[*tile_data_ptr++];
@@ -182,7 +182,7 @@ static void render_tile_map(const unsigned x) {
       }
       // render full tiles
       for (unsigned tx = 1; tx < frame_width / tile_width; tx++) {
-        const uint8_t tile_ix = tiles_map.cell[y][tile_x + tx];
+        const uint8_t tile_ix = tiles_map.cell[tile_y][tile_x + tx];
         const uint8_t* tile_data_ptr = tiles[tile_ix].data + (ty * tile_height);
         for (unsigned i = 0; i < tile_width; i++) {
           *line_buf_ptr++ = palette[*tile_data_ptr++];
@@ -190,14 +190,14 @@ static void render_tile_map(const unsigned x) {
       }
       if (tile_dx) {
         // render last partial tile
-        const uint8_t tile_ix = tiles_map.cell[y][tile_x + frame_width / tile_width];
+        const uint8_t tile_ix = tiles_map.cell[tile_y][tile_x + frame_width / tile_width];
         const uint8_t* tile_data_ptr = tiles[tile_ix].data + (ty * tile_height);
         for (unsigned i = 0; i < tile_dx; i++) {
           *line_buf_ptr++ = palette[*tile_data_ptr++];
         }
       }
     }
-    tft.setAddrWindow(viewport_x, viewport_y + y * tile_height, viewport_w, tile_height);
+    tft.setAddrWindow(viewport_x, viewport_y + tile_y * tile_height, viewport_w, tile_height);
     tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w * tile_height);
   }
 }

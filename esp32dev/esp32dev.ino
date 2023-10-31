@@ -210,11 +210,11 @@ void loop() {
   tft.endWrite();
 
   x += dx_inc;
-  if (x > (int)(tiles_map_width * tile_width - frame_width)) {
-    x = tiles_map_width * tile_width - frame_width;
-    dx_inc = -1;
-  } else if (x < 0) {
+  if (x < 0) {
     x = 0;
     dx_inc = 1;
+  } else if (x > (tiles_map_width * tile_width - frame_width)) {
+    x = tiles_map_width * tile_width - frame_width;
+    dx_inc = -1;
   }
 }

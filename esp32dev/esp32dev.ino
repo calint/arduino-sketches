@@ -40,30 +40,44 @@
 #endif
 
 class fps {
-  unsigned interval_ms = 5000;
-  unsigned frames_rendered_in_interval = 0;
-  unsigned long last_update_ms = 0;
-  unsigned current_fps = 0;
+  unsigned interval_ms_ = 5000;
+  unsigned frames_rendered_in_interval_ = 0;
+  unsigned long last_update_ms_ = 0;
+  unsigned long prv_now_ms_ = 0;
+  unsigned current_fps_ = 0;
+  unsigned long now_ms_ = 0;
+  float dt_s_ = 0;
 
 public:
   void init(const unsigned long now_ms) {
-    last_update_ms = now_ms;
+    last_update_ms_ = prv_now_ms_ = now_ms;
   }
 
   auto on_frame(const unsigned long now_ms) -> bool {
-    frames_rendered_in_interval++;
-    const unsigned long dt_ms = now_ms - last_update_ms;
-    if (dt_ms >= interval_ms) {
-      current_fps = frames_rendered_in_interval * 1000 / dt_ms;
-      frames_rendered_in_interval = 0;
-      last_update_ms = now_ms;
+    now_ms_ = now_ms;
+    dt_s_ = (now_ms - prv_now_ms_) / 1000.0f;
+    prv_now_ms_ = now_ms;
+    frames_rendered_in_interval_++;
+    const unsigned long dt_ms = now_ms - last_update_ms_;
+    if (dt_ms >= interval_ms_) {
+      current_fps_ = frames_rendered_in_interval_ * 1000 / dt_ms;
+      frames_rendered_in_interval_ = 0;
+      last_update_ms_ = now_ms;
       return true;
     }
     return false;
   }
 
   inline auto get() -> unsigned {
-    return current_fps;
+    return current_fps_;
+  }
+
+  inline auto now_ms() -> unsigned long {
+    return now_ms_;
+  }
+
+  inline auto dt_s() -> float {
+    return dt_s_;
   }
 
 } static fps{};
@@ -107,10 +121,6 @@ static constexpr uint16_t palette[256]{
   0b1111111111111111,  // white
 };
 
-static float x = 0;
-static float dx_per_s = 80;
-static unsigned long t0_ms;
-
 static TFT_eSPI tft;  // invoke library, pins defined in User_Setup.h
 
 void setup(void) {
@@ -146,7 +156,6 @@ void setup(void) {
 #endif
 
   fps.init(millis());
-  t0_ms = millis();
 }
 
 // one tile height buffer, paletted 8 bit tiles in tiles map
@@ -196,20 +205,19 @@ static void tiles_map_render(const unsigned x) {
   }
 }
 
-void loop() {
-  const unsigned long now_ms = millis();
-  const float dt_s = (now_ms - t0_ms) / 1000.0f;
-  t0_ms = now_ms;
+static float x = 0;
+static float dx_per_s = 80;
 
-  if (fps.on_frame(now_ms)) {
-    Serial.printf("t=%lu  fps=%d\n", now_ms, fps.get());
+void loop() {
+  if (fps.on_frame(millis())) {
+    Serial.printf("t=%lu  fps=%d\n", fps.now_ms(), fps.get());
   }
 
   tft.startWrite();
   tiles_map_render(unsigned(x));
   tft.endWrite();
 
-  x += dx_per_s * dt_s;
+  x += dx_per_s * fps.dt_s();
   if (x < 0) {
     x = 0;
     dx_per_s = -dx_per_s;

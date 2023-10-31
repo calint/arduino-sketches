@@ -39,8 +39,6 @@
 #include "secrets.h"
 #endif
 
-static TFT_eSPI tft;  // Invoke library, pins defined in User_Setup.h
-
 class fps {
   unsigned interval_ms = 5000;
   unsigned frames_rendered_in_interval = 0;
@@ -75,50 +73,20 @@ static constexpr uint16_t frame_height = 240;
 
 static constexpr uint8_t tile_width = 8;
 static constexpr uint8_t tile_height = 8;
-// struct tile {
-//   uint16_t data[tile_width * tile_height];
-// } static tiles[] PROGMEM{
-//   { 0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
-//     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-//     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-//     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-//     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-//     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-//     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-//     0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff },
-
-//   { 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
-//     0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
-//     0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
-//     0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
-//     0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
-//     0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
-//     0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
-//     0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff },
-
-//   { 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
-//     0xffff, 0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
-//     0xffff, 0x0000, 0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff,
-//     0xffff, 0x0000, 0x0000, 0xffff, 0x0000, 0x0000, 0x0000, 0xffff,
-//     0xffff, 0x0000, 0x0000, 0x0000, 0xffff, 0x0000, 0x0000, 0xffff,
-//     0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff, 0x0000, 0xffff,
-//     0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff, 0xffff,
-//     0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff },
-
-//   { 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
-//     0xffff, 0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff, 0xffff,
-//     0xffff, 0x0000, 0xffff, 0x0000, 0x0000, 0xffff, 0x0000, 0xffff,
-//     0xffff, 0x0000, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000, 0xffff,
-//     0xffff, 0x0000, 0x0000, 0xffff, 0xffff, 0x0000, 0x0000, 0xffff,
-//     0xffff, 0x0000, 0xffff, 0x0000, 0x0000, 0xffff, 0x0000, 0xffff,
-//     0xffff, 0xffff, 0x0000, 0x0000, 0x0000, 0x0000, 0xffff, 0xffff,
-//     0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff },
-// };
-
 struct tile {
   const uint8_t data[tile_width * tile_height];
 } static constexpr tiles[] PROGMEM{
 #include "tiles.h"
+};
+
+static constexpr unsigned tiles_map_width = 80;
+static constexpr unsigned tiles_map_height = 30;
+struct tiles_map {
+  uint8_t cell[tiles_map_height][tiles_map_width];
+} static constexpr tiles_map{
+  {
+#include "tiles_map.h"
+  }
 };
 
 static constexpr uint16_t palette[256]{
@@ -132,32 +100,12 @@ static constexpr uint16_t palette[256]{
   0b1111111111111111,  // white
 };
 
-static constexpr unsigned tiles_map_height = 30;
-static constexpr unsigned tiles_map_width = 80;
-struct tiles_map {
-  uint8_t cell[tiles_map_height][tiles_map_width];
-} static constexpr tiles_map{
-  {
-#include "tiles_map.h"
-  }
-};
-
 static int32_t viewport_x;
 static int32_t viewport_y;
 static int32_t viewport_w;
 static int32_t viewport_h;
 
-// static void print_heap_info(Stream& os) {
-//   os.print("used: ");
-//   os.print(ESP.getHeapSize() - ESP.getFreeHeap());
-//   os.println(" B");
-//   os.print("free: ");
-//   os.print(ESP.getFreeHeap());
-//   os.println(" B");
-//   os.print("total: ");
-//   os.print(ESP.getHeapSize());
-//   os.println(" B");
-// }
+static TFT_eSPI tft;  // invoke library, pins defined in User_Setup.h
 
 void setup(void) {
   Serial.begin(115200);
@@ -170,29 +118,7 @@ void setup(void) {
 #ifdef USE_WIFI
   Serial.printf("using WiFi\n");
 #endif
-  // Serial.printf("largest free block: %d B\n", heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
   Serial.printf("------------------------------------------------------------------------------\n");
-
-  // heap_caps_print_heap_info(MALLOC_CAP_8BIT);
-
-  // uint32_t total = 0;
-  // while (true) {
-  //   // heap_caps_print_heap_info(MALLOC_CAP_DEFAULT);
-  //   const uint32_t n = heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT);
-  //   if (n == 0) {
-  //     break;
-  //   }
-  //   void* buf = malloc(n);
-  //   if (buf == nullptr) {
-  //     break;
-  //   }
-  //   total += n;
-  //   Serial.printf("address: %p   allocated: %d\n", buf, n);
-  // }
-  // Serial.printf("total allocated bytes: %d\n", total);
-
-  // Serial.printf("heap info:\n");
-  // print_heap_info(Serial);
 
   tft.init();
   tft.setRotation(1);
@@ -224,7 +150,7 @@ void setup(void) {
 
 // one tile height buffer, paletted 8 bit tiles
 // 31 fps
-static void render_8bit_tiles_using_one_tile_height_buffer(const unsigned tile_x, const unsigned tile_dx) {
+static void render_tile_map(const unsigned tile_x, const unsigned tile_dx) {
   static uint16_t line_buf_1[frame_width * tile_height];
   static uint16_t line_buf_2[frame_width * tile_height];
 
@@ -266,148 +192,6 @@ static void render_8bit_tiles_using_one_tile_height_buffer(const unsigned tile_x
   }
 }
 
-// one scan line buffer
-// 25 fps
-// static void render_using_one_scan_line_buffer(const unsigned tile_dx) {
-//   static uint16_t line_buf_1[frame_width];
-//   static uint16_t line_buf_2[frame_width];
-
-//   bool line_buf_first = true;  // selects buffer to write while dma reads the other
-//   const unsigned tile_dx_shifted = tile_dx;
-//   const unsigned tile_width_minus_dx = tile_width - tile_dx_shifted;
-//   for (unsigned y = 0; y < frame_height; y += tile_height) {
-//     for (unsigned ty = 0; ty < tile_height; ty++) {
-//       // swap between two line buffers to not overwrite DMA accessed buffer
-//       uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
-//       uint16_t* line_buf_ptr_dma = line_buf_ptr;
-//       line_buf_first = not line_buf_first;
-//       if (tile_width_minus_dx) {
-//         // render first partial tile
-//         uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height) + tile_dx_shifted;
-//         memcpy(line_buf_ptr, tile_data_ptr, tile_width_minus_dx * sizeof(uint16_t));
-//         line_buf_ptr += tile_width_minus_dx;
-//       }
-//       // render full tiles
-//       for (unsigned tx = 1; tx < frame_width / tile_width; tx++) {
-//         uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
-//         memcpy(line_buf_ptr, tile_data_ptr, tile_width * sizeof(uint16_t));
-//         line_buf_ptr += tile_width;
-//       }
-//       if (tile_dx_shifted) {
-//         // render last partial tile
-//         uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
-//         memcpy(line_buf_ptr, tile_data_ptr, tile_dx_shifted * sizeof(uint16_t));
-//         line_buf_ptr += tile_dx_shifted;
-//       }
-//       tft.setAddrWindow(viewport_x, viewport_y + y + ty, viewport_w, 1);
-//       tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w);
-//     }
-//   }
-// }
-
-// one tile height buffer
-// 31 fps
-// static void render_using_one_tile_height_buffer(const unsigned tile_dx) {
-//   static uint16_t line_buf_1[frame_width * tile_height];
-//   static uint16_t line_buf_2[frame_width * tile_height];
-
-//   bool line_buf_first = true;  // selects buffer to write while dma reads the other
-//   const unsigned tile_dx_shifted = tile_dx;
-//   const unsigned tile_width_minus_dx = tile_width - tile_dx_shifted;
-//   for (unsigned y = 0; y < frame_height; y += tile_height) {
-//     // swap between two line buffers to not overwrite DMA accessed buffer
-//     uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
-//     uint16_t* line_buf_ptr_dma = line_buf_ptr;
-//     line_buf_first = not line_buf_first;
-//     for (unsigned ty = 0; ty < tile_height; ty++) {
-//       if (tile_width_minus_dx) {
-//         // render first partial tile
-//         uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height) + tile_dx_shifted;
-//         memcpy(line_buf_ptr, tile_data_ptr, tile_width_minus_dx * sizeof(uint16_t));
-//         line_buf_ptr += tile_width_minus_dx;
-//       }
-//       // render full tiles
-//       for (unsigned tx = 1; tx < frame_width / tile_width; tx++) {
-//         uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
-//         memcpy(line_buf_ptr, tile_data_ptr, tile_width * sizeof(uint16_t));
-//         line_buf_ptr += tile_width;
-//       }
-//       if (tile_dx_shifted) {
-//         // render last partial tile
-//         uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
-//         memcpy(line_buf_ptr, tile_data_ptr, tile_dx_shifted * sizeof(uint16_t));
-//         line_buf_ptr += tile_dx_shifted;
-//       }
-//     }
-//     tft.setAddrWindow(viewport_x, viewport_y + y, viewport_w, tile_height);
-//     tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w * tile_height);
-//   }
-// }
-
-// four tile heights buffers
-// 30 fps
-// static void render_using_four_tile_height_buffer(const unsigned tile_dx) {
-//   static uint16_t line_buf_1[frame_width * tile_height * 4];
-//   static uint16_t line_buf_2[frame_width * tile_height * 4];
-
-//   bool line_buf_first = true;  // selects buffer to write while dma reads the other
-//   uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
-//   uint16_t* line_buf_ptr_dma = line_buf_ptr;
-//   line_buf_first = not line_buf_first;
-//   const unsigned tile_dx_shifted = tile_dx;
-//   const unsigned tile_width_minus_dx = tile_width - tile_dx_shifted;
-//   for (unsigned y = 0; y < frame_height; y += tile_height) {
-//     for (unsigned ty = 0; ty < tile_height; ty++) {
-//       if (tile_width_minus_dx) {
-//         // render first partial tile
-//         uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height) + tile_dx_shifted;
-//         memcpy(line_buf_ptr, tile_data_ptr, tile_width_minus_dx * sizeof(uint16_t));
-//         line_buf_ptr += tile_width_minus_dx;
-//       }
-//       // render full tiles
-//       for (unsigned tx = 1; tx < frame_width / tile_width; tx++) {
-//         uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
-//         memcpy(line_buf_ptr, tile_data_ptr, tile_width * sizeof(uint16_t));
-//         line_buf_ptr += tile_width;
-//       }
-//       if (tile_dx_shifted) {
-//         // render last partial tile
-//         uint16_t* tile_data_ptr = tiles[1].data + (ty * tile_height);
-//         memcpy(line_buf_ptr, tile_data_ptr, tile_dx_shifted * sizeof(uint16_t));
-//         line_buf_ptr += tile_dx_shifted;
-//       }
-//     }
-//     if (y % (tile_height * 4) == 0) {
-//       tft.setAddrWindow(viewport_x, viewport_y + y, viewport_w, tile_height * 4);
-//       tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w * tile_height * 4);
-//       // swap between two line buffers to not overwrite DMA accessed buffer
-//       line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
-//       line_buf_ptr_dma = line_buf_ptr;
-//       line_buf_first = not line_buf_first;
-//     }
-//   }
-// }
-
-// 13 fps with dma
-// 25 fps without dma
-// static void render_using_no_buffers(const unsigned tile_dx) {
-//   uint8_t tile_id = 0;
-//   for (unsigned y = 0; y < frame_height; y += tile_height) {
-//     for (unsigned x = 0; x < frame_width; x += tile_width) {
-//       tft.setAddrWindow(viewport_x + x, viewport_y + y, tile_width, tile_height);
-//       tft.pushPixels(tiles[tile_id].data, tile_width * tile_height);
-//       tile_id++;
-//       if (tile_id > 3) {
-//         tile_id = 0;
-//       }
-//     }
-//   }
-// }
-
-// static int tile_x = tiles_map_width - frame_width / tile_width;
-// static int tile_dx = 0;
-// static int tile_dx_inc = -1;
-
 static int tile_x = 0;
 static int tile_dx = 0;
 static int tile_dx_inc = 1;
@@ -419,11 +203,7 @@ void loop() {
   }
 
   tft.startWrite();
-  // render_using_one_scan_line_buffer(tile_dx);
-  // render_using_one_tile_height_buffer(tile_dx);
-  // render_using_four_tile_height_buffer(tile_dx);
-  // render_using_no_buffers(tile_dx);
-  render_8bit_tiles_using_one_tile_height_buffer(tile_x, tile_dx);
+  render_tile_map(tile_x, tile_dx);
   tft.endWrite();
 
   tile_dx += tile_dx_inc;

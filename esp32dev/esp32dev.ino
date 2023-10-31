@@ -107,11 +107,6 @@ static constexpr uint16_t palette[256]{
   0b1111111111111111,  // white
 };
 
-static int32_t viewport_x;
-static int32_t viewport_y;
-static int32_t viewport_w;
-static int32_t viewport_h;
-
 static TFT_eSPI tft;  // invoke library, pins defined in User_Setup.h
 
 void setup(void) {
@@ -121,6 +116,7 @@ void setup(void) {
     ;  // wait for serial port to connect. needed for native usb port only
   Serial.printf("\n------------------------------------------------------------------------------\n");
   Serial.printf("        chip model: %s\n", ESP.getChipModel());
+  Serial.printf("            screen: %d x %d px\n", frame_width, frame_height);
   Serial.printf("largest free block: %d B\n", ESP.getMaxAllocHeap());
 #ifdef USE_WIFI
   Serial.printf("using WiFi\n");
@@ -130,13 +126,6 @@ void setup(void) {
   tft.init();
   tft.setRotation(1);
   tft.initDMA(true);
-
-  viewport_x = tft.getViewportX();
-  viewport_y = tft.getViewportY();
-  viewport_w = tft.getViewportWidth();
-  viewport_h = tft.getViewportHeight();
-
-  Serial.printf("viewport: x=%d, y=%d, w=%d, h=%d\n", viewport_x, viewport_y, viewport_w, viewport_h);
 
 #ifdef USE_WIFI
   WiFi.begin(SECRET_WIFI_NETWORK, SECRET_WIFI_PASSWORD);
@@ -197,8 +186,8 @@ static void tile_map_render(const unsigned x) {
         }
       }
     }
-    tft.setAddrWindow(viewport_x, viewport_y + tile_y * tile_height, viewport_w, tile_height);
-    tft.pushPixelsDMA(line_buf_ptr_dma, viewport_w * tile_height);
+    tft.setAddrWindow(0, tile_y * tile_height, frame_width, tile_height);
+    tft.pushPixelsDMA(line_buf_ptr_dma, frame_width * tile_height);
   }
 }
 

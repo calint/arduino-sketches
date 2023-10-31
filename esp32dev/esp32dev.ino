@@ -150,13 +150,14 @@ void setup(void) {
   fps.init(millis());
 }
 
-// one tile height buffer, paletted 8 bit tiles
+// one tile height buffer, paletted 8 bit tiles in tiles map
 // 31 fps
 static void render_tile_map(const unsigned x) {
-  const unsigned tile_x = x >> tile_width_shift;
-  const unsigned tile_dx = x & tile_width_and;
   static uint16_t line_buf_1[frame_width * tile_height];
   static uint16_t line_buf_2[frame_width * tile_height];
+
+  const unsigned tile_x = x >> tile_width_shift;
+  const unsigned tile_dx = x & tile_width_and;
 
   bool line_buf_first = true;  // selects buffer to write while dma reads the other
   const unsigned tile_width_minus_dx = tile_width - tile_dx;

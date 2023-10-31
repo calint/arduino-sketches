@@ -72,9 +72,14 @@ static constexpr uint16_t frame_width = 320;
 static constexpr uint16_t frame_height = 240;
 
 static constexpr uint8_t tile_width = 8;
-static constexpr uint8_t tile_width_shift = 3;
-static constexpr uint8_t tile_width_and = 7;
 static constexpr uint8_t tile_height = 8;
+
+// the right shift of 'x' to get the x in tiles map
+static constexpr uint8_t tile_width_shift = 3;
+
+// the bits that are the partial tile position between 0 and not including 'tile_width'
+static constexpr uint8_t tile_width_and = 7;
+
 struct tile {
   const uint8_t data[tile_width * tile_height];
 } static constexpr tiles[] PROGMEM{

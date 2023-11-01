@@ -11,6 +11,7 @@
 // https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 //    install boards: esp32 by Espressif 2.0.14
 //   install library: TFT_eSPI by Bodmer 2.5.31
+//                    XPT2046_Touchscreen by Paul Stoffregen 1.4.0
 //     setup library: replace User_Setup.h in libraries/TFT_eSPI/ with provided
 //                    file
 //
@@ -33,7 +34,20 @@
 //
 
 #include <SPI.h>
-#include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
+#include <TFT_eSPI.h>
+#include <XPT2046_Touchscreen.h>
+
+// setting up screen and touch from:
+// https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/Examples/Basics/2-TouchTest/2-TouchTest.ino
+#define XPT2046_IRQ 36
+#define XPT2046_MOSI 32
+#define XPT2046_MISO 39
+#define XPT2046_CLK 25
+#define XPT2046_CS 33
+
+static SPIClass spi{HSPI};
+static XPT2046_Touchscreen ts{XPT2046_CS, XPT2046_IRQ};
+static TFT_eSPI tft{};
 
 // #define USE_WIFI
 
@@ -117,8 +131,6 @@ static constexpr uint16_t palette[256]{
     0b1111111111111111, // white
 };
 
-static TFT_eSPI tft; // invoke library, pins defined in User_Setup.h
-
 void setup(void) {
   Serial.begin(115200);
   sleep(1); // arbitrary wait 1 second for serial to connect
@@ -134,6 +146,11 @@ void setup(void) {
 #endif
   Serial.printf("--------------------------------------------------------------"
                 "----------------\n");
+
+  // Start the SPI for the touch screen and init the TS library
+  spi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
+  ts.begin(spi);
+  ts.setRotation(1);
 
   tft.init();
   tft.setRotation(1);
@@ -218,16 +235,26 @@ void loop() {
     Serial.printf("t=%lu  fps=%u\n", fps.now_ms(), fps.get());
   }
 
+  if (ts.tirqTouched() and ts.touched()) {
+    TS_Point p = ts.getPoint();
+    Serial.printf("touch x=%d  y=%d  z=%d\n", p.x, p.y, p.z);
+    if (p.x < 2000) {
+      dx_per_s = -80;
+    } else if (p.x > 2000) {
+      dx_per_s = 80;
+    }
+  }
+
   tft.startWrite();
   tiles_map_render(unsigned(x));
   tft.endWrite();
 
   x += dx_per_s * fps.dt_s();
   if (x < 0) {
-    x = 0; //? += dx_per_s
-    dx_per_s = -dx_per_s;
+    x = 0;
+    dx_per_s = 0;
   } else if (x > (tiles_map_width * tile_width - frame_width)) {
-    x = tiles_map_width * tile_width - frame_width; //? -= dx_per_s
-    dx_per_s = -dx_per_s;
+    x = tiles_map_width * tile_width - frame_width;
+    dx_per_s = 0;
   }
 }

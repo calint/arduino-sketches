@@ -221,6 +221,7 @@
                 "/home/c/Arduino/libraries/TFT_eSPI",
                 "/home/c/.arduino15/packages/esp32/hardware/esp32/2.0.14/libraries/FS/src",
                 "/home/c/.arduino15/packages/esp32/hardware/esp32/2.0.14/libraries/SPIFFS/src",
+                "/home/c/Arduino/libraries/XPT2046_Touchscreen",
                 "/home/c/.arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/esp-2021r2-patch5-8.4.0/xtensa-esp32-elf/include/c++/8.4.0",
                 "/home/c/.arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/esp-2021r2-patch5-8.4.0/xtensa-esp32-elf/include/c++/8.4.0/xtensa-esp32-elf",
                 "/home/c/.arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/esp-2021r2-patch5-8.4.0/xtensa-esp32-elf/include/c++/8.4.0/backward",

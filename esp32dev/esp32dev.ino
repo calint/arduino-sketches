@@ -210,7 +210,7 @@ static float dx_per_s = 80;
 
 void loop() {
   if (fps.on_frame(millis())) {
-    Serial.printf("t=%lu  fps=%d\n", fps.now_ms(), fps.get());
+    Serial.printf("t: %lu  fps: %d\n", fps.now_ms(), fps.get());
   }
 
   tft.startWrite();

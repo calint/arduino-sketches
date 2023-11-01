@@ -8,7 +8,7 @@
     "buildPreferences": [
         [
             "compiler.cpp.extra_flags",
-            "-Wall -Wextra -pedantic -Wconversion -Wsign-conversion"
+            "-Werror -Wall -Wextra -pedantic -Wconversion -Wsign-conversion"
         ]
     ]
 }

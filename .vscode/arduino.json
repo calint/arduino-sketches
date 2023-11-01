@@ -4,5 +4,11 @@
     "sketch": "esp32dev/esp32dev.ino",
     "port": "/dev/ttyUSB0",
     "programmer": "esptool",
-    "output": "build"
+    "output": "build",
+    "buildPreferences": [
+        [
+            "compiler.cpp.extra_flags",
+            "-Wall -Wextra -pedantic -Wconversion -Wsign-conversion"
+        ]
+    ]
 }

@@ -7,10 +7,12 @@
 //  purchased at: https://www.aliexpress.com/item/1005004502250619.html
 //
 //                    Arduino IDE 2.2.1
-// additional boards: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+// additional boards:
+// https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 //    install boards: esp32 by Espressif 2.0.14
 //   install library: TFT_eSPI by Bodmer 2.5.31
-//     setup library: replace User_Setup.h in libraries/TFT_eSPI/ with provided file
+//     setup library: replace User_Setup.h in libraries/TFT_eSPI/ with provided
+//                    file
 //
 //   Arduino IDE, Tools menu and select:
 //                                Board: ESP32 Dev Module
@@ -23,14 +25,15 @@
 //                           Flash Size: 4MB (32Mb)
 //                         JTAG Adapter: Disabled
 //                      Arduino Runs On: Core 1
-//                     Partition Scheme: Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+//                     Partition Scheme: Default 4MB with spiffs (1.2MB
+//                                       APP/1.5MB SPIFFS)
 //                                PSRAM: Disabled
 //                         Upload Speed: 921600
 //                           Programmer: Esptool
 //
 
-#include <TFT_eSPI.h>  // Graphics and font library for ST7735 driver chip
 #include <SPI.h>
+#include <TFT_eSPI.h> // Graphics and font library for ST7735 driver chip
 
 // #define USE_WIFI
 
@@ -68,17 +71,11 @@ public:
     return false;
   }
 
-  inline auto get() -> unsigned {
-    return current_fps_;
-  }
+  inline auto get() -> unsigned { return current_fps_; }
 
-  inline auto now_ms() -> unsigned long {
-    return now_ms_;
-  }
+  inline auto now_ms() -> unsigned long { return now_ms_; }
 
-  inline auto dt_s() -> float {
-    return dt_s_;
-  }
+  inline auto dt_s() -> float { return dt_s_; }
 
 } static fps{};
 
@@ -91,7 +88,8 @@ static constexpr uint8_t tile_height = 8;
 // the right shift of 'x' to get the x in tiles map
 static constexpr uint8_t tile_width_shift = 3;
 
-// the bits that are the partial tile position between 0 and not including 'tile_width'
+// the bits that are the partial tile position between 0 and not including
+// 'tile_width'
 static constexpr uint8_t tile_width_and = 7;
 
 struct tile {
@@ -104,38 +102,38 @@ static constexpr unsigned tiles_map_width = 80;
 static constexpr unsigned tiles_map_height = 30;
 struct tiles_map {
   uint8_t cell[tiles_map_height][tiles_map_width];
-} static constexpr tiles_map{
-  {
+} static constexpr tiles_map{{
 #include "tiles_map.h"
-  }
-};
+}};
 
 static constexpr uint16_t palette[256]{
-  0b0000000000000000,  // black
-  0b0000000000011111,  // green
-  0b0000011111100000,  // red
-  0b0000011111111111,  // yellow
-  0b1111100000000000,  // blue
-  0b1111100000011111,  // cyan
-  0b1111111111100000,  // magenta
-  0b1111111111111111,  // white
+    0b0000000000000000, // black
+    0b0000000000011111, // green
+    0b0000011111100000, // red
+    0b0000011111111111, // yellow
+    0b1111100000000000, // blue
+    0b1111100000011111, // cyan
+    0b1111111111100000, // magenta
+    0b1111111111111111, // white
 };
 
-static TFT_eSPI tft;  // invoke library, pins defined in User_Setup.h
+static TFT_eSPI tft; // invoke library, pins defined in User_Setup.h
 
 void setup(void) {
   Serial.begin(115200);
-  sleep(1);  // arbitrary wait 1 second for serial to connect
+  sleep(1); // arbitrary wait 1 second for serial to connect
   while (!Serial)
-    ;  // wait for serial port to connect. needed for native usb port only
-  Serial.printf("\n------------------------------------------------------------------------------\n");
+    ; // wait for serial port to connect. needed for native usb port only
+  Serial.printf("\n------------------------------------------------------------"
+                "------------------\n");
   Serial.printf("        chip model: %s\n", ESP.getChipModel());
   Serial.printf("            screen: %d x %d px\n", frame_width, frame_height);
   Serial.printf("largest free block: %d B\n", ESP.getMaxAllocHeap());
 #ifdef USE_WIFI
   Serial.printf("using WiFi\n");
 #endif
-  Serial.printf("------------------------------------------------------------------------------\n");
+  Serial.printf("--------------------------------------------------------------"
+                "----------------\n");
 
   tft.init();
   tft.setRotation(1);
@@ -168,17 +166,19 @@ static void tiles_map_render(const unsigned x) {
   const unsigned tile_dx = x & tile_width_and;
   const unsigned tile_width_minus_dx = tile_width - tile_dx;
 
-  bool line_buf_first = true;  // selects buffer to write while dma reads the other
+  bool line_buf_first =
+      true; // selects buffer to write while dma reads the other
   for (unsigned tile_y = 0; tile_y < tiles_map_height; tile_y++) {
     // swap between two line buffers to not overwrite DMA accessed buffer
-    uint16_t* line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
-    uint16_t* line_buf_ptr_dma = line_buf_ptr;
+    uint16_t *line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
+    uint16_t *line_buf_ptr_dma = line_buf_ptr;
     line_buf_first = not line_buf_first;
     for (unsigned ty = 0; ty < tile_height; ty++) {
       if (tile_width_minus_dx) {
         // render first partial tile
         const uint8_t tile_ix = tiles_map.cell[tile_y][tile_x];
-        const uint8_t* tile_data_ptr = tiles[tile_ix].data + (ty * tile_height) + tile_dx;
+        const uint8_t *tile_data_ptr =
+            tiles[tile_ix].data + (ty * tile_height) + tile_dx;
         for (unsigned i = tile_dx; i < tile_width; i++) {
           *line_buf_ptr++ = palette[*tile_data_ptr++];
         }
@@ -186,15 +186,16 @@ static void tiles_map_render(const unsigned x) {
       // render full tiles
       for (unsigned tx = 1; tx < frame_width / tile_width; tx++) {
         const uint8_t tile_ix = tiles_map.cell[tile_y][tile_x + tx];
-        const uint8_t* tile_data_ptr = tiles[tile_ix].data + (ty * tile_height);
+        const uint8_t *tile_data_ptr = tiles[tile_ix].data + (ty * tile_height);
         for (unsigned i = 0; i < tile_width; i++) {
           *line_buf_ptr++ = palette[*tile_data_ptr++];
         }
       }
       if (tile_dx) {
         // render last partial tile
-        const uint8_t tile_ix = tiles_map.cell[tile_y][tile_x + frame_width / tile_width];
-        const uint8_t* tile_data_ptr = tiles[tile_ix].data + (ty * tile_height);
+        const uint8_t tile_ix =
+            tiles_map.cell[tile_y][tile_x + frame_width / tile_width];
+        const uint8_t *tile_data_ptr = tiles[tile_ix].data + (ty * tile_height);
         for (unsigned i = 0; i < tile_dx; i++) {
           *line_buf_ptr++ = palette[*tile_data_ptr++];
         }
@@ -219,10 +220,10 @@ void loop() {
 
   x += dx_per_s * fps.dt_s();
   if (x < 0) {
-    x = 0;  //? += dx_per_s
+    x = 0; //? += dx_per_s
     dx_per_s = -dx_per_s;
   } else if (x > (tiles_map_width * tile_width - frame_width)) {
-    x = tiles_map_width * tile_width - frame_width;  //? -= dx_per_s
+    x = tiles_map_width * tile_width - frame_width; //? -= dx_per_s
     dx_per_s = -dx_per_s;
   }
 }

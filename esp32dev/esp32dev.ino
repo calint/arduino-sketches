@@ -156,7 +156,7 @@ void setup(void) {
   fps.init(millis());
 }
 
-// one tile height buffer, paletted 8 bit tiles in tiles map
+// one tile height buffer, palette, 8-bit tiles from tiles map
 // 31 fps
 static void tiles_map_render(const unsigned x) {
   static uint16_t line_buf_1[frame_width * tile_height];
@@ -166,13 +166,16 @@ static void tiles_map_render(const unsigned x) {
   const unsigned tile_dx = x & tile_width_and;
   const unsigned tile_width_minus_dx = tile_width - tile_dx;
 
-  bool line_buf_first =
-      true; // selects buffer to write while dma reads the other
+  // selects buffer to write while DMA reads the other
+  bool line_buf_first = true;
   for (unsigned tile_y = 0; tile_y < tiles_map_height; tile_y++) {
     // swap between two line buffers to not overwrite DMA accessed buffer
     uint16_t *line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
     uint16_t *line_buf_ptr_dma = line_buf_ptr;
     line_buf_first = not line_buf_first;
+
+    // render one tile height of data to the 'line_buf_ptr' starting and ending
+    // with partial tile
     for (unsigned ty = 0; ty < tile_height; ty++) {
       if (tile_width_minus_dx) {
         // render first partial tile
@@ -201,6 +204,7 @@ static void tiles_map_render(const unsigned x) {
         }
       }
     }
+    // write buffer to screen
     tft.setAddrWindow(0, tile_y * tile_height, frame_width, tile_height);
     tft.pushPixelsDMA(line_buf_ptr_dma, frame_width * tile_height);
   }
@@ -211,7 +215,7 @@ static float dx_per_s = 80;
 
 void loop() {
   if (fps.on_frame(millis())) {
-    Serial.printf("t: %lu  fps: %d\n", fps.now_ms(), fps.get());
+    Serial.printf("t=%lu  fps=%u\n", fps.now_ms(), fps.get());
   }
 
   tft.startWrite();

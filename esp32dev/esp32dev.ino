@@ -187,9 +187,13 @@ static void tiles_map_render(const unsigned x) {
   const unsigned tile_dx = x & tile_width_and;
   const unsigned tile_width_minus_dx = tile_width - tile_dx;
 
-  // selects buffer to write while DMA reads the other
+  // selects buffer to write while DMA reads the other buffer
   bool line_buf_first = true;
-  for (unsigned tile_y = 0; tile_y < tiles_map_height; tile_y++) {
+  // pointer to start of current row of tiles
+  const uint8_t *tiles_map_row_ptr = tiles_map.cell[0];
+  // for each row of tiles
+  for (unsigned tile_y = 0; tile_y < tiles_map_height;
+       tile_y++, tiles_map_row_ptr += tiles_map_width) {
     // swap between two line buffers to not overwrite DMA accessed buffer
     uint16_t *line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
     uint16_t *line_buf_ptr_dma = line_buf_ptr;
@@ -201,7 +205,7 @@ static void tiles_map_render(const unsigned x) {
          ty++, ty_times_tile_height += tile_height) {
       if (tile_width_minus_dx) {
         // render first partial tile
-        const uint8_t tile_ix = tiles_map.cell[tile_y][tile_x];
+        const uint8_t tile_ix = *(tiles_map_row_ptr + tile_x);
         const uint8_t *tile_data_ptr =
             tiles[tile_ix].data + ty_times_tile_height + tile_dx;
         for (unsigned i = tile_dx; i < tile_width; i++) {
@@ -211,7 +215,7 @@ static void tiles_map_render(const unsigned x) {
       // render full tiles
       const unsigned tx_max = tile_x + (frame_width / tile_width);
       for (unsigned tx = tile_x + 1; tx < tx_max; tx++) {
-        const uint8_t tile_ix = tiles_map.cell[tile_y][tx];
+        const uint8_t tile_ix = *(tiles_map_row_ptr + tx);
         const uint8_t *tile_data_ptr =
             tiles[tile_ix].data + ty_times_tile_height;
         for (unsigned i = 0; i < tile_width; i++) {
@@ -220,7 +224,7 @@ static void tiles_map_render(const unsigned x) {
       }
       if (tile_dx) {
         // render last partial tile
-        const uint8_t tile_ix = tiles_map.cell[tile_y][tx_max];
+        const uint8_t tile_ix = *(tiles_map_row_ptr + tx_max);
         const uint8_t *tile_data_ptr =
             tiles[tile_ix].data + ty_times_tile_height;
         for (unsigned i = 0; i < tile_dx; i++) {

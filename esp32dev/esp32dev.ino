@@ -256,7 +256,7 @@ void loop() {
   if (ts.tirqTouched() and ts.touched()) {
     const TS_Point pt = ts.getPoint();
     const int x_relative_center = pt.x - 4096 / 2;
-    constexpr float dx_factor = 100.0f / (4096 / 2);
+    constexpr float dx_factor = 200.0f / (4096 / 2);
     dx_per_s = dx_factor * x_relative_center;
     Serial.printf("touch x=%d  y=%d  z=%d  dx=%f\n", pt.x, pt.y, pt.z,
                   dx_per_s);

@@ -191,9 +191,11 @@ static void tiles_map_render(const unsigned x) {
   bool line_buf_first = true;
   // pointer to start of current row of tiles
   const uint8_t *tiles_map_row_ptr = tiles_map.cell[0];
+  // y in frame for current tiles row
+  unsigned frame_y = 0;
   // for each row of tiles
   for (unsigned tile_y = 0; tile_y < tiles_map_height;
-       tile_y++, tiles_map_row_ptr += tiles_map_width) {
+       tile_y++, tiles_map_row_ptr += tiles_map_width, frame_y += tile_height) {
     // swap between two line buffers to not overwrite DMA accessed buffer
     uint16_t *line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
     uint16_t *line_buf_ptr_dma = line_buf_ptr;
@@ -233,7 +235,7 @@ static void tiles_map_render(const unsigned x) {
       }
     }
     // write buffer to screen
-    tft.setAddrWindow(0, tile_y * tile_height, frame_width, tile_height);
+    tft.setAddrWindow(0, frame_y, frame_width, tile_height);
     tft.pushPixelsDMA(line_buf_ptr_dma, frame_width * tile_height);
   }
 }

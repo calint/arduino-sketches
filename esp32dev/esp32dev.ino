@@ -196,30 +196,33 @@ static void tiles_map_render(const unsigned x) {
     line_buf_first = not line_buf_first;
 
     // render one tile height of data to the 'line_buf_ptr' starting and ending
-    // with partial tile
-    for (unsigned ty = 0; ty < tile_height; ty++) {
+    // with possible partial tiles
+    for (unsigned ty = 0, ty_times_tile_height = 0; ty < tile_height;
+         ty++, ty_times_tile_height += tile_height) {
       if (tile_width_minus_dx) {
         // render first partial tile
         const uint8_t tile_ix = tiles_map.cell[tile_y][tile_x];
         const uint8_t *tile_data_ptr =
-            tiles[tile_ix].data + (ty * tile_height) + tile_dx;
+            tiles[tile_ix].data + ty_times_tile_height + tile_dx;
         for (unsigned i = tile_dx; i < tile_width; i++) {
           *line_buf_ptr++ = palette[*tile_data_ptr++];
         }
       }
       // render full tiles
-      for (unsigned tx = 1; tx < frame_width / tile_width; tx++) {
-        const uint8_t tile_ix = tiles_map.cell[tile_y][tile_x + tx];
-        const uint8_t *tile_data_ptr = tiles[tile_ix].data + (ty * tile_height);
+      const unsigned tx_max = tile_x + (frame_width / tile_width);
+      for (unsigned tx = tile_x + 1; tx < tx_max; tx++) {
+        const uint8_t tile_ix = tiles_map.cell[tile_y][tx];
+        const uint8_t *tile_data_ptr =
+            tiles[tile_ix].data + ty_times_tile_height;
         for (unsigned i = 0; i < tile_width; i++) {
           *line_buf_ptr++ = palette[*tile_data_ptr++];
         }
       }
       if (tile_dx) {
         // render last partial tile
-        const uint8_t tile_ix =
-            tiles_map.cell[tile_y][tile_x + frame_width / tile_width];
-        const uint8_t *tile_data_ptr = tiles[tile_ix].data + (ty * tile_height);
+        const uint8_t tile_ix = tiles_map.cell[tile_y][tx_max];
+        const uint8_t *tile_data_ptr =
+            tiles[tile_ix].data + ty_times_tile_height;
         for (unsigned i = 0; i < tile_dx; i++) {
           *line_buf_ptr++ = palette[*tile_data_ptr++];
         }
@@ -232,7 +235,7 @@ static void tiles_map_render(const unsigned x) {
 }
 
 static float x = 0;
-static float dx_per_s = 80;
+static float dx_per_s = 100;
 
 void loop() {
   if (fps.on_frame(millis())) {
@@ -240,13 +243,12 @@ void loop() {
   }
 
   if (ts.tirqTouched() and ts.touched()) {
-    TS_Point p = ts.getPoint();
-    Serial.printf("touch x=%d  y=%d  z=%d\n", p.x, p.y, p.z);
-    if (p.x < 2000) {
-      dx_per_s = -80;
-    } else if (p.x > 2000) {
-      dx_per_s = 80;
-    }
+    const TS_Point pt = ts.getPoint();
+    const int x_relative_center = pt.x - 4096 / 2;
+    constexpr float dx_factor = 100.0f / (4096 / 2);
+    dx_per_s = dx_factor * x_relative_center;
+    Serial.printf("touch x=%d  y=%d  z=%d  dx=%f\n", pt.x, pt.y, pt.z,
+                  dx_per_s);
   }
 
   tft.startWrite();
@@ -256,9 +258,9 @@ void loop() {
   x += dx_per_s * fps.dt_s();
   if (x < 0) {
     x = 0;
-    dx_per_s = 0;
+    dx_per_s = -dx_per_s;
   } else if (x > (tiles_map_width * tile_width - frame_width)) {
     x = tiles_map_width * tile_width - frame_width;
-    dx_per_s = 0;
+    dx_per_s = -dx_per_s;
   }
 }

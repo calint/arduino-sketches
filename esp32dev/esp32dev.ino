@@ -1,5 +1,5 @@
 //
-// intended for:
+// intended for: ESP32-2432S028R
 //    ESP32 Arduino LVGL WIFI & Bluetooth Development Board 2.8"
 //    240 * 320 Smart Display Screen 2.8 inch LCD TFT Module With Touch WROOM
 //
@@ -32,6 +32,10 @@
 //                         Upload Speed: 921600
 //                           Programmer: Esptool
 //
+//  Visual Code:
+//    * install plug-in Arduino v0.6.0
+//    * run task ">Arduino: Initialize"
+//    * install libraries (plug-in installs libraries in ~/Arduino/libraries)
 
 #include <SPI.h>
 #include <TFT_eSPI.h>

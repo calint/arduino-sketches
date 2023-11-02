@@ -5,6 +5,7 @@
 //
 //          from: http://www.jczn1688.com/
 //  purchased at: https://www.aliexpress.com/item/1005004502250619.html
+//     resources: https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display
 //
 //                    Arduino IDE 2.2.1
 // additional boards:
@@ -34,7 +35,11 @@
 //
 //  Visual Code:
 //    * install plug-in Arduino v0.6.0
-//    * run task ">Arduino: Initialize"
+//    * task ">Arduino: Initialize"
+//    * task ">Arduino: Board Manager"
+//        install "esp32 by Espressif Systems Version 2.0.14"
+//    * task ">Arduino: Board Config"
+//        select "ESP32 Dev Module (esp32)"
 //    * install libraries (plug-in installs libraries in ~/Arduino/libraries)
 
 #include <SPI.h>

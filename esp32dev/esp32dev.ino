@@ -272,7 +272,7 @@ static float dx_per_s = 100;
 
 void loop() {
   if (fps.on_frame(millis())) {
-    Serial.printf("t=%lu  fps=%u  ldr=%d\n", fps.now_ms(), fps.get(),
+    Serial.printf("t=%lu  fps=%u  ldr=%u\n", fps.now_ms(), fps.get(),
                   analogRead(LDR_PIN));
   }
 

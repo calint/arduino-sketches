@@ -46,6 +46,15 @@
 #include <TFT_eSPI.h>
 #include <XPT2046_Touchscreen.h>
 
+// ldr (light dependant resistor)
+// analog read of pin gives: 0 for full brightness, higher values is darker
+#define LDR_PIN 34
+
+// rgb led
+#define CYD_LED_BLUE 17
+#define CYD_LED_RED 4
+#define CYD_LED_GREEN 16
+
 // setting up screen and touch from:
 // https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/Examples/Basics/2-TouchTest/2-TouchTest.ino
 #define XPT2046_IRQ 36
@@ -156,6 +165,14 @@ void setup(void) {
   Serial.printf("--------------------------------------------------------------"
                 "----------------\n");
 
+  // setup rgb led
+  pinMode(CYD_LED_RED, OUTPUT);
+  pinMode(CYD_LED_GREEN, OUTPUT);
+  pinMode(CYD_LED_BLUE, OUTPUT);
+
+  // setup ldr
+  pinMode(LDR_PIN, INPUT);
+
   // Start the SPI for the touch screen and init the TS library
   spi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
   ts.begin(spi);
@@ -180,6 +197,11 @@ void setup(void) {
 #endif
 
   fps.init(millis());
+
+  // set rgb led to green
+  digitalWrite(CYD_LED_RED, HIGH);
+  digitalWrite(CYD_LED_GREEN, LOW);
+  digitalWrite(CYD_LED_BLUE, HIGH);
 }
 
 // one tile height buffer, palette, 8-bit tiles from tiles map
@@ -250,7 +272,8 @@ static float dx_per_s = 100;
 
 void loop() {
   if (fps.on_frame(millis())) {
-    Serial.printf("t=%lu  fps=%u\n", fps.now_ms(), fps.get());
+    Serial.printf("t=%lu  fps=%u  ldr=%d\n", fps.now_ms(), fps.get(),
+                  analogRead(LDR_PIN));
   }
 
   if (ts.tirqTouched() and ts.touched()) {

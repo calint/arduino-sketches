@@ -78,9 +78,9 @@ class fps {
   unsigned interval_ms_ = 5000;
   unsigned frames_rendered_in_interval_ = 0;
   unsigned long last_update_ms_ = 0;
+  unsigned long now_ms_ = 0;
   unsigned long prv_now_ms_ = 0;
   unsigned current_fps_ = 0;
-  unsigned long now_ms_ = 0;
   float dt_s_ = 0;
 
 public:

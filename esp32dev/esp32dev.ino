@@ -291,7 +291,7 @@ static void tiles_map_render(const unsigned x) {
   const uint8_t *tiles_map_row_ptr = tiles_map.cell[0];
   // y in frame for current tiles row
   unsigned frame_y = 0;
-  int spr_width_neg = -(int)sprite_width;
+  const int16_t spr_width_neg = -(int16_t)sprite_width;
   // for each row of tiles
   for (unsigned tile_y = 0; tile_y < tiles_map_height;
        tile_y++, tiles_map_row_ptr += tiles_map_width, frame_y += tile_height) {
@@ -337,10 +337,14 @@ static void tiles_map_render(const unsigned x) {
       // although grossly inefficient method the DMA is busy while rendering
       // 1024 sprites and tiles. core 0 will do graphics and core 1 will do game
       // logic
-      const unsigned y = frame_y + ty;
+      const int16_t y = frame_y + ty;
       for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
         const sprite *spr = &sprites[i];
-        // spr->x > spr_width_neg and spr->x < frame_width and
+        // ? the if statement below drops frame rate from 29 to 22. why so much?
+        // if (spr->x <= spr_width_neg or spr->x > (int16_t)frame_width) {
+        //   Serial.printf("skipped\n");
+        //   continue;
+        // }
         if (spr->y <= y and (spr->y + sprite_height) > y) {
           const unsigned sprite_data_row_num = y - spr->y;
           uint16_t *px_ptr = line_buf_ptr_dma + frame_width * ty + spr->x;

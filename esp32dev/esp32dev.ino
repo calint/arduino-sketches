@@ -149,6 +149,42 @@ static constexpr uint16_t palette[256]{
     0b1111111111111111, // white
 };
 
+static constexpr unsigned sprite_width = 8;
+static constexpr unsigned sprite_height = 8;
+static constexpr unsigned sprite_count = 1024;
+
+// clang-format off
+uint8_t sprite1_data[]{
+  0,0,2,2,2,2,0,0,
+  0,2,2,2,2,2,2,0,
+  2,2,2,2,2,2,2,2,
+  2,2,2,0,0,2,2,2,
+  2,2,2,0,0,2,2,2,
+  2,2,2,2,2,2,2,2,
+  0,2,2,2,2,2,2,0,
+  0,0,2,2,2,2,0,0,
+};
+// clang-format on
+
+// clang-format off
+uint8_t sprite2_data[]{
+  0,3,3,3,3,3,3,0,
+  3,2,2,2,2,2,2,3,
+  3,2,2,2,2,2,2,3,
+  3,2,2,0,0,2,2,3,
+  3,2,2,0,0,2,2,3,
+  3,2,2,2,2,2,2,3,
+  3,2,2,2,2,2,2,3,
+  0,3,3,3,3,3,3,0,
+};
+// clang-format on
+
+struct sprite {
+  uint8_t *data;
+  int16_t x;
+  int16_t y;
+} static sprites[sprite_count];
+
 void setup(void) {
   Serial.begin(115200);
   sleep(1); // arbitrary wait 1 second for serial to connect
@@ -202,6 +238,41 @@ void setup(void) {
   digitalWrite(CYD_LED_RED, HIGH);
   digitalWrite(CYD_LED_GREEN, LOW);
   digitalWrite(CYD_LED_BLUE, HIGH);
+
+  // initiate sprites
+  unsigned i = 0;
+  for (unsigned x = 0; x < 32; x++) {
+    for (unsigned y = 0; y < 16; y++) {
+      sprite *spr = &sprites[i++];
+      spr->x = x * 10;
+      spr->y = y * 10;
+      spr->data = sprite1_data;
+    }
+  }
+  for (unsigned x = 0; x < 32; x++) {
+    for (unsigned y = 0; y < 16; y++) {
+      sprite *spr = &sprites[i++];
+      spr->x = x * 10;
+      spr->y = y * 10;
+      spr->data = sprite2_data;
+    }
+  }
+  // for (unsigned x = 0; x < 32; x++) {
+  //   for (unsigned y = 0; y < 16; y++) {
+  //     sprite *spr = &sprites[i++];
+  //     spr->x = x * 10;
+  //     spr->y = y * 10;
+  //     spr->data = sprite1_data;
+  //   }
+  // }
+  // for (unsigned x = 0; x < 32; x++) {
+  //   for (unsigned y = 0; y < 16; y++) {
+  //     sprite *spr = &sprites[i++];
+  //     spr->x = x * 10;
+  //     spr->y = y * 10;
+  //     spr->data = sprite2_data;
+  //   }
+  // }
 }
 
 // one tile height buffer, palette, 8-bit tiles from tiles map
@@ -220,6 +291,7 @@ static void tiles_map_render(const unsigned x) {
   const uint8_t *tiles_map_row_ptr = tiles_map.cell[0];
   // y in frame for current tiles row
   unsigned frame_y = 0;
+  int spr_width_neg = -(int)sprite_width;
   // for each row of tiles
   for (unsigned tile_y = 0; tile_y < tiles_map_height;
        tile_y++, tiles_map_row_ptr += tiles_map_width, frame_y += tile_height) {
@@ -227,7 +299,7 @@ static void tiles_map_render(const unsigned x) {
     uint16_t *line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
     uint16_t *line_buf_ptr_dma = line_buf_ptr;
     line_buf_first = not line_buf_first;
-
+    memset(line_buf_ptr, 0, frame_width * tile_height);
     // render one tile height of data to the 'line_buf_ptr' starting and ending
     // with possible partial tiles
     for (unsigned ty = 0, ty_times_tile_height = 0; ty < tile_height;
@@ -260,8 +332,38 @@ static void tiles_map_render(const unsigned x) {
           *line_buf_ptr++ = palette[*tile_data_ptr++];
         }
       }
+
+      // render sprites
+      // although grossly inefficient method the DMA is busy while rendering
+      // 1024 sprites and tiles. core 0 will do graphics and core 1 will do game
+      // logic
+      const unsigned y = frame_y + ty;
+      for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
+        const sprite *spr = &sprites[i];
+        // spr->x > spr_width_neg and spr->x < frame_width and
+        if (spr->y <= y and (spr->y + sprite_height) > y) {
+          const unsigned sprite_data_row_num = y - spr->y;
+          uint16_t *px_ptr = line_buf_ptr_dma + frame_width * ty + spr->x;
+          uint8_t *spr_data_ptr =
+              spr->data + sprite_data_row_num * sprite_width;
+          // Serial.printf("spr.y=%d  y=%d  i=%d  data=%p\n", spr->y, y, i,
+          //               (void *)spr_data_ptr);
+          for (unsigned j = 0; j < sprite_width; j++) {
+            const uint8_t color_ix = *spr_data_ptr++;
+            if (color_ix) {
+              *px_ptr++ = palette[color_ix];
+            } else {
+              px_ptr++;
+            }
+            // *px_ptr++ = palette[*spr_data_ptr++];
+          }
+        }
+      }
     }
     // write buffer to screen
+    // if (tft.dmaBusy()) {
+    //   Serial.printf("dma busy\n");
+    // }
     tft.setAddrWindow(0, frame_y, frame_width, tile_height);
     tft.pushPixelsDMA(line_buf_ptr_dma, frame_width * tile_height);
   }
@@ -286,7 +388,15 @@ void loop() {
   }
 
   tft.startWrite();
+
   tiles_map_render(unsigned(x));
+
+  // for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
+  //   const struct sprite *spr = &sprites[i];
+  //   tft.setAddrWindow(spr->x, spr->y, sprite_width, sprite_height);
+  //   tft.pushPixelsDMA(spr->data, sprite_width * sprite_height);
+  // }
+
   tft.endWrite();
 
   x += dx_per_s * fps.dt_s();

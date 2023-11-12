@@ -183,7 +183,12 @@ struct sprite {
   uint8_t *data;
   int16_t x;
   int16_t y;
+  uint8_t collision_type;
+  uint8_t collision_flags;
+  uint16_t bits; // 1: enabled
 } static sprites[sprite_count];
+
+uint8_t collision_map[frame_height][frame_width];
 
 void setup(void) {
   Serial.begin(115200);
@@ -244,6 +249,8 @@ void setup(void) {
   for (unsigned x = 0; x < 32; x++) {
     for (unsigned y = 0; y < 16; y++) {
       sprite *spr = &sprites[i++];
+      spr->bits = 1;
+      spr->collision_type = 1;
       spr->x = x * 10;
       spr->y = y * 10;
       spr->data = sprite1_data;
@@ -252,27 +259,13 @@ void setup(void) {
   for (unsigned x = 0; x < 32; x++) {
     for (unsigned y = 0; y < 16; y++) {
       sprite *spr = &sprites[i++];
+      spr->bits = 1;
+      spr->collision_type = 2;
       spr->x = x * 10;
       spr->y = y * 10;
       spr->data = sprite2_data;
     }
   }
-  // for (unsigned x = 0; x < 32; x++) {
-  //   for (unsigned y = 0; y < 16; y++) {
-  //     sprite *spr = &sprites[i++];
-  //     spr->x = x * 10;
-  //     spr->y = y * 10;
-  //     spr->data = sprite1_data;
-  //   }
-  // }
-  // for (unsigned x = 0; x < 32; x++) {
-  //   for (unsigned y = 0; y < 16; y++) {
-  //     sprite *spr = &sprites[i++];
-  //     spr->x = x * 10;
-  //     spr->y = y * 10;
-  //     spr->data = sprite2_data;
-  //   }
-  // }
 }
 
 // one tile height buffer, palette, 8-bit tiles from tiles map
@@ -339,13 +332,14 @@ static void tiles_map_render(const unsigned x) {
       // logic
       const int16_t y = frame_y + ty;
       for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
-        const sprite *spr = &sprites[i];
-        // ? the if statement below drops frame rate from 29 to 22. why so much?
-        // if (spr->x <= spr_width_neg or spr->x > (int16_t)frame_width) {
-        //   Serial.printf("skipped\n");
-        //   continue;
-        // }
+        sprite *spr = &sprites[i];
+        // ? the commented if statement below drops frame rate from 29 to 22.
+        // why so much?
         if (spr->y <= y and (spr->y + sprite_height) > y) {
+          if (spr->x <= spr_width_neg or spr->x > (int16_t)frame_width) {
+            // Serial.printf("skipped\n");
+            continue;
+          }
           const unsigned sprite_data_row_num = y - spr->y;
           uint16_t *px_ptr = line_buf_ptr_dma + frame_width * ty + spr->x;
           uint8_t *spr_data_ptr =
@@ -353,13 +347,15 @@ static void tiles_map_render(const unsigned x) {
           // Serial.printf("spr.y=%d  y=%d  i=%d  data=%p\n", spr->y, y, i,
           //               (void *)spr_data_ptr);
           for (unsigned j = 0; j < sprite_width; j++) {
+            const uint8_t collision_flags = collision_map[y][spr->x + j];
+            spr->collision_flags |= collision_flags;
+            collision_map[y][spr->x + j] |= spr->collision_type;
             const uint8_t color_ix = *spr_data_ptr++;
             if (color_ix) {
               *px_ptr++ = palette[color_ix];
             } else {
               px_ptr++;
             }
-            // *px_ptr++ = palette[*spr_data_ptr++];
           }
         }
       }
@@ -391,17 +387,32 @@ void loop() {
                   dx_per_s);
   }
 
+  // clear collisions map
+  memset(collision_map, 0, sizeof(collision_map));
+
+  {
+    // clear collision flags on sprites
+    struct sprite *spr = &sprites[0];
+    for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
+      spr->collision_flags = 0;
+      spr++;
+    }
+  }
+
   tft.startWrite();
-
   tiles_map_render(unsigned(x));
-
-  // for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
-  //   const struct sprite *spr = &sprites[i];
-  //   tft.setAddrWindow(spr->x, spr->y, sprite_width, sprite_height);
-  //   tft.pushPixelsDMA(spr->data, sprite_width * sprite_height);
-  // }
-
   tft.endWrite();
+
+  {
+    // update frame
+    struct sprite *spr = &sprites[0];
+    for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
+      if (spr->collision_flags) {
+        // spr->y = -sprite_height;
+      }
+      spr++;
+    }
+  }
 
   x += dx_per_s * fps.dt_s();
   if (x < 0) {

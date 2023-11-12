@@ -331,30 +331,26 @@ static void tiles_map_render(const unsigned x) {
       // 1024 sprites and tiles. core 0 will do graphics and core 1 will do game
       // logic
       const int16_t y = frame_y + ty;
+      uint16_t *base_line_ptr = line_buf_ptr_dma + frame_width * ty;
       for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
         sprite *spr = &sprites[i];
-        // ? the commented if statement below drops frame rate from 29 to 22.
-        // why so much?
         if (spr->y <= y and (spr->y + sprite_height) > y) {
           if (spr->x <= spr_width_neg or spr->x > (int16_t)frame_width) {
             // Serial.printf("skipped\n");
             continue;
           }
-          const unsigned sprite_data_row_num = y - spr->y;
-          uint16_t *px_ptr = line_buf_ptr_dma + frame_width * ty + spr->x;
-          uint8_t *spr_data_ptr =
-              spr->data + sprite_data_row_num * sprite_width;
-          // Serial.printf("spr.y=%d  y=%d  i=%d  data=%p\n", spr->y, y, i,
-          //               (void *)spr_data_ptr);
+          uint8_t *spr_data_ptr = spr->data + (y - spr->y) * sprite_width;
+          uint8_t *collision_cell = &collision_map[y][spr->x];
+          uint16_t *frame_buf_ptr = base_line_ptr + spr->x;
           for (unsigned j = 0; j < sprite_width; j++) {
-            const uint8_t collision_flags = collision_map[y][spr->x + j];
-            spr->collision_flags |= collision_flags;
-            collision_map[y][spr->x + j] |= spr->collision_type;
+            spr->collision_flags |= *collision_cell;
+            *collision_cell |= spr->collision_type;
+            collision_cell++;
             const uint8_t color_ix = *spr_data_ptr++;
             if (color_ix) {
-              *px_ptr++ = palette[color_ix];
+              *frame_buf_ptr++ = palette[color_ix];
             } else {
-              px_ptr++;
+              frame_buf_ptr++;
             }
           }
         }

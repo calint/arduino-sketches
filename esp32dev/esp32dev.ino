@@ -135,7 +135,7 @@ static constexpr unsigned tiles_map_height = 30;
 struct tiles_map {
   uint8_t cell[tiles_map_height][tiles_map_width];
 } static constexpr tiles_map{{
-    // #include "tiles_map.h"
+#include "tiles_map.h"
 }};
 
 static constexpr uint16_t palette[256]{

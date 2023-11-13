@@ -135,7 +135,7 @@ static constexpr unsigned tiles_map_height = 30;
 struct tiles_map {
   uint8_t cell[tiles_map_height][tiles_map_width];
 } static constexpr tiles_map{{
-#include "tiles_map.h"
+    // #include "tiles_map.h"
 }};
 
 static constexpr uint16_t palette[256]{
@@ -250,29 +250,34 @@ void setup(void) {
   digitalWrite(CYD_LED_GREEN, LOW);
   digitalWrite(CYD_LED_BLUE, HIGH);
 
+  // set random seed to get same random every time
+  randomSeed(0);
+
   // initiate sprites and physics states
   {
     float x = -20, y = -20;
+    struct sprite *spr = sprites;
+    struct physics *phy = physics;
     for (unsigned i = 1; i < sprite_count; i++) {
-      struct sprite *spr = &sprites[i];
       spr->data = sprite1_data;
-      struct physics *phy = &physics[i];
       phy->x = x;
       phy->y = y;
       phy->dx = 0.5f;
-      phy->dy = 0.5f;
+      phy->dy = 2.0f - float(rand() % 4);
       x += 10;
       if (x > (frame_width + sprite_width)) {
         x = -20;
         y += 20;
       }
+      phy++;
+      spr++;
     }
   }
 }
 
 // one tile height buffer, palette, 8-bit tiles from tiles map
 // 31 fps
-static void tiles_map_render(const unsigned x) {
+static void render(const unsigned x) {
   static uint16_t line_buf_1[frame_width * tile_height];
   static uint16_t line_buf_2[frame_width * tile_height];
 
@@ -327,16 +332,18 @@ static void tiles_map_render(const unsigned x) {
           *line_buf_ptr++ = palette[*tile_data_ptr++];
         }
       }
+
       // render sprites
-      // although grossly inefficient algorithm the DMA is busy while rendering
-      // sprites and tiles. core 0 will do graphics and core 1 will do game
-      // logic
-      const int16_t y = frame_y + ty;
-      uint16_t *base_line_ptr = line_buf_ptr_dma + frame_width * ty;
+      // note. although grossly inefficient algorithm the DMA is busy while
+      // rendering sprites and tiles. core 0 will do graphics and core 1 will do
+      // game logic.
+      const int16_t scanline_y = frame_y + ty;
+      uint16_t *scanline_ptr = line_buf_ptr_dma + frame_width * ty;
       for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
         sprite *spr = &sprites[i];
-        if (not(spr->y <= y and (spr->y + (int16_t)sprite_height) > y) or
-            spr->x <= sprite_width_neg or spr->x > (int16_t)frame_width or
+        if (spr->y > scanline_y or
+            spr->y + int16_t(sprite_height) <= scanline_y or
+            spr->x <= sprite_width_neg or spr->x > int16_t(frame_width) or
             spr->data == nullptr) {
           // not within scan line or
           // is outside the screen x-wise or
@@ -344,31 +351,36 @@ static void tiles_map_render(const unsigned x) {
           // Serial.printf("skipped sprite %d\n", i);
           continue;
         }
-        uint8_t *spr_data_ptr = spr->data + (y - spr->y) * sprite_width;
-        uint16_t *frame_buf_ptr = base_line_ptr + spr->x;
-        unsigned width = sprite_width;
-        uint8_t *collision_cell = &collision_map[y][spr->x];
+        uint8_t *spr_data_ptr =
+            spr->data + (scanline_y - spr->y) * sprite_width;
+        uint16_t *scanline_dst_ptr = scanline_ptr + spr->x;
+        unsigned render_width = sprite_width;
+        uint8_t *collision_pixel = &collision_map[scanline_y][spr->x];
         if (spr->x < 0) {
           // adjustment if x is negative
           spr_data_ptr -= spr->x;
-          frame_buf_ptr -= spr->x;
-          width = sprite_width + spr->x;
-          collision_cell -= spr->x;
+          scanline_dst_ptr -= spr->x;
+          render_width = sprite_width + spr->x;
+          collision_pixel -= spr->x;
         } else if (spr->x + sprite_width > frame_width) {
           // adjustment if sprite partially outside
-          width = frame_width - spr->x;
+          render_width = frame_width - spr->x;
         }
-        for (unsigned j = 0; j < width; j++) {
-          if (*collision_cell) {
-            spr->collision_with = *collision_cell;
-            sprites[*collision_cell].collision_with = i;
+        // render line of sprite
+        for (unsigned j = 0; j < render_width; j++) {
+          if (*collision_pixel) {
+            // collision
+            spr->collision_with = *collision_pixel;
+            sprites[*collision_pixel].collision_with = i;
           }
-          collision_cell++;
+          // set pixel collision value to sprite index
+          *collision_pixel++ = i;
+          // write pixel from sprite data or skip if 0
           const uint8_t color_ix = *spr_data_ptr++;
           if (color_ix) {
-            *frame_buf_ptr++ = palette[color_ix];
+            *scanline_dst_ptr++ = palette[color_ix];
           } else {
-            frame_buf_ptr++;
+            scanline_dst_ptr++;
           }
         }
       }
@@ -386,11 +398,13 @@ static float x = 0;
 static float dx_per_s = 100;
 
 void loop() {
+  // frames per second update
   if (fps.on_frame(millis())) {
     Serial.printf("t=%lu  fps=%u  ldr=%u\n", fps.now_ms(), fps.get(),
                   analogRead(LDR_PIN));
   }
 
+  // check touch screen
   if (ts.tirqTouched() and ts.touched()) {
     const TS_Point pt = ts.getPoint();
     const int x_relative_center = pt.x - 4096 / 2;
@@ -414,9 +428,9 @@ void loop() {
       phy->x += phy->dx * dt_s;
       phy->y += phy->dy * dt_s;
       // set rendering info
-      spr->x = (int16_t)phy->x;
-      spr->y = (int16_t)phy->y;
-      // clear collision flag
+      spr->x = int16_t(phy->x);
+      spr->y = int16_t(phy->y);
+      // clear collision info
       spr->collision_with = 0;
       // next
       spr++;
@@ -425,15 +439,15 @@ void loop() {
   }
 
   tft.startWrite();
-  tiles_map_render(unsigned(x));
+  render(unsigned(x));
   tft.endWrite();
 
   {
     // update frame
-    struct sprite *spr = &sprites[0];
+    struct sprite *spr = sprites;
     for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
       if (spr->collision_with) {
-        // spr->y = -sprite_height;
+        spr->data = nullptr; // hide sprite
       }
       spr++;
     }

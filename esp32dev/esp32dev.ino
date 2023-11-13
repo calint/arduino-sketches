@@ -151,7 +151,7 @@ static constexpr uint16_t palette[256]{
 
 static constexpr unsigned sprite_width = 8;
 static constexpr unsigned sprite_height = 8;
-static constexpr unsigned sprite_count = 1024;
+static constexpr unsigned sprite_count = 256;
 
 // clang-format off
 uint8_t sprite1_data[]{
@@ -179,13 +179,19 @@ uint8_t sprite2_data[]{
 };
 // clang-format on
 
+struct physics {
+  float x;
+  float y;
+  float dx;
+  float dy;
+} static physics[sprite_count];
+
 struct sprite {
   uint8_t *data;
   int16_t x;
   int16_t y;
-  uint8_t collision_type;
-  uint8_t collision_flags;
-  uint16_t bits; // 1: enabled
+  uint8_t collision_with;
+  uint8_t bits;
 } static sprites[sprite_count];
 
 uint8_t collision_map[frame_height][frame_width];
@@ -244,26 +250,22 @@ void setup(void) {
   digitalWrite(CYD_LED_GREEN, LOW);
   digitalWrite(CYD_LED_BLUE, HIGH);
 
-  // initiate sprites
-  unsigned i = 0;
-  for (unsigned x = 0; x < 32; x++) {
-    for (unsigned y = 0; y < 16; y++) {
-      sprite *spr = &sprites[i++];
-      spr->bits = 1;
-      spr->collision_type = 1;
-      spr->x = x * 10;
-      spr->y = y * 10;
+  // initiate sprites and physics states
+  {
+    float x = -20, y = -20;
+    for (unsigned i = 1; i < sprite_count; i++) {
+      struct sprite *spr = &sprites[i];
       spr->data = sprite1_data;
-    }
-  }
-  for (unsigned x = 0; x < 32; x++) {
-    for (unsigned y = 0; y < 16; y++) {
-      sprite *spr = &sprites[i++];
-      spr->bits = 1;
-      spr->collision_type = 2;
-      spr->x = x * 10;
-      spr->y = y * 10;
-      spr->data = sprite2_data;
+      struct physics *phy = &physics[i];
+      phy->x = x;
+      phy->y = y;
+      phy->dx = 0.5f;
+      phy->dy = 0.5f;
+      x += 10;
+      if (x > (frame_width + sprite_width)) {
+        x = -20;
+        y += 20;
+      }
     }
   }
 }
@@ -284,7 +286,7 @@ static void tiles_map_render(const unsigned x) {
   const uint8_t *tiles_map_row_ptr = tiles_map.cell[0];
   // y in frame for current tiles row
   unsigned frame_y = 0;
-  const int16_t spr_width_neg = -(int16_t)sprite_width;
+  const int16_t sprite_width_neg = -(int16_t)sprite_width;
   // for each row of tiles
   for (unsigned tile_y = 0; tile_y < tiles_map_height;
        tile_y++, tiles_map_row_ptr += tiles_map_width, frame_y += tile_height) {
@@ -292,7 +294,7 @@ static void tiles_map_render(const unsigned x) {
     uint16_t *line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
     uint16_t *line_buf_ptr_dma = line_buf_ptr;
     line_buf_first = not line_buf_first;
-    memset(line_buf_ptr, 0, frame_width * tile_height);
+    // memset(line_buf_ptr, 0, frame_width * tile_height);
     // render one tile height of data to the 'line_buf_ptr' starting and ending
     // with possible partial tiles
     for (unsigned ty = 0, ty_times_tile_height = 0; ty < tile_height;
@@ -325,40 +327,55 @@ static void tiles_map_render(const unsigned x) {
           *line_buf_ptr++ = palette[*tile_data_ptr++];
         }
       }
-
       // render sprites
-      // although grossly inefficient method the DMA is busy while rendering
-      // 1024 sprites and tiles. core 0 will do graphics and core 1 will do game
+      // although grossly inefficient algorithm the DMA is busy while rendering
+      // sprites and tiles. core 0 will do graphics and core 1 will do game
       // logic
       const int16_t y = frame_y + ty;
       uint16_t *base_line_ptr = line_buf_ptr_dma + frame_width * ty;
       for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
         sprite *spr = &sprites[i];
-        if (spr->y <= y and (spr->y + sprite_height) > y) {
-          if (spr->x <= spr_width_neg or spr->x > (int16_t)frame_width) {
-            // Serial.printf("skipped\n");
-            continue;
+        if (not(spr->y <= y and (spr->y + (int16_t)sprite_height) > y) or
+            spr->x <= sprite_width_neg or spr->x > (int16_t)frame_width or
+            spr->data == nullptr) {
+          // not within scan line or
+          // is outside the screen x-wise or
+          // sprite has no data
+          // Serial.printf("skipped sprite %d\n", i);
+          continue;
+        }
+        uint8_t *spr_data_ptr = spr->data + (y - spr->y) * sprite_width;
+        uint16_t *frame_buf_ptr = base_line_ptr + spr->x;
+        unsigned width = sprite_width;
+        uint8_t *collision_cell = &collision_map[y][spr->x];
+        if (spr->x < 0) {
+          // adjustment if x is negative
+          spr_data_ptr -= spr->x;
+          frame_buf_ptr -= spr->x;
+          width = sprite_width + spr->x;
+          collision_cell -= spr->x;
+        } else if (spr->x + sprite_width > frame_width) {
+          // adjustment if sprite partially outside
+          width = frame_width - spr->x;
+        }
+        for (unsigned j = 0; j < width; j++) {
+          if (*collision_cell) {
+            spr->collision_with = *collision_cell;
+            sprites[*collision_cell].collision_with = i;
           }
-          uint8_t *spr_data_ptr = spr->data + (y - spr->y) * sprite_width;
-          uint8_t *collision_cell = &collision_map[y][spr->x];
-          uint16_t *frame_buf_ptr = base_line_ptr + spr->x;
-          for (unsigned j = 0; j < sprite_width; j++) {
-            spr->collision_flags |= *collision_cell;
-            *collision_cell |= spr->collision_type;
-            collision_cell++;
-            const uint8_t color_ix = *spr_data_ptr++;
-            if (color_ix) {
-              *frame_buf_ptr++ = palette[color_ix];
-            } else {
-              frame_buf_ptr++;
-            }
+          collision_cell++;
+          const uint8_t color_ix = *spr_data_ptr++;
+          if (color_ix) {
+            *frame_buf_ptr++ = palette[color_ix];
+          } else {
+            frame_buf_ptr++;
           }
         }
       }
     }
     // write buffer to screen
     // if (tft.dmaBusy()) {
-    //   Serial.printf("dma busy\n");
+    //   Serial.printf(".");
     // }
     tft.setAddrWindow(0, frame_y, frame_width, tile_height);
     tft.pushPixelsDMA(line_buf_ptr_dma, frame_width * tile_height);
@@ -387,11 +404,23 @@ void loop() {
   memset(collision_map, 0, sizeof(collision_map));
 
   {
-    // clear collision flags on sprites
-    struct sprite *spr = &sprites[0];
-    for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
-      spr->collision_flags = 0;
+    // update physics (todo. do on other core)
+    const float dt_s = fps.dt_s();
+    struct physics *phy = physics;
+    struct sprite *spr = sprites;
+    unsigned i = sprite_count;
+    while (i--) {
+      // update physics
+      phy->x += phy->dx * dt_s;
+      phy->y += phy->dy * dt_s;
+      // set rendering info
+      spr->x = (int16_t)phy->x;
+      spr->y = (int16_t)phy->y;
+      // clear collision flag
+      spr->collision_with = 0;
+      // next
       spr++;
+      phy++;
     }
   }
 
@@ -403,7 +432,7 @@ void loop() {
     // update frame
     struct sprite *spr = &sprites[0];
     for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
-      if (spr->collision_flags) {
+      if (spr->collision_with) {
         // spr->y = -sprite_height;
       }
       spr++;

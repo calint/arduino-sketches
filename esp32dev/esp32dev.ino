@@ -111,6 +111,18 @@ public:
 
 } static fps{};
 
+// palette used to convert uint8_t to uint16_t rgb 565 color
+static constexpr uint16_t palette[256]{
+    0b0000000000000000, // black
+    0b0000000000011111, // green
+    0b0000011111100000, // red
+    0b0000011111111111, // yellow
+    0b1111100000000000, // blue
+    0b1111100000011111, // cyan
+    0b1111111111100000, // magenta
+    0b1111111111111111, // white
+};
+
 static constexpr unsigned frame_width = 320;
 static constexpr unsigned frame_height = 240;
 
@@ -132,7 +144,7 @@ struct tile {
 #include "tiles.h"
 };
 
-static constexpr unsigned tiles_map_width = 160;
+static constexpr unsigned tiles_map_width = 320;
 static constexpr unsigned tiles_map_height = 15;
 struct tiles_map {
   uint8_t cell[tiles_map_height][tiles_map_width];
@@ -140,22 +152,11 @@ struct tiles_map {
 #include "tiles_map.h"
 }};
 
-static constexpr uint16_t palette[256]{
-    0b0000000000000000, // black
-    0b0000000000011111, // green
-    0b0000011111100000, // red
-    0b0000011111111111, // yellow
-    0b1111100000000000, // blue
-    0b1111100000011111, // cyan
-    0b1111111111100000, // magenta
-    0b1111111111111111, // white
-};
-
 static constexpr unsigned sprite_width = 16;
 static constexpr unsigned sprite_height = 16;
 static constexpr unsigned sprite_count = 256;
 
-static uint8_t sprite1_data[]{
+static constexpr uint8_t sprite1_data[]{
     // clang-format off
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
@@ -184,7 +185,7 @@ struct physics {
 } static physics[sprite_count];
 
 struct sprite {
-  uint8_t *data;
+  const uint8_t *data;
   int16_t x;
   int16_t y;
   uint8_t collision_with;
@@ -274,7 +275,7 @@ static void render(const unsigned x) {
           // Serial.printf("skipped sprite %d\n", i);
           continue;
         }
-        uint8_t *spr_data_ptr =
+        const uint8_t *spr_data_ptr =
             spr->data + (scanline_y - spr->y) * sprite_width;
         uint16_t *scanline_dst_ptr = scanline_ptr + spr->x;
         unsigned render_width = sprite_width;
@@ -417,6 +418,7 @@ void setup(void) {
   }
 }
 
+// ~5 minutes of scrolling from right to left / down up
 static float x = tiles_map_width * tile_width - frame_width;
 static float dx_per_s = -16;
 

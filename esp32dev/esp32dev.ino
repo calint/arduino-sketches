@@ -442,8 +442,8 @@ void loop() {
   // clear collisions map
   memset(collision_map, 0, sizeof(collision_map));
 
+  // update physics (todo. do on other core)
   {
-    // update physics (todo. do on other core)
     const float dt_s = fps.dt_s();
     struct physics *phy = physics;
     struct sprite *spr = sprites;
@@ -463,12 +463,13 @@ void loop() {
     }
   }
 
+  // render tiles and sprites
   tft.startWrite();
   render(unsigned(x));
   tft.endWrite();
 
+  // update frame
   {
-    // update frame
     struct sprite *spr = sprites;
     for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
       if (spr->collision_with) {
@@ -478,6 +479,7 @@ void loop() {
     }
   }
 
+  // update x position in pixels in the tile map
   x += dx_per_s * fps.dt_s();
   if (x < 0) {
     x = 0;

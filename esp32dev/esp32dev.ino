@@ -258,6 +258,8 @@ void setup(void) {
     float x = -20, y = -20;
     struct sprite *spr = sprites;
     struct physics *phy = physics;
+    // i not from 0 because sprite 0 is unused due to the collision map value 0
+    // is no sprite
     for (unsigned i = 1; i < sprite_count; i++) {
       spr->data = sprite1_data;
       phy->x = x;
@@ -339,7 +341,9 @@ static void render(const unsigned x) {
       // game logic.
       const int16_t scanline_y = frame_y + ty;
       uint16_t *scanline_ptr = line_buf_ptr_dma + frame_width * ty;
-      for (unsigned i = 0; i < sizeof(sprites) / sizeof(struct sprite); i++) {
+      // i not from 0 because that sprite is unused and represents 'no sprite'
+      // in collision map
+      for (unsigned i = 1; i < sizeof(sprites) / sizeof(struct sprite); i++) {
         sprite *spr = &sprites[i];
         if (spr->y > scanline_y or
             spr->y + int16_t(sprite_height) <= scanline_y or

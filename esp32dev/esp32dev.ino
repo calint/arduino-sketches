@@ -114,15 +114,15 @@ public:
 static constexpr unsigned frame_width = 320;
 static constexpr unsigned frame_height = 240;
 
-static constexpr unsigned tile_width = 8;
-static constexpr unsigned tile_height = 8;
+static constexpr unsigned tile_width = 16;
+static constexpr unsigned tile_height = 16;
 
 // the right shift of 'x' to get the x in tiles map
-static constexpr unsigned tile_width_shift = 3;
+static constexpr unsigned tile_width_shift = 4;
 
 // the bits that are the partial tile position between 0 and not including
 // 'tile_width'
-static constexpr unsigned tile_width_and = 7;
+static constexpr unsigned tile_width_and = 15;
 
 struct tile {
   const uint8_t data[tile_width * tile_height];
@@ -131,7 +131,7 @@ struct tile {
 };
 
 static constexpr unsigned tiles_map_width = 80;
-static constexpr unsigned tiles_map_height = 30;
+static constexpr unsigned tiles_map_height = 15;
 struct tiles_map {
   uint8_t cell[tiles_map_height][tiles_map_width];
 } static constexpr tiles_map{{
@@ -149,33 +149,28 @@ static constexpr uint16_t palette[256]{
     0b1111111111111111, // white
 };
 
-static constexpr unsigned sprite_width = 8;
-static constexpr unsigned sprite_height = 8;
+static constexpr unsigned sprite_width = 16;
+static constexpr unsigned sprite_height = 16;
 static constexpr unsigned sprite_count = 256;
 
 // clang-format off
-uint8_t sprite1_data[]{
-  0,0,2,2,2,2,0,0,
-  0,2,2,2,2,2,2,0,
-  2,2,2,2,2,2,2,2,
-  2,2,2,0,0,2,2,2,
-  2,2,2,0,0,2,2,2,
-  2,2,2,2,2,2,2,2,
-  0,2,2,2,2,2,2,0,
-  0,0,2,2,2,2,0,0,
-};
-// clang-format on
-
-// clang-format off
-uint8_t sprite2_data[]{
-  0,3,3,3,3,3,3,0,
-  3,2,2,2,2,2,2,3,
-  3,2,2,2,2,2,2,3,
-  3,2,2,0,0,2,2,3,
-  3,2,2,0,0,2,2,3,
-  3,2,2,2,2,2,2,3,
-  3,2,2,2,2,2,2,3,
-  0,3,3,3,3,3,3,0,
+static uint8_t sprite1_data[]{
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
 };
 // clang-format on
 
@@ -194,7 +189,127 @@ struct sprite {
   uint8_t bits;
 } static sprites[sprite_count];
 
-uint8_t collision_map[frame_height][frame_width];
+static uint8_t collision_map[frame_height][frame_width];
+
+// one tile height buffer, palette, 8-bit tiles from tiles map
+// 31 fps
+static uint16_t *render_buf_1;
+static uint16_t *render_buf_2;
+static void render(const unsigned x) {
+  const unsigned tile_x = x >> tile_width_shift;
+  const unsigned tile_dx = x & tile_width_and;
+  const unsigned tile_width_minus_dx = tile_width - tile_dx;
+
+  // selects buffer to write while DMA reads the other buffer
+  bool render_buf_first = true;
+  // pointer to start of current row of tiles
+  const uint8_t *tiles_map_row_ptr = tiles_map.cell[0];
+  // y in frame for current tiles row
+  unsigned frame_y = 0;
+  const int16_t sprite_width_neg = -(int16_t)sprite_width;
+  // for each row of tiles
+  for (unsigned tile_y = 0; tile_y < tiles_map_height;
+       tile_y++, tiles_map_row_ptr += tiles_map_width, frame_y += tile_height) {
+    // swap between two line buffers to not overwrite DMA accessed buffer
+    uint16_t *render_buf_ptr = render_buf_first ? render_buf_1 : render_buf_2;
+    uint16_t *render_buf_ptr_dma = render_buf_ptr;
+    render_buf_first = not render_buf_first;
+    // memset(line_buf_ptr, 0, frame_width * tile_height);
+    // render one tile height of data to the 'line_buf_ptr' starting and ending
+    // with possible partial tiles
+    for (unsigned ty = 0, ty_times_tile_height = 0; ty < tile_height;
+         ty++, ty_times_tile_height += tile_height) {
+      if (tile_width_minus_dx) {
+        // render first partial tile
+        const uint8_t tile_ix = *(tiles_map_row_ptr + tile_x);
+        const uint8_t *tile_data_ptr =
+            tiles[tile_ix].data + ty_times_tile_height + tile_dx;
+        for (unsigned i = tile_dx; i < tile_width; i++) {
+          *render_buf_ptr++ = palette[*tile_data_ptr++];
+        }
+      }
+      // render full tiles
+      const unsigned tx_max = tile_x + (frame_width / tile_width);
+      for (unsigned tx = tile_x + 1; tx < tx_max; tx++) {
+        const uint8_t tile_ix = *(tiles_map_row_ptr + tx);
+        const uint8_t *tile_data_ptr =
+            tiles[tile_ix].data + ty_times_tile_height;
+        for (unsigned i = 0; i < tile_width; i++) {
+          *render_buf_ptr++ = palette[*tile_data_ptr++];
+        }
+      }
+      if (tile_dx) {
+        // render last partial tile
+        const uint8_t tile_ix = *(tiles_map_row_ptr + tx_max);
+        const uint8_t *tile_data_ptr =
+            tiles[tile_ix].data + ty_times_tile_height;
+        for (unsigned i = 0; i < tile_dx; i++) {
+          *render_buf_ptr++ = palette[*tile_data_ptr++];
+        }
+      }
+
+      // render sprites
+      // note. although grossly inefficient algorithm the DMA is busy while
+      // rendering sprites and tiles. core 0 will do graphics and core 1 will do
+      // game logic.
+      const int16_t scanline_y = frame_y + ty;
+      uint16_t *scanline_ptr = render_buf_ptr_dma + frame_width * ty;
+      // i not from 0 because that sprite is unused and represents 'no sprite'
+      // in collision map
+      for (unsigned i = 1; i < sizeof(sprites) / sizeof(struct sprite); i++) {
+        sprite *spr = &sprites[i];
+        if (spr->y > scanline_y or
+            spr->y + int16_t(sprite_height) <= scanline_y or
+            spr->x <= sprite_width_neg or spr->x > int16_t(frame_width) or
+            spr->data == nullptr) {
+          // not within scan line or
+          // is outside the screen x-wise or
+          // sprite has no data
+          // Serial.printf("skipped sprite %d\n", i);
+          continue;
+        }
+        uint8_t *spr_data_ptr =
+            spr->data + (scanline_y - spr->y) * sprite_width;
+        uint16_t *scanline_dst_ptr = scanline_ptr + spr->x;
+        unsigned render_width = sprite_width;
+        uint8_t *collision_pixel = &collision_map[scanline_y][spr->x];
+        if (spr->x < 0) {
+          // adjustment if x is negative
+          spr_data_ptr -= spr->x;
+          scanline_dst_ptr -= spr->x;
+          render_width = sprite_width + spr->x;
+          collision_pixel -= spr->x;
+        } else if (spr->x + sprite_width > frame_width) {
+          // adjustment if sprite partially outside
+          render_width = frame_width - spr->x;
+        }
+        // render line of sprite
+        for (unsigned j = 0; j < render_width; j++) {
+          if (*collision_pixel) {
+            // collision
+            spr->collision_with = *collision_pixel;
+            sprites[*collision_pixel].collision_with = i;
+          }
+          // set pixel collision value to sprite index
+          *collision_pixel++ = i;
+          // write pixel from sprite data or skip if 0
+          const uint8_t color_ix = *spr_data_ptr++;
+          if (color_ix) {
+            *scanline_dst_ptr++ = palette[color_ix];
+          } else {
+            scanline_dst_ptr++;
+          }
+        }
+      }
+    }
+    // write buffer to screen
+    // if (tft.dmaBusy()) {
+    //   Serial.printf(".");
+    // }
+    tft.setAddrWindow(0, frame_y, frame_width, tile_height);
+    tft.pushPixelsDMA(render_buf_ptr_dma, frame_width * tile_height);
+  }
+}
 
 void setup(void) {
   Serial.begin(115200);
@@ -211,6 +326,16 @@ void setup(void) {
 #endif
   Serial.printf("--------------------------------------------------------------"
                 "----------------\n");
+
+  // allocate rendering buffers
+  render_buf_1 = (uint16_t *)malloc(sizeof(uint16_t) * frame_width * tile_height);
+  render_buf_2 = (uint16_t *)malloc(sizeof(uint16_t) * frame_width * tile_height);
+  if (render_buf_1 == nullptr or render_buf_2 == nullptr) {
+    Serial.printf("!!! could not allocate line_buf_x");
+    while (true) {
+      sleep(60);
+    }
+  }
 
   // setup rgb led
   pinMode(CYD_LED_RED, OUTPUT);
@@ -266,135 +391,14 @@ void setup(void) {
       phy->y = y;
       phy->dx = 0.5f;
       phy->dy = 2.0f - float(rand() % 4);
-      x += 10;
+      x += 20;
       if (x > (frame_width + sprite_width)) {
         x = -20;
-        y += 20;
+        y += 30;
       }
       phy++;
       spr++;
     }
-  }
-}
-
-// one tile height buffer, palette, 8-bit tiles from tiles map
-// 31 fps
-static void render(const unsigned x) {
-  static uint16_t line_buf_1[frame_width * tile_height];
-  static uint16_t line_buf_2[frame_width * tile_height];
-
-  const unsigned tile_x = x >> tile_width_shift;
-  const unsigned tile_dx = x & tile_width_and;
-  const unsigned tile_width_minus_dx = tile_width - tile_dx;
-
-  // selects buffer to write while DMA reads the other buffer
-  bool line_buf_first = true;
-  // pointer to start of current row of tiles
-  const uint8_t *tiles_map_row_ptr = tiles_map.cell[0];
-  // y in frame for current tiles row
-  unsigned frame_y = 0;
-  const int16_t sprite_width_neg = -(int16_t)sprite_width;
-  // for each row of tiles
-  for (unsigned tile_y = 0; tile_y < tiles_map_height;
-       tile_y++, tiles_map_row_ptr += tiles_map_width, frame_y += tile_height) {
-    // swap between two line buffers to not overwrite DMA accessed buffer
-    uint16_t *line_buf_ptr = line_buf_first ? line_buf_1 : line_buf_2;
-    uint16_t *line_buf_ptr_dma = line_buf_ptr;
-    line_buf_first = not line_buf_first;
-    // memset(line_buf_ptr, 0, frame_width * tile_height);
-    // render one tile height of data to the 'line_buf_ptr' starting and ending
-    // with possible partial tiles
-    for (unsigned ty = 0, ty_times_tile_height = 0; ty < tile_height;
-         ty++, ty_times_tile_height += tile_height) {
-      if (tile_width_minus_dx) {
-        // render first partial tile
-        const uint8_t tile_ix = *(tiles_map_row_ptr + tile_x);
-        const uint8_t *tile_data_ptr =
-            tiles[tile_ix].data + ty_times_tile_height + tile_dx;
-        for (unsigned i = tile_dx; i < tile_width; i++) {
-          *line_buf_ptr++ = palette[*tile_data_ptr++];
-        }
-      }
-      // render full tiles
-      const unsigned tx_max = tile_x + (frame_width / tile_width);
-      for (unsigned tx = tile_x + 1; tx < tx_max; tx++) {
-        const uint8_t tile_ix = *(tiles_map_row_ptr + tx);
-        const uint8_t *tile_data_ptr =
-            tiles[tile_ix].data + ty_times_tile_height;
-        for (unsigned i = 0; i < tile_width; i++) {
-          *line_buf_ptr++ = palette[*tile_data_ptr++];
-        }
-      }
-      if (tile_dx) {
-        // render last partial tile
-        const uint8_t tile_ix = *(tiles_map_row_ptr + tx_max);
-        const uint8_t *tile_data_ptr =
-            tiles[tile_ix].data + ty_times_tile_height;
-        for (unsigned i = 0; i < tile_dx; i++) {
-          *line_buf_ptr++ = palette[*tile_data_ptr++];
-        }
-      }
-
-      // render sprites
-      // note. although grossly inefficient algorithm the DMA is busy while
-      // rendering sprites and tiles. core 0 will do graphics and core 1 will do
-      // game logic.
-      const int16_t scanline_y = frame_y + ty;
-      uint16_t *scanline_ptr = line_buf_ptr_dma + frame_width * ty;
-      // i not from 0 because that sprite is unused and represents 'no sprite'
-      // in collision map
-      for (unsigned i = 1; i < sizeof(sprites) / sizeof(struct sprite); i++) {
-        sprite *spr = &sprites[i];
-        if (spr->y > scanline_y or
-            spr->y + int16_t(sprite_height) <= scanline_y or
-            spr->x <= sprite_width_neg or spr->x > int16_t(frame_width) or
-            spr->data == nullptr) {
-          // not within scan line or
-          // is outside the screen x-wise or
-          // sprite has no data
-          // Serial.printf("skipped sprite %d\n", i);
-          continue;
-        }
-        uint8_t *spr_data_ptr =
-            spr->data + (scanline_y - spr->y) * sprite_width;
-        uint16_t *scanline_dst_ptr = scanline_ptr + spr->x;
-        unsigned render_width = sprite_width;
-        uint8_t *collision_pixel = &collision_map[scanline_y][spr->x];
-        if (spr->x < 0) {
-          // adjustment if x is negative
-          spr_data_ptr -= spr->x;
-          scanline_dst_ptr -= spr->x;
-          render_width = sprite_width + spr->x;
-          collision_pixel -= spr->x;
-        } else if (spr->x + sprite_width > frame_width) {
-          // adjustment if sprite partially outside
-          render_width = frame_width - spr->x;
-        }
-        // render line of sprite
-        for (unsigned j = 0; j < render_width; j++) {
-          if (*collision_pixel) {
-            // collision
-            spr->collision_with = *collision_pixel;
-            sprites[*collision_pixel].collision_with = i;
-          }
-          // set pixel collision value to sprite index
-          *collision_pixel++ = i;
-          // write pixel from sprite data or skip if 0
-          const uint8_t color_ix = *spr_data_ptr++;
-          if (color_ix) {
-            *scanline_dst_ptr++ = palette[color_ix];
-          } else {
-            scanline_dst_ptr++;
-          }
-        }
-      }
-    }
-    // write buffer to screen
-    // if (tft.dmaBusy()) {
-    //   Serial.printf(".");
-    // }
-    tft.setAddrWindow(0, frame_y, frame_width, tile_height);
-    tft.pushPixelsDMA(line_buf_ptr_dma, frame_width * tile_height);
   }
 }
 

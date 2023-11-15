@@ -117,6 +117,8 @@ static constexpr unsigned frame_height = 240;
 static constexpr unsigned tile_width = 16;
 static constexpr unsigned tile_height = 16;
 
+static constexpr unsigned tile_count = 256;
+
 // the right shift of 'x' to get the x in tiles map
 static constexpr unsigned tile_width_shift = 4;
 
@@ -126,11 +128,11 @@ static constexpr unsigned tile_width_and = 15;
 
 struct tile {
   const uint8_t data[tile_width * tile_height];
-} static constexpr tiles[]{
+} static constexpr tiles[tile_count]{
 #include "tiles.h"
 };
 
-static constexpr unsigned tiles_map_width = 80;
+static constexpr unsigned tiles_map_width = 160;
 static constexpr unsigned tiles_map_height = 15;
 struct tiles_map {
   uint8_t cell[tiles_map_height][tiles_map_width];
@@ -153,8 +155,8 @@ static constexpr unsigned sprite_width = 16;
 static constexpr unsigned sprite_height = 16;
 static constexpr unsigned sprite_count = 256;
 
-// clang-format off
 static uint8_t sprite1_data[]{
+    // clang-format off
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
@@ -171,8 +173,8 @@ static uint8_t sprite1_data[]{
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+    // clang-format on
 };
-// clang-format on
 
 struct physics {
   float x;
@@ -189,6 +191,7 @@ struct sprite {
   uint8_t bits;
 } static sprites[sprite_count];
 
+// pixel precision collision detection between sprites
 static uint8_t collision_map[frame_height][frame_width];
 
 // one tile height buffer, palette, 8-bit tiles from tiles map
@@ -206,17 +209,20 @@ static void render(const unsigned x) {
   const uint8_t *tiles_map_row_ptr = tiles_map.cell[0];
   // y in frame for current tiles row
   unsigned frame_y = 0;
-  const int16_t sprite_width_neg = -(int16_t)sprite_width;
+  // used in calculations
+  constexpr int16_t sprite_width_neg = -(int16_t)sprite_width;
   // for each row of tiles
   for (unsigned tile_y = 0; tile_y < tiles_map_height;
        tile_y++, tiles_map_row_ptr += tiles_map_width, frame_y += tile_height) {
-    // swap between two line buffers to not overwrite DMA accessed buffer
+    // swap between two rendering buffers to not overwrite DMA accessed buffer
     uint16_t *render_buf_ptr = render_buf_first ? render_buf_1 : render_buf_2;
+    // pointer to the buffer that the DMA will copy to screen
     uint16_t *render_buf_ptr_dma = render_buf_ptr;
+    // flip to the other buffer so that rendering is done in one buffer while
+    // DMA renders the other one
     render_buf_first = not render_buf_first;
-    // memset(line_buf_ptr, 0, frame_width * tile_height);
-    // render one tile height of data to the 'line_buf_ptr' starting and ending
-    // with possible partial tiles
+    // render one tile height of data to the 'render_buf_ptr' starting and
+    // ending with possible partial tiles
     for (unsigned ty = 0, ty_times_tile_height = 0; ty < tile_height;
          ty++, ty_times_tile_height += tile_height) {
       if (tile_width_minus_dx) {
@@ -250,11 +256,11 @@ static void render(const unsigned x) {
 
       // render sprites
       // note. although grossly inefficient algorithm the DMA is busy while
-      // rendering sprites and tiles. core 0 will do graphics and core 1 will do
-      // game logic.
+      // rendering one tile height of sprites and tiles. core 0 will do graphics
+      // and core 1 will do game logic.
       const int16_t scanline_y = frame_y + ty;
       uint16_t *scanline_ptr = render_buf_ptr_dma + frame_width * ty;
-      // i not from 0 because that sprite is unused and represents 'no sprite'
+      // i not from 0 because sprite[0] is unused and represents 'no sprite'
       // in collision map
       for (unsigned i = 1; i < sizeof(sprites) / sizeof(struct sprite); i++) {
         sprite *spr = &sprites[i];
@@ -280,7 +286,7 @@ static void render(const unsigned x) {
           render_width = sprite_width + spr->x;
           collision_pixel -= spr->x;
         } else if (spr->x + sprite_width > frame_width) {
-          // adjustment if sprite partially outside
+          // adjustment if sprite partially outside screen (x-wise)
           render_width = frame_width - spr->x;
         }
         // render line of sprite
@@ -320,22 +326,31 @@ void setup(void) {
                 "------------------\n");
   Serial.printf("        chip model: %s\n", ESP.getChipModel());
   Serial.printf("            screen: %d x %d px\n", frame_width, frame_height);
+  Serial.printf("     free heap mem: %d B\n", ESP.getFreeHeap());
   Serial.printf("largest free block: %d B\n", ESP.getMaxAllocHeap());
 #ifdef USE_WIFI
   Serial.printf("using WiFi\n");
 #endif
-  Serial.printf("--------------------------------------------------------------"
-                "----------------\n");
 
   // allocate rendering buffers
-  render_buf_1 = (uint16_t *)malloc(sizeof(uint16_t) * frame_width * tile_height);
-  render_buf_2 = (uint16_t *)malloc(sizeof(uint16_t) * frame_width * tile_height);
+  render_buf_1 =
+      (uint16_t *)malloc(sizeof(uint16_t) * frame_width * tile_height);
+  render_buf_2 =
+      (uint16_t *)malloc(sizeof(uint16_t) * frame_width * tile_height);
   if (render_buf_1 == nullptr or render_buf_2 == nullptr) {
     Serial.printf("!!! could not allocate line_buf_x");
     while (true) {
       sleep(60);
     }
   }
+
+  Serial.printf("--------------------------------------------------------------"
+                "----------------\n");
+  Serial.printf("                    after allocated buffers\n");
+  Serial.printf("     free heap mem: %d B\n", ESP.getFreeHeap());
+  Serial.printf("largest free block: %d B\n", ESP.getMaxAllocHeap());
+  Serial.printf("--------------------------------------------------------------"
+                "----------------\n");
 
   // setup rgb led
   pinMode(CYD_LED_RED, OUTPUT);
@@ -402,8 +417,8 @@ void setup(void) {
   }
 }
 
-static float x = 0;
-static float dx_per_s = 100;
+static float x = tiles_map_width * tile_width - frame_width;
+static float dx_per_s = -16;
 
 void loop() {
   // frames per second update

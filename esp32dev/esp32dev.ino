@@ -163,8 +163,12 @@ static constexpr unsigned sprite_width = 16;
 static constexpr unsigned sprite_height = 16;
 static constexpr unsigned sprite_count = 256;
 
+// used when rendering
+static constexpr int16_t sprite_width_neg = -int16_t(sprite_width);
+
 static constexpr uint8_t sprite1_data[]{
     // clang-format off
+  0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
@@ -179,17 +183,16 @@ static constexpr uint8_t sprite1_data[]{
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,
     // clang-format on
 };
 
-struct physics {
+struct object {
   float x;
   float y;
   float dx;
   float dy;
-} static physics[sprite_count];
+} static objects[sprite_count];
 
 struct sprite {
   const uint8_t *data;
@@ -212,9 +215,6 @@ static float x = tiles_map_width * tile_width - frame_width;
 static float dx_per_s = -16;
 static float y = 1;
 static float dy_per_s = 1;
-
-// used in calculations
-constexpr int16_t sprite_width_neg = -(int16_t)sprite_width;
 
 static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
                             const unsigned tile_x, const unsigned tile_dx,
@@ -260,8 +260,8 @@ static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
 
   // i not from 0 because sprite[0] is unused and represents 'no sprite'
   // in collision map
-  for (unsigned i = 1; i < sprite_count; i++) {
-    sprite *spr = &sprites[i];
+  sprite *spr = &sprites[1];
+  for (unsigned i = 1; i < sprite_count; i++, spr++) {
     if (spr->y > scanline_y or spr->y + int16_t(sprite_height) <= scanline_y or
         spr->x <= sprite_width_neg or spr->x > int16_t(frame_width) or
         spr->data == nullptr) {
@@ -306,7 +306,7 @@ static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
   }
 }
 
-// one tile height buffer, palette, 8-bit tiles from tiles map
+// one tile height buffer, palette, 8-bit tiles from tiles map, 8-bit sprites
 // 31 fps
 static void render(const unsigned x, const unsigned y) {
   const unsigned tile_x = x >> tile_width_shift;
@@ -479,24 +479,24 @@ void setup(void) {
 
   // initiate sprites and physics states
   {
-    float phy_x = -24, phy_y = -24;
+    float obj_x = -24, obj_y = -24;
     // sprite[0] is unused. start from sprite[1]
-    struct sprite *spr = &sprites[1];
-    struct physics *phy = &physics[1];
+    sprite *spr = &sprites[1];
+    object *obj = &objects[1];
     // i not from 0 because sprite 0 is unused due to the collision map value 0
     // is no sprite
     for (unsigned i = 1; i < sprite_count; i++) {
       spr->data = sprite1_data;
-      phy->x = phy_x;
-      phy->y = phy_y;
-      phy->dx = 0.5f;
-      phy->dy = 2.0f - float(rand() % 4);
-      phy_x += 24;
-      if (phy_x > (frame_width + sprite_width)) {
-        phy_x = -24;
-        phy_y += 24;
+      obj->x = obj_x;
+      obj->y = obj_y;
+      obj->dx = 0.5f;
+      obj->dy = 2.0f - float(rand() % 4);
+      obj_x += 24;
+      if (obj_x > (frame_width + sprite_width)) {
+        obj_x = -24;
+        obj_y += 24;
       }
-      phy++;
+      obj++;
       spr++;
     }
   }
@@ -522,22 +522,21 @@ void loop() {
   // update physics (todo. do on other core)
   {
     const float dt_s = fps.dt_s();
-    //? start from physics[1] and sprites[1]
-    struct physics *phy = physics;
-    struct sprite *spr = sprites;
-    unsigned i = sprite_count;
+    object *obj = &objects[1];
+    sprite *spr = &sprites[1];
+    unsigned i = sprite_count - 1; // -1 because index 0 is reserved
     while (i--) {
       // update physics
-      phy->x += phy->dx * dt_s;
-      phy->y += phy->dy * dt_s;
+      obj->x += obj->dx * dt_s;
+      obj->y += obj->dy * dt_s;
       // set rendering info
-      spr->x = int16_t(phy->x);
-      spr->y = int16_t(phy->y);
+      spr->x = int16_t(obj->x);
+      spr->y = int16_t(obj->y);
       // clear collision info
       spr->collision_with = 0;
       // next
       spr++;
-      phy++;
+      obj++;
     }
   }
 
@@ -551,7 +550,7 @@ void loop() {
 
   // update frame
   {
-    struct sprite *spr = sprites;
+    sprite *spr = sprites;
     for (unsigned i = 0; i < sprite_count; i++) {
       if (spr->collision_with) {
         Serial.printf("sprite %d collision with %d\n", i, spr->collision_with);

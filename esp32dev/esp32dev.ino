@@ -313,8 +313,8 @@ static void render(const unsigned x, const unsigned y) {
   const unsigned tile_dx = x & tile_width_and;
   const unsigned tile_width_minus_dx = tile_width - tile_dx;
   unsigned tile_y = y >> tile_height_shift;
-  const unsigned tile_y_max = tile_y + (frame_height / tile_height);
   const unsigned tile_dy = y & tile_height_and;
+  const unsigned tile_y_max = tile_y + (frame_height / tile_height);
   const unsigned tile_height_minus_dy = tile_height - tile_dy;
 
   // selects buffer to write while DMA reads the other buffer
@@ -326,16 +326,15 @@ static void render(const unsigned x, const unsigned y) {
   // pointer to start of current row of tiles
   const uint8_t *tiles_map_row_ptr = tiles_map.cell[tile_y];
   if (tile_dy) {
-    // Serial.printf("tile_dy=%d\n", tile_dy);
+    // render the partial top tile
     // swap between two rendering buffers to not overwrite DMA accessed buffer
     uint16_t *render_buf_ptr = render_buf_first ? render_buf_1 : render_buf_2;
     // pointer to the buffer that the DMA will copy to screen
     uint16_t *render_buf_ptr_dma = render_buf_ptr;
-    // memset(render_buf_ptr, 0, frame_width * tile_height * sizeof(uint16_t));
     // flip to the other buffer so that rendering is done in one buffer while
     // DMA renders the other one
     render_buf_first = not render_buf_first;
-    // render the partial top tile
+    // render scanlines of first partial tile
     for (unsigned tile_sub_y = tile_dy,
                   tile_sub_y_times_tile_width = tile_dy * tile_width;
          tile_sub_y < tile_height;
@@ -347,11 +346,10 @@ static void render(const unsigned x, const unsigned y) {
                       tile_sub_y_times_tile_width);
       scanline_y++;
     }
-    tft.setAddrWindow(0, frame_y, frame_width, tile_height - tile_dy);
-    tft.pushPixelsDMA(render_buf_ptr_dma,
-                      frame_width * (tile_height - tile_dy));
+    tft.setAddrWindow(0, frame_y, frame_width, tile_height_minus_dy);
+    tft.pushPixelsDMA(render_buf_ptr_dma, frame_width * tile_height_minus_dy);
     tile_y++;
-    frame_y += (tile_height - tile_dy);
+    frame_y += tile_height_minus_dy;
   }
   // for each row of full tiles
   for (; tile_y < tile_y_max;
@@ -363,8 +361,8 @@ static void render(const unsigned x, const unsigned y) {
     // flip to the other buffer so that rendering is done in one buffer while
     // DMA renders the other one
     render_buf_first = not render_buf_first;
-    // render one tile height of data to the 'render_buf_ptr' starting and
-    // ending with possible partial tiles
+    // render one tile height of pixels from tiles map and sprites to the
+    // 'render_buf_ptr'
     for (unsigned tile_sub_y = 0, tile_sub_y_times_tile_width = 0;
          tile_sub_y < tile_height;
          tile_sub_y++, tile_sub_y_times_tile_width += tile_height,
@@ -375,24 +373,19 @@ static void render(const unsigned x, const unsigned y) {
                       tile_sub_y_times_tile_width);
       scanline_y++;
     }
-    // write buffer to screen
-    // if (tft.dmaBusy()) {
-    //   Serial.printf(".");
-    // }
     tft.setAddrWindow(0, frame_y, frame_width, tile_height);
     tft.pushPixelsDMA(render_buf_ptr_dma, frame_width * tile_height);
   }
   if (tile_dy) {
-    // Serial.printf("tile_dy=%d\n", tile_dy);
+    // render last partial tile
     // swap between two rendering buffers to not overwrite DMA accessed buffer
     uint16_t *render_buf_ptr = render_buf_first ? render_buf_1 : render_buf_2;
     // pointer to the buffer that the DMA will copy to screen
     uint16_t *render_buf_ptr_dma = render_buf_ptr;
-    // memset(render_buf_ptr, 0, frame_width * tile_height * sizeof(uint16_t));
     // flip to the other buffer so that rendering is done in one buffer while
     // DMA renders the other one
     render_buf_first = not render_buf_first;
-    // render the partial top tile
+    // render the partial last tile row
     for (unsigned tile_sub_y = 0, tile_sub_y_times_tile_width = 0;
          tile_sub_y < tile_dy;
          tile_sub_y++, tile_sub_y_times_tile_width += tile_width,

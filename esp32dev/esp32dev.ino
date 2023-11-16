@@ -207,8 +207,8 @@ static uint8_t collision_map[frame_height][frame_width];
 
 // buffers for rendering a chunk that is transferred to the screen using DMA
 // while next chunk is rendered
-static uint16_t *render_buf_1;
-static uint16_t *render_buf_2;
+static uint16_t *dma_buf_1;
+static uint16_t *dma_buf_2;
 
 // ~5 minutes of scrolling from right to left / down up
 static float x = tiles_map_width * tile_width - frame_width;
@@ -318,7 +318,7 @@ static void render(const unsigned x, const unsigned y) {
   const unsigned tile_height_minus_dy = tile_height - tile_dy;
 
   // selects buffer to write while DMA reads the other buffer
-  bool render_buf_first = true;
+  bool dma_buf_use_first = true;
   // y in frame for current tiles row to be copied by DMA
   unsigned frame_y = 0;
   // current line y on screen
@@ -328,12 +328,10 @@ static void render(const unsigned x, const unsigned y) {
   if (tile_dy) {
     // render the partial top tile
     // swap between two rendering buffers to not overwrite DMA accessed buffer
-    uint16_t *render_buf_ptr = render_buf_first ? render_buf_1 : render_buf_2;
+    uint16_t *render_buf_ptr = dma_buf_use_first ? dma_buf_1 : dma_buf_2;
+    dma_buf_use_first = not dma_buf_use_first;
     // pointer to the buffer that the DMA will copy to screen
-    uint16_t *render_buf_ptr_dma = render_buf_ptr;
-    // flip to the other buffer so that rendering is done in one buffer while
-    // DMA renders the other one
-    render_buf_first = not render_buf_first;
+    uint16_t *dma_buf = render_buf_ptr;
     // render scanlines of first partial tile
     for (unsigned tile_sub_y = tile_dy,
                   tile_sub_y_times_tile_width = tile_dy * tile_width;
@@ -347,7 +345,7 @@ static void render(const unsigned x, const unsigned y) {
       scanline_y++;
     }
     tft.setAddrWindow(0, frame_y, frame_width, tile_height_minus_dy);
-    tft.pushPixelsDMA(render_buf_ptr_dma, frame_width * tile_height_minus_dy);
+    tft.pushPixelsDMA(dma_buf, frame_width * tile_height_minus_dy);
     tile_y++;
     frame_y += tile_height_minus_dy;
   }
@@ -355,12 +353,10 @@ static void render(const unsigned x, const unsigned y) {
   for (; tile_y < tile_y_max;
        tile_y++, tiles_map_row_ptr += tiles_map_width, frame_y += tile_height) {
     // swap between two rendering buffers to not overwrite DMA accessed buffer
-    uint16_t *render_buf_ptr = render_buf_first ? render_buf_1 : render_buf_2;
+    uint16_t *render_buf_ptr = dma_buf_use_first ? dma_buf_1 : dma_buf_2;
+    dma_buf_use_first = not dma_buf_use_first;
     // pointer to the buffer that the DMA will copy to screen
-    uint16_t *render_buf_ptr_dma = render_buf_ptr;
-    // flip to the other buffer so that rendering is done in one buffer while
-    // DMA renders the other one
-    render_buf_first = not render_buf_first;
+    uint16_t *dma_buf = render_buf_ptr;
     // render one tile height of pixels from tiles map and sprites to the
     // 'render_buf_ptr'
     for (unsigned tile_sub_y = 0, tile_sub_y_times_tile_width = 0;
@@ -374,17 +370,15 @@ static void render(const unsigned x, const unsigned y) {
       scanline_y++;
     }
     tft.setAddrWindow(0, frame_y, frame_width, tile_height);
-    tft.pushPixelsDMA(render_buf_ptr_dma, frame_width * tile_height);
+    tft.pushPixelsDMA(dma_buf, frame_width * tile_height);
   }
   if (tile_dy) {
     // render last partial tile
     // swap between two rendering buffers to not overwrite DMA accessed buffer
-    uint16_t *render_buf_ptr = render_buf_first ? render_buf_1 : render_buf_2;
+    uint16_t *render_buf_ptr = dma_buf_use_first ? dma_buf_1 : dma_buf_2;
+    dma_buf_use_first = not dma_buf_use_first;
     // pointer to the buffer that the DMA will copy to screen
-    uint16_t *render_buf_ptr_dma = render_buf_ptr;
-    // flip to the other buffer so that rendering is done in one buffer while
-    // DMA renders the other one
-    render_buf_first = not render_buf_first;
+    uint16_t *dma_buf = render_buf_ptr;
     // render the partial last tile row
     for (unsigned tile_sub_y = 0, tile_sub_y_times_tile_width = 0;
          tile_sub_y < tile_dy;
@@ -397,7 +391,7 @@ static void render(const unsigned x, const unsigned y) {
       scanline_y++;
     }
     tft.setAddrWindow(0, frame_y, frame_width, tile_dy);
-    tft.pushPixelsDMA(render_buf_ptr_dma, frame_width * tile_dy);
+    tft.pushPixelsDMA(dma_buf, frame_width * tile_dy);
   }
 }
 
@@ -417,11 +411,11 @@ void setup(void) {
 #endif
 
   // allocate rendering buffers
-  render_buf_1 =
+  dma_buf_1 =
       (uint16_t *)malloc(sizeof(uint16_t) * frame_width * tile_height);
-  render_buf_2 =
+  dma_buf_2 =
       (uint16_t *)malloc(sizeof(uint16_t) * frame_width * tile_height);
-  if (render_buf_1 == nullptr or render_buf_2 == nullptr) {
+  if (dma_buf_1 == nullptr or dma_buf_2 == nullptr) {
     Serial.printf("!!! could not allocate line_buf_x");
     while (true) {
       sleep(60);

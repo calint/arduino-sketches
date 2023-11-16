@@ -129,8 +129,6 @@ static constexpr unsigned frame_height = 240;
 static constexpr unsigned tile_width = 16;
 static constexpr unsigned tile_height = 16;
 
-static constexpr unsigned tile_count = 256;
-
 // the right shift of 'x' to get the x in tiles map
 static constexpr unsigned tile_width_shift = 4;
 
@@ -145,6 +143,8 @@ static constexpr unsigned tile_height_shift = 4;
 // 'tile_height'
 static constexpr unsigned tile_height_and = 15;
 
+static constexpr unsigned tile_count = 256;
+
 struct tile {
   const uint8_t data[tile_width * tile_height];
 } static constexpr tiles[tile_count]{
@@ -153,6 +153,7 @@ struct tile {
 
 static constexpr unsigned tiles_map_width = 320;
 static constexpr unsigned tiles_map_height = 17;
+
 struct tiles_map {
   uint8_t cell[tiles_map_height][tiles_map_width];
 } static constexpr tiles_map{{

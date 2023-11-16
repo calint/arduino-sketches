@@ -195,6 +195,15 @@ struct sprite {
 // pixel precision collision detection between sprites
 static uint8_t collision_map[frame_height][frame_width];
 
+// buffers for rendering a chunk that is transferred to the screen using DMA
+// while next chunk is rendered
+static uint16_t *render_buf_1;
+static uint16_t *render_buf_2;
+
+// ~5 minutes of scrolling from right to left / down up
+static float x = tiles_map_width * tile_width - frame_width;
+static float dx_per_s = -16;
+
 // used in calculations
 constexpr int16_t sprite_width_neg = -(int16_t)sprite_width;
 
@@ -290,8 +299,6 @@ static void render_scanline(uint16_t *render_buf_ptr, const unsigned frame_y,
 
 // one tile height buffer, palette, 8-bit tiles from tiles map
 // 31 fps
-static uint16_t *render_buf_1;
-static uint16_t *render_buf_2;
 static void render(const unsigned x) {
   const unsigned tile_x = x >> tile_width_shift;
   const unsigned tile_dx = x & tile_width_and;
@@ -432,10 +439,6 @@ void setup(void) {
     }
   }
 }
-
-// ~5 minutes of scrolling from right to left / down up
-static float x = tiles_map_width * tile_width - frame_width;
-static float dx_per_s = -16;
 
 void loop() {
   // frames per second update

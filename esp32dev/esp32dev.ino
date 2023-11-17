@@ -208,6 +208,8 @@ static sprite_ix collision_map[frame_height][frame_width];
 // using DMA
 static uint16_t *dma_buf_1;
 static uint16_t *dma_buf_2;
+static constexpr unsigned dma_buf_size =
+    sizeof(uint16_t) * frame_width * tile_height;
 
 // ~5 minutes of scrolling from right to left / down up
 static float x = tiles_map_width * tile_width - frame_width;
@@ -400,7 +402,7 @@ void setup(void) {
   sleep(1); // arbitrary wait 1 second for serial to connect
   while (!Serial)
     ; // wait for serial port to connect. needed for native usb port only
-  Serial.printf("\n------------------------------------------------------------"
+  Serial.printf("\n------------------- info -----------------------------------"
                 "------------------\n");
   Serial.printf("        chip model: %s\n", ESP.getChipModel());
   Serial.printf("            screen: %d x %d px\n", frame_width, frame_height);
@@ -411,8 +413,8 @@ void setup(void) {
 #endif
 
   // allocate rendering buffers
-  dma_buf_1 = (uint16_t *)malloc(sizeof(uint16_t) * frame_width * tile_height);
-  dma_buf_2 = (uint16_t *)malloc(sizeof(uint16_t) * frame_width * tile_height);
+  dma_buf_1 = (uint16_t *)malloc(dma_buf_size);
+  dma_buf_2 = (uint16_t *)malloc(dma_buf_size);
   if (dma_buf_1 == nullptr or dma_buf_2 == nullptr) {
     Serial.printf("!!! could not allocate line_buf_x");
     while (true) {
@@ -420,11 +422,22 @@ void setup(void) {
     }
   }
 
-  Serial.printf("--------------------------------------------------------------"
+  Serial.printf("------------------- after init -------------------------------"
                 "----------------\n");
-  Serial.printf("                    after allocated buffers\n");
-  Serial.printf("     free heap mem: %d B\n", ESP.getFreeHeap());
-  Serial.printf("largest free block: %d B\n", ESP.getMaxAllocHeap());
+  Serial.printf("          free mem: %zu B\n", ESP.getFreeHeap());
+  Serial.printf("largest free block: %zu B\n", ESP.getMaxAllocHeap());
+  Serial.printf("------------------- buffers ----------------------------------"
+                "----------------\n");
+  Serial.printf("   DMA buf 1 and 2: %zu B\n", 2 * dma_buf_size);
+  Serial.printf("           sprites: %zu B\n", sizeof(sprites));
+  Serial.printf("     collision_map: %zu B\n", sizeof(collision_map));
+  Serial.printf("         tiles_map: %zu B\n", sizeof(tiles_map));
+  Serial.printf("             tiles: %zu B\n", sizeof(tiles));
+  Serial.printf("------------------- instances --------------------------------"
+                "----------------\n");
+  Serial.printf("            sprite: %zu B\n", sizeof(sprite));
+  Serial.printf("      sprite image: %zu B\n", sizeof(sprite1_data));
+  Serial.printf("              tile: %zu B\n", sizeof(tile));
   Serial.printf("--------------------------------------------------------------"
                 "----------------\n");
 
@@ -472,10 +485,8 @@ void setup(void) {
   // initiate sprites
   {
     float spr_x = -24, spr_y = -24;
-    // sprite[0] is unused. start from sprite[1]
+    // sprite[0] is unused / reserved. start from sprite[1]
     sprite *spr = &sprites[1];
-    // i not from 0 because sprite 0 is unused due to the collision map value 0
-    // is no sprite
     for (unsigned i = 1; i < sprite_count; i++, spr++) {
       spr->data = sprite1_data;
       spr->x = spr_x;

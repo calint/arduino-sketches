@@ -190,17 +190,14 @@ static constexpr uint8_t sprite1_data[]{
     // clang-format on
 };
 
-struct object {
+struct sprite {
   float x;
   float y;
   float dx;
   float dy;
-} static objects[sprite_count];
-
-struct sprite {
   const uint8_t *data;
-  int16_t x;
-  int16_t y;
+  int16_t scr_x;
+  int16_t scr_y;
   sprite_ix collision_with;
 } static sprites[sprite_count];
 
@@ -264,8 +261,9 @@ static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
   // in collision map
   sprite *spr = &sprites[1];
   for (unsigned i = 1; i < sprite_count; i++, spr++) {
-    if (spr->y > scanline_y or spr->y + int16_t(sprite_height) <= scanline_y or
-        spr->x <= sprite_width_neg or spr->x > int16_t(frame_width) or
+    if (spr->scr_y > scanline_y or
+        spr->scr_y + int16_t(sprite_height) <= scanline_y or
+        spr->scr_x <= sprite_width_neg or spr->scr_x > int16_t(frame_width) or
         spr->data == nullptr) {
       // not within scan line or
       // is outside the screen x-wise or
@@ -274,19 +272,19 @@ static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
       continue;
     }
     const uint8_t *spr_data_ptr =
-        spr->data + (scanline_y - spr->y) * sprite_width;
-    uint16_t *scanline_dst_ptr = scanline_ptr + spr->x;
+        spr->data + (scanline_y - spr->scr_y) * sprite_width;
+    uint16_t *scanline_dst_ptr = scanline_ptr + spr->scr_x;
     unsigned render_width = sprite_width;
-    sprite_ix *collision_pixel = &collision_map[scanline_y][spr->x];
-    if (spr->x < 0) {
+    sprite_ix *collision_pixel = &collision_map[scanline_y][spr->scr_x];
+    if (spr->scr_x < 0) {
       // adjustment if x is negative
-      spr_data_ptr -= spr->x;
-      scanline_dst_ptr -= spr->x;
-      render_width = sprite_width + spr->x;
-      collision_pixel -= spr->x;
-    } else if (spr->x + sprite_width > frame_width) {
+      spr_data_ptr -= spr->scr_x;
+      scanline_dst_ptr -= spr->scr_x;
+      render_width = sprite_width + spr->scr_x;
+      collision_pixel -= spr->scr_x;
+    } else if (spr->scr_x + sprite_width > frame_width) {
       // adjustment if sprite partially outside screen (x-wise)
-      render_width = frame_width - spr->x;
+      render_width = frame_width - spr->scr_x;
     }
     // render line of sprite
     for (unsigned j = 0; j < render_width; j++) {
@@ -471,27 +469,24 @@ void setup(void) {
   // set random seed to get same random every time
   randomSeed(0);
 
-  // initiate sprites and physics states
+  // initiate sprites
   {
-    float obj_x = -24, obj_y = -24;
+    float spr_x = -24, spr_y = -24;
     // sprite[0] is unused. start from sprite[1]
     sprite *spr = &sprites[1];
-    object *obj = &objects[1];
     // i not from 0 because sprite 0 is unused due to the collision map value 0
     // is no sprite
-    for (unsigned i = 1; i < sprite_count; i++) {
+    for (unsigned i = 1; i < sprite_count; i++, spr++) {
       spr->data = sprite1_data;
-      obj->x = obj_x;
-      obj->y = obj_y;
-      obj->dx = 0.5f;
-      obj->dy = 2.0f - float(rand() % 4);
-      obj_x += 24;
-      if (obj_x > (frame_width + sprite_width)) {
-        obj_x = -24;
-        obj_y += 24;
+      spr->x = spr_x;
+      spr->y = spr_y;
+      spr->dx = 0.5f;
+      spr->dy = 2.0f - float(rand() % 4);
+      spr_x += 24;
+      if (spr_x > (frame_width + sprite_width)) {
+        spr_x = -24;
+        spr_y += 24;
       }
-      obj++;
-      spr++;
     }
   }
 }
@@ -516,21 +511,17 @@ void loop() {
   // update physics (todo. do on other core)
   {
     const float dt_s = fps.dt_s();
-    object *obj = &objects[1];
-    sprite *spr = &sprites[1];
-    unsigned i = sprite_count - 1; // -1 because index 0 is reserved
-    while (i--) {
+    sprite *spr = &sprites[1]; // 1 because sprite[0] is reserved
+    // i = 1 because index 0 is reserved
+    for (unsigned i = 1; i < sprite_count; i++, spr++) {
       // update physics
-      obj->x += obj->dx * dt_s;
-      obj->y += obj->dy * dt_s;
+      spr->x += spr->dx * dt_s;
+      spr->y += spr->dy * dt_s;
       // set rendering info
-      spr->x = int16_t(obj->x);
-      spr->y = int16_t(obj->y);
+      spr->scr_x = int16_t(spr->x);
+      spr->scr_y = int16_t(spr->y);
       // clear collision info
       spr->collision_with = 0;
-      // next
-      spr++;
-      obj++;
     }
   }
 
@@ -545,12 +536,11 @@ void loop() {
   // update frame
   {
     sprite *spr = sprites;
-    for (unsigned i = 0; i < sprite_count; i++) {
+    for (unsigned i = 0; i < sprite_count; i++, spr++) {
       if (spr->collision_with) {
         Serial.printf("sprite %d collision with %d\n", i, spr->collision_with);
         spr->data = nullptr; // hide sprite
       }
-      spr++;
     }
   }
   // update x position in pixels in the tile map

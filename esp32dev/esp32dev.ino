@@ -201,11 +201,11 @@ struct sprite {
   sprite_ix collision_with;
 } static sprites[sprite_count];
 
-// pixel precision collision detection between sprites
+// pixel precision collision detection between sprites on screen
 static sprite_ix collision_map[frame_height][frame_width];
 
-// buffers for rendering a chunk that is transferred to the screen using DMA
-// while next chunk is rendered
+// buffers for rendering a chunk while the other is transferred to the screen
+// using DMA
 static uint16_t *dma_buf_1;
 static uint16_t *dma_buf_2;
 
@@ -225,9 +225,9 @@ static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
   uint16_t *scanline_ptr = render_buf_ptr;
   if (tile_width_minus_dx) {
     // render first partial tile
-    const tile_ix tile_ix = *(tiles_map_row_ptr + tile_x);
+    const tile_ix tile_index = *(tiles_map_row_ptr + tile_x);
     const uint8_t *tile_data_ptr =
-        tiles[tile_ix].data + tile_sub_y_times_tile_width + tile_dx;
+        tiles[tile_index].data + tile_sub_y_times_tile_width + tile_dx;
     for (unsigned i = tile_dx; i < tile_width; i++) {
       *render_buf_ptr++ = palette[*tile_data_ptr++];
     }
@@ -235,18 +235,18 @@ static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
   // render full tiles
   const unsigned tx_max = tile_x + (frame_width / tile_width);
   for (unsigned tx = tile_x + 1; tx < tx_max; tx++) {
-    const tile_ix tile_ix = *(tiles_map_row_ptr + tx);
+    const tile_ix tile_index = *(tiles_map_row_ptr + tx);
     const uint8_t *tile_data_ptr =
-        tiles[tile_ix].data + tile_sub_y_times_tile_width;
+        tiles[tile_index].data + tile_sub_y_times_tile_width;
     for (unsigned i = 0; i < tile_width; i++) {
       *render_buf_ptr++ = palette[*tile_data_ptr++];
     }
   }
   if (tile_dx) {
     // render last partial tile
-    const tile_ix tile_ix = *(tiles_map_row_ptr + tx_max);
+    const tile_ix tile_index = *(tiles_map_row_ptr + tx_max);
     const uint8_t *tile_data_ptr =
-        tiles[tile_ix].data + tile_sub_y_times_tile_width;
+        tiles[tile_index].data + tile_sub_y_times_tile_width;
     for (unsigned i = 0; i < tile_dx; i++) {
       *render_buf_ptr++ = palette[*tile_data_ptr++];
     }
@@ -512,7 +512,6 @@ void loop() {
   {
     const float dt_s = fps.dt_s();
     sprite *spr = &sprites[1]; // 1 because sprite[0] is reserved
-    // i = 1 because index 0 is reserved
     for (unsigned i = 1; i < sprite_count; i++, spr++) {
       // update physics
       spr->x += spr->dx * dt_s;
@@ -533,16 +532,17 @@ void loop() {
   render(unsigned(x), unsigned(y));
   tft.endWrite();
 
-  // update frame
+  // handle collisions
   {
-    sprite *spr = sprites;
-    for (unsigned i = 0; i < sprite_count; i++, spr++) {
+    sprite *spr = &sprites[1]; // 1 because sprite[0] is reserved
+    for (unsigned i = 1; i < sprite_count; i++, spr++) {
       if (spr->collision_with) {
         Serial.printf("sprite %d collision with %d\n", i, spr->collision_with);
         spr->data = nullptr; // hide sprite
       }
     }
   }
+
   // update x position in pixels in the tile map
   x += dx_per_s * fps.dt_s();
   if (x < 0) {
@@ -563,5 +563,4 @@ void loop() {
     y = tiles_map_height * tile_height - frame_height;
     dy_per_s = -dy_per_s;
   }
-  // sleep(1);
 }

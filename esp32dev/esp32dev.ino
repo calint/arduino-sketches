@@ -144,6 +144,7 @@ static constexpr unsigned tile_height_shift = 4;
 static constexpr unsigned tile_height_and = 15;
 
 static constexpr unsigned tile_count = 256;
+using tile_ix = uint8_t;
 
 struct tile {
   const uint8_t data[tile_width * tile_height];
@@ -155,7 +156,7 @@ static constexpr unsigned tiles_map_width = 320;
 static constexpr unsigned tiles_map_height = 17;
 
 struct tiles_map {
-  uint8_t cell[tiles_map_height][tiles_map_width];
+  tile_ix cell[tiles_map_height][tiles_map_width];
 } static constexpr tiles_map{{
 #include "tiles_map.h"
 }};
@@ -163,6 +164,7 @@ struct tiles_map {
 static constexpr unsigned sprite_width = 16;
 static constexpr unsigned sprite_height = 16;
 static constexpr unsigned sprite_count = 256;
+using sprite_ix = uint8_t;
 
 // used when rendering
 static constexpr int16_t sprite_width_neg = -int16_t(sprite_width);
@@ -199,12 +201,11 @@ struct sprite {
   const uint8_t *data;
   int16_t x;
   int16_t y;
-  uint8_t collision_with;
-  uint8_t bits;
+  sprite_ix collision_with;
 } static sprites[sprite_count];
 
 // pixel precision collision detection between sprites
-static uint8_t collision_map[frame_height][frame_width];
+static sprite_ix collision_map[frame_height][frame_width];
 
 // buffers for rendering a chunk that is transferred to the screen using DMA
 // while next chunk is rendered
@@ -220,14 +221,14 @@ static float dy_per_s = 1;
 static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
                             const unsigned tile_x, const unsigned tile_dx,
                             const unsigned tile_width_minus_dx,
-                            const uint8_t *tiles_map_row_ptr,
+                            const tile_ix *tiles_map_row_ptr,
                             const unsigned tile_sub_y,
                             const unsigned tile_sub_y_times_tile_width) {
   // used later by sprite renderer to overwrite tiles pixels
   uint16_t *scanline_ptr = render_buf_ptr;
   if (tile_width_minus_dx) {
     // render first partial tile
-    const uint8_t tile_ix = *(tiles_map_row_ptr + tile_x);
+    const tile_ix tile_ix = *(tiles_map_row_ptr + tile_x);
     const uint8_t *tile_data_ptr =
         tiles[tile_ix].data + tile_sub_y_times_tile_width + tile_dx;
     for (unsigned i = tile_dx; i < tile_width; i++) {
@@ -237,7 +238,7 @@ static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
   // render full tiles
   const unsigned tx_max = tile_x + (frame_width / tile_width);
   for (unsigned tx = tile_x + 1; tx < tx_max; tx++) {
-    const uint8_t tile_ix = *(tiles_map_row_ptr + tx);
+    const tile_ix tile_ix = *(tiles_map_row_ptr + tx);
     const uint8_t *tile_data_ptr =
         tiles[tile_ix].data + tile_sub_y_times_tile_width;
     for (unsigned i = 0; i < tile_width; i++) {
@@ -246,7 +247,7 @@ static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
   }
   if (tile_dx) {
     // render last partial tile
-    const uint8_t tile_ix = *(tiles_map_row_ptr + tx_max);
+    const tile_ix tile_ix = *(tiles_map_row_ptr + tx_max);
     const uint8_t *tile_data_ptr =
         tiles[tile_ix].data + tile_sub_y_times_tile_width;
     for (unsigned i = 0; i < tile_dx; i++) {
@@ -276,7 +277,7 @@ static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
         spr->data + (scanline_y - spr->y) * sprite_width;
     uint16_t *scanline_dst_ptr = scanline_ptr + spr->x;
     unsigned render_width = sprite_width;
-    uint8_t *collision_pixel = &collision_map[scanline_y][spr->x];
+    sprite_ix *collision_pixel = &collision_map[scanline_y][spr->x];
     if (spr->x < 0) {
       // adjustment if x is negative
       spr_data_ptr -= spr->x;
@@ -325,7 +326,7 @@ static void render(const unsigned x, const unsigned y) {
   // current line y on screen
   int16_t scanline_y = 0;
   // pointer to start of current row of tiles
-  const uint8_t *tiles_map_row_ptr = tiles_map.cell[tile_y];
+  const tile_ix *tiles_map_row_ptr = tiles_map.cell[tile_y];
   if (tile_dy) {
     // render the partial top tile
     // swap between two rendering buffers to not overwrite DMA accessed buffer
@@ -412,10 +413,8 @@ void setup(void) {
 #endif
 
   // allocate rendering buffers
-  dma_buf_1 =
-      (uint16_t *)malloc(sizeof(uint16_t) * frame_width * tile_height);
-  dma_buf_2 =
-      (uint16_t *)malloc(sizeof(uint16_t) * frame_width * tile_height);
+  dma_buf_1 = (uint16_t *)malloc(sizeof(uint16_t) * frame_width * tile_height);
+  dma_buf_2 = (uint16_t *)malloc(sizeof(uint16_t) * frame_width * tile_height);
   if (dma_buf_1 == nullptr or dma_buf_2 == nullptr) {
     Serial.printf("!!! could not allocate line_buf_x");
     while (true) {

@@ -395,8 +395,10 @@ void setup(void) {
   sleep(1); // arbitrary wait 1 second for serial to connect
   while (!Serial)
     ; // wait for serial port to connect. needed for native usb port only
-  Serial.printf("\n------------------- info -----------------------------------"
-                "------------------\n");
+
+  // heap_caps_dump_all();
+  Serial.printf("\n\n");
+  Serial.printf("------------------- info ---------------------------------\n");
   Serial.printf("        chip model: %s\n", ESP.getChipModel());
   Serial.printf("            screen: %d x %d px\n", frame_width, frame_height);
   Serial.printf("     free heap mem: %d B\n", ESP.getFreeHeap());
@@ -424,24 +426,22 @@ void setup(void) {
     }
   }
 
-  Serial.printf("------------------- after init -------------------------------"
-                "----------------\n");
+  Serial.printf("------------------- after init ---------------------------\n");
   Serial.printf("          free mem: %zu B\n", ESP.getFreeHeap());
   Serial.printf("largest free block: %zu B\n", ESP.getMaxAllocHeap());
-  Serial.printf("------------------- buffers ----------------------------------"
-                "----------------\n");
-  Serial.printf("   DMA buf 1 and 2: %zu B\n", 2 * dma_buf_size);
-  Serial.printf("  sprite instances: %zu B\n", sizeof(sprites));
+  Serial.printf("------------------- in program memory --------------------\n");
   Serial.printf("     sprite images: %zu B\n", sizeof(sprite_imgs));
-  Serial.printf("     collision_map: %zu B\n", collision_map_size);
-  Serial.printf("         tiles_map: %zu B\n", sizeof(tiles_map));
   Serial.printf("             tiles: %zu B\n", sizeof(tiles));
-  Serial.printf("------------------- instances --------------------------------"
-                "----------------\n");
+  Serial.printf("         tiles map: %zu B\n", sizeof(tiles_map));
+  Serial.printf("------------------- globals ------------------------------\n");
+  Serial.printf("           sprites: %zu B\n", sizeof(sprites));
+  Serial.printf("------------------- on heap ------------------------------\n");
+  Serial.printf("   DMA buf 1 and 2: %zu B\n", 2 * dma_buf_size);
+  Serial.printf("     collision map: %zu B\n", collision_map_size);
+  Serial.printf("------------------- object sizes -------------------------\n");
   Serial.printf("            sprite: %zu B\n", sizeof(sprite));
   Serial.printf("              tile: %zu B\n", sizeof(tile));
-  Serial.printf("--------------------------------------------------------------"
-                "----------------\n");
+  Serial.printf("----------------------------------------------------------\n");
 
   // setup rgb led
   pinMode(CYD_LED_RED, OUTPUT);

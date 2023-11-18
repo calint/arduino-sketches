@@ -58,14 +58,10 @@
 // setting up screen and touch from:
 // https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/Examples/Basics/2-TouchTest/2-TouchTest.ino
 #define XPT2046_IRQ 36
-// Master Out Slave In
-#define XPT2046_MOSI 32
-// Master In Slave Out
-#define XPT2046_MISO 39
-// Serial Clock
-#define XPT2046_SCK 25
-// Slave Select
-#define XPT2046_SS 33
+#define XPT2046_MOSI 32 // Master Out Slave In
+#define XPT2046_MISO 39 // Master In Slave Out
+#define XPT2046_SCK 25  // Serial Clock
+#define XPT2046_SS 33   // Slave Select
 
 static SPIClass spi{HSPI};
 static XPT2046_Touchscreen ts{XPT2046_SS, XPT2046_IRQ};

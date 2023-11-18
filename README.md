@@ -1,5 +1,5 @@
 # arduino-sketches
-experiments with arduino sketches for raspberry pico w and arduino nano esp32
+experiments with arduino sketches for raspberry pico w, arduino nano esp32 and ESP32-2432S028R a.k.a. cheap-yellow-display
 
 ### howto: raspberry pico w in arduino ide (2.1.1)
 File -> Preferences
@@ -23,12 +23,3 @@ subsequent uploads select port e.g. "/dev/ttyACM0"
 connect with serial terminal to e.g. /dev/ttyACM0 at 115200 baud
 
 type "help" to get started
-
-## clipboard
-```
-git config --global credential.helper cache
-git config --global credential.helper 'cache --timeout=36000'
-
-git add . && git commit -m "." && git push
-TAG=$(date "+%Y-%m-%d--%H-%M") && git tag $TAG && git push origin $TAG
-```

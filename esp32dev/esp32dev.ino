@@ -73,12 +73,12 @@
 #define XPT2046_IRQ 36
 #define XPT2046_MOSI 32 // Master Out Slave In
 #define XPT2046_MISO 39 // Master In Slave Out
-#define XPT2046_SCK 25  // Serial Clock
-#define XPT2046_SS 33   // Slave Select
+#define XPT2046_CLK 25  // Clock
+#define XPT2046_CS 33   // Chip Select
 
 static SPIClass spi{HSPI};
-static XPT2046_Touchscreen ts{XPT2046_SS, XPT2046_IRQ};
-static TFT_eSPI tft{};
+static XPT2046_Touchscreen touch_screen{XPT2046_CS, XPT2046_IRQ};
+static TFT_eSPI tft_display{};
 
 // palette used to convert uint8_t to uint16_t rgb 565
 // lower and higher byte swapped (red being the highest bits)
@@ -348,8 +348,8 @@ static void render(const unsigned x, const unsigned y) {
                       tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
                       tile_sub_y, tile_sub_y_times_tile_width);
     }
-    tft.setAddrWindow(0, frame_y, frame_width, tile_height_minus_dy);
-    tft.pushPixelsDMA(dma_buf, frame_width * tile_height_minus_dy);
+    tft_display.setAddrWindow(0, frame_y, frame_width, tile_height_minus_dy);
+    tft_display.pushPixelsDMA(dma_buf, frame_width * tile_height_minus_dy);
     tile_y++;
     frame_y += tile_height_minus_dy;
   }
@@ -373,8 +373,8 @@ static void render(const unsigned x, const unsigned y) {
                       tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
                       tile_sub_y, tile_sub_y_times_tile_width);
     }
-    tft.setAddrWindow(0, frame_y, frame_width, tile_height);
-    tft.pushPixelsDMA(dma_buf, frame_width * tile_height);
+    tft_display.setAddrWindow(0, frame_y, frame_width, tile_height);
+    tft_display.pushPixelsDMA(dma_buf, frame_width * tile_height);
   }
   if (tile_dy) {
     // render last partial tile
@@ -394,8 +394,8 @@ static void render(const unsigned x, const unsigned y) {
                       tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
                       tile_sub_y, tile_sub_y_times_tile_width);
     }
-    tft.setAddrWindow(0, frame_y, frame_width, tile_dy);
-    tft.pushPixelsDMA(dma_buf, frame_width * tile_dy);
+    tft_display.setAddrWindow(0, frame_y, frame_width, tile_dy);
+    tft_display.pushPixelsDMA(dma_buf, frame_width * tile_dy);
   }
 }
 
@@ -466,13 +466,13 @@ void setup(void) {
   pinMode(LDR_PIN, INPUT);
 
   // start the SPI for the touch screen and init the TS library
-  spi.begin(XPT2046_SCK, XPT2046_MISO, XPT2046_MOSI, XPT2046_SS);
-  ts.begin(spi);
-  ts.setRotation(1);
+  spi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
+  touch_screen.begin(spi);
+  touch_screen.setRotation(1);
 
-  tft.init();
-  tft.setRotation(1);
-  tft.initDMA(true);
+  tft_display.init();
+  tft_display.setRotation(1);
+  tft_display.initDMA(true);
 
 #ifdef USE_WIFI
   WiFi.begin(SECRET_WIFI_NETWORK, SECRET_WIFI_PASSWORD);
@@ -521,8 +521,8 @@ void loop() {
   }
 
   // check touch screen
-  if (ts.tirqTouched() and ts.touched()) {
-    const TS_Point pt = ts.getPoint();
+  if (touch_screen.tirqTouched() and touch_screen.touched()) {
+    const TS_Point pt = touch_screen.getPoint();
     const int x_relative_center = pt.x - 4096 / 2;
     constexpr float dx_factor = 200.0f / (4096 / 2);
     dx_per_s = dx_factor * x_relative_center;
@@ -550,9 +550,9 @@ void loop() {
   memset(collision_map, 0, collision_map_size);
 
   // render tiles, sprites and collision map
-  tft.startWrite();
+  tft_display.startWrite();
   render(unsigned(x), unsigned(y));
-  tft.endWrite();
+  tft_display.endWrite();
 
   // handle collisions
   {

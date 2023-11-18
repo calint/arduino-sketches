@@ -167,7 +167,7 @@ using sprite_ix = uint8_t;
 // used when rendering
 static constexpr int16_t sprite_width_neg = -int16_t(sprite_width);
 
-static constexpr uint8_t sprite1_data[]{
+static constexpr uint8_t sprite1_data[sprite_width * sprite_height]{
     // clang-format off
   0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,
   2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,

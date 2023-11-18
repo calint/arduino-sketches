@@ -1,2 +1,2 @@
-#define SECRET_WIFI_NETWORK "Network"
-#define SECRET_WIFI_PASSWORD "Passwords"
+#define SECRET_WIFI_NETWORK "network"
+#define SECRET_WIFI_PASSWORD "password"

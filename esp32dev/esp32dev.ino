@@ -203,13 +203,13 @@ struct sprite {
 static sprite_ix collision_map[frame_height][frame_width];
 
 // buffers for rendering a chunk while the other is transferred to the screen
-// using DMA
+// using DMA. allocated in setup.
 static uint16_t *dma_buf_1;
 static uint16_t *dma_buf_2;
 static constexpr unsigned dma_buf_size =
     sizeof(uint16_t) * frame_width * tile_height;
 
-// ~5 minutes of scrolling from right to left / down up
+// scrolling from right to left / down up
 static float x = tiles_map_width * tile_width - frame_width;
 static float dx_per_s = -16;
 static float y = 1;
@@ -223,6 +223,7 @@ static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
                             const unsigned tile_sub_y_times_tile_width) {
   // used later by sprite renderer to overwrite tiles pixels
   uint16_t *scanline_ptr = render_buf_ptr;
+
   if (tile_width_minus_dx) {
     // render first partial tile
     const tile_ix tile_index = *(tiles_map_row_ptr + tile_x);

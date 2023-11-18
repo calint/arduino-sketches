@@ -41,6 +41,13 @@
 //    * task ">Arduino: Board Config"
 //        select "ESP32 Dev Module (esp32)"
 //    * install libraries (plug-in installs libraries in ~/Arduino/libraries)
+//
+
+// note. why some buffers are allocated at 'setup'
+// Due to a technical limitation, the maximum statically allocated DRAM usage is
+// 160KB. The remaining 160KB (for a total of 320KB of DRAM) can only be
+// allocated at runtime as heap.
+// -- https://stackoverflow.com/questions/71085927/how-to-extend-esp32-heap-size
 
 #include <SPI.h>
 #include <TFT_eSPI.h>

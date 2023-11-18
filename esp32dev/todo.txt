@@ -1,3 +1,4 @@
-[ ] horizontal, vertical flip of sprite
 [ ] objects composed of several sprites
-[ ] allocating sprites for projectiles
+[ ] separate concept of sprite and object
+[ ] sprite allocation for visible objects
+[ ] horizontal, vertical flip of sprite

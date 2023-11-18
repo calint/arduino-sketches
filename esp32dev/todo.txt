@@ -1,2 +1,3 @@
 [ ] horizontal, vertical flip of sprite
 [ ] objects composed of several sprites
+[ ] allocating sprites for projectiles

@@ -58,13 +58,17 @@
 // setting up screen and touch from:
 // https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/Examples/Basics/2-TouchTest/2-TouchTest.ino
 #define XPT2046_IRQ 36
+// Master Out Slave In
 #define XPT2046_MOSI 32
+// Master In Slave Out
 #define XPT2046_MISO 39
-#define XPT2046_CLK 25
-#define XPT2046_CS 33
+// Serial Clock
+#define XPT2046_SCK 25
+// Slave Select
+#define XPT2046_SS 33
 
 static SPIClass spi{HSPI};
-static XPT2046_Touchscreen ts{XPT2046_CS, XPT2046_IRQ};
+static XPT2046_Touchscreen ts{XPT2046_SS, XPT2046_IRQ};
 static TFT_eSPI tft{};
 
 // #define USE_WIFI
@@ -415,7 +419,7 @@ void setup(void) {
   dma_buf_1 = (uint16_t *)malloc(dma_buf_size);
   dma_buf_2 = (uint16_t *)malloc(dma_buf_size);
   if (dma_buf_1 == nullptr or dma_buf_2 == nullptr) {
-    Serial.printf("!!! could not allocate line_buf_x");
+    Serial.printf("!!! could not allocate DMA buffers");
     while (true) {
       sleep(60);
     }
@@ -445,11 +449,16 @@ void setup(void) {
   pinMode(CYD_LED_GREEN, OUTPUT);
   pinMode(CYD_LED_BLUE, OUTPUT);
 
+  // set rgb led to green
+  digitalWrite(CYD_LED_RED, HIGH);
+  digitalWrite(CYD_LED_GREEN, LOW);
+  digitalWrite(CYD_LED_BLUE, HIGH);
+
   // setup ldr
   pinMode(LDR_PIN, INPUT);
 
-  // Start the SPI for the touch screen and init the TS library
-  spi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
+  // start the SPI for the touch screen and init the TS library
+  spi.begin(XPT2046_SCK, XPT2046_MISO, XPT2046_MOSI, XPT2046_SS);
   ts.begin(spi);
   ts.setRotation(1);
 
@@ -470,13 +479,6 @@ void setup(void) {
   Serial.print("\nConnected\nIP: ");
   Serial.println(WiFi.localIP());
 #endif
-
-  fps.init(millis());
-
-  // set rgb led to green
-  digitalWrite(CYD_LED_RED, HIGH);
-  digitalWrite(CYD_LED_GREEN, LOW);
-  digitalWrite(CYD_LED_BLUE, HIGH);
 
   // set random seed to get same random every time
   randomSeed(0);
@@ -499,6 +501,8 @@ void setup(void) {
       }
     }
   }
+
+  fps.init(millis());
 }
 
 void loop() {

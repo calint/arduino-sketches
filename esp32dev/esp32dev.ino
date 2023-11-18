@@ -73,43 +73,6 @@ static SPIClass spi{HSPI};
 static XPT2046_Touchscreen ts{XPT2046_SS, XPT2046_IRQ};
 static TFT_eSPI tft{};
 
-class fps {
-  unsigned interval_ms_ = 5000;
-  unsigned frames_rendered_in_interval_ = 0;
-  unsigned long last_update_ms_ = 0;
-  unsigned long now_ms_ = 0;
-  unsigned long prv_now_ms_ = 0;
-  unsigned current_fps_ = 0;
-  float dt_s_ = 0;
-
-public:
-  void init(const unsigned long now_ms) {
-    last_update_ms_ = prv_now_ms_ = now_ms;
-  }
-
-  auto on_frame(const unsigned long now_ms) -> bool {
-    now_ms_ = now_ms;
-    dt_s_ = (now_ms - prv_now_ms_) / 1000.0f;
-    prv_now_ms_ = now_ms;
-    frames_rendered_in_interval_++;
-    const unsigned long dt_ms = now_ms - last_update_ms_;
-    if (dt_ms >= interval_ms_) {
-      current_fps_ = frames_rendered_in_interval_ * 1000 / dt_ms;
-      frames_rendered_in_interval_ = 0;
-      last_update_ms_ = now_ms;
-      return true;
-    }
-    return false;
-  }
-
-  inline auto get() -> unsigned { return current_fps_; }
-
-  inline auto now_ms() -> unsigned long { return now_ms_; }
-
-  inline auto dt_s() -> float { return dt_s_; }
-
-} static fps{};
-
 // palette used to convert uint8_t to uint16_t rgb 565
 // lower and higher byte swapped (red being the highest bits)
 static constexpr uint16_t palette[256]{
@@ -119,9 +82,6 @@ static constexpr uint16_t palette[256]{
     0b0001111100000000, // blue
     0b1111111111111111, // white
 };
-
-static constexpr unsigned frame_width = 320;
-static constexpr unsigned frame_height = 240;
 
 static constexpr unsigned tile_width = 16;
 static constexpr unsigned tile_height = 16;
@@ -166,25 +126,8 @@ using sprite_ix = uint8_t;
 // used when rendering
 static constexpr int16_t sprite_width_neg = -int16_t(sprite_width);
 
-static constexpr uint8_t sprite1_data[sprite_width * sprite_height]{
-    // clang-format off
-  0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,0,
-    // clang-format on
+static constexpr uint8_t sprites_data[256][sprite_width * sprite_height]{
+#include "sprites_data.h"
 };
 
 struct sprite {
@@ -198,8 +141,14 @@ struct sprite {
   sprite_ix collision_with;
 } static sprites[sprite_count];
 
-// pixel precision collision detection between sprites on screen
-static sprite_ix collision_map[frame_height][frame_width];
+static constexpr unsigned frame_width = 320;
+static constexpr unsigned frame_height = 240;
+
+// pixel precision collision detection between on screen sprites
+// allocated in setup
+static sprite_ix *collision_map;
+static constexpr unsigned collision_map_size =
+    sizeof(sprite_ix) * frame_width * frame_height;
 
 // buffers for rendering a chunk while the other is transferred to the screen
 // using DMA. allocated in setup.
@@ -213,6 +162,43 @@ static float x = tiles_map_width * tile_width - frame_width;
 static float dx_per_s = -16;
 static float y = 1;
 static float dy_per_s = 1;
+
+class fps {
+  unsigned interval_ms_ = 5000;
+  unsigned frames_rendered_in_interval_ = 0;
+  unsigned long last_update_ms_ = 0;
+  unsigned long now_ms_ = 0;
+  unsigned long prv_now_ms_ = 0;
+  unsigned current_fps_ = 0;
+  float dt_s_ = 0;
+
+public:
+  void init(const unsigned long now_ms) {
+    last_update_ms_ = prv_now_ms_ = now_ms;
+  }
+
+  auto on_frame(const unsigned long now_ms) -> bool {
+    now_ms_ = now_ms;
+    dt_s_ = (now_ms - prv_now_ms_) / 1000.0f;
+    prv_now_ms_ = now_ms;
+    frames_rendered_in_interval_++;
+    const unsigned long dt_ms = now_ms - last_update_ms_;
+    if (dt_ms >= interval_ms_) {
+      current_fps_ = frames_rendered_in_interval_ * 1000 / dt_ms;
+      frames_rendered_in_interval_ = 0;
+      last_update_ms_ = now_ms;
+      return true;
+    }
+    return false;
+  }
+
+  inline auto get() const -> unsigned { return current_fps_; }
+
+  inline auto now_ms() const -> unsigned long { return now_ms_; }
+
+  inline auto dt_s() const -> float { return dt_s_; }
+
+} static fps{};
 
 static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
                             const unsigned tile_x, const unsigned tile_dx,
@@ -275,7 +261,8 @@ static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
         spr->data + (scanline_y - spr->scr_y) * sprite_width;
     uint16_t *scanline_dst_ptr = scanline_ptr + spr->scr_x;
     unsigned render_width = sprite_width;
-    sprite_ix *collision_pixel = &collision_map[scanline_y][spr->scr_x];
+    sprite_ix *collision_pixel =
+        collision_map + scanline_y * frame_width + spr->scr_x;
     if (spr->scr_x < 0) {
       // adjustment if x is negative
       spr_data_ptr -= spr->scr_x;
@@ -410,11 +397,20 @@ void setup(void) {
   Serial.printf("using WiFi\n");
 #endif
 
-  // allocate rendering buffers
+  // allocate dma buffers
   dma_buf_1 = (uint16_t *)malloc(dma_buf_size);
   dma_buf_2 = (uint16_t *)malloc(dma_buf_size);
   if (dma_buf_1 == nullptr or dma_buf_2 == nullptr) {
     Serial.printf("!!! could not allocate DMA buffers");
+    while (true) {
+      sleep(60);
+    }
+  }
+
+  // allocate collision map
+  collision_map = (sprite_ix *)malloc(collision_map_size);
+  if (!collision_map) {
+    Serial.printf("!!! could not allocate collision map");
     while (true) {
       sleep(60);
     }
@@ -427,14 +423,14 @@ void setup(void) {
   Serial.printf("------------------- buffers ----------------------------------"
                 "----------------\n");
   Serial.printf("   DMA buf 1 and 2: %zu B\n", 2 * dma_buf_size);
-  Serial.printf("           sprites: %zu B\n", sizeof(sprites));
-  Serial.printf("     collision_map: %zu B\n", sizeof(collision_map));
+  Serial.printf("  sprite instances: %zu B\n", sizeof(sprites));
+  Serial.printf("     sprite images: %zu B\n", sizeof(sprites_data));
+  Serial.printf("     collision_map: %zu B\n", collision_map_size);
   Serial.printf("         tiles_map: %zu B\n", sizeof(tiles_map));
   Serial.printf("             tiles: %zu B\n", sizeof(tiles));
   Serial.printf("------------------- instances --------------------------------"
                 "----------------\n");
   Serial.printf("            sprite: %zu B\n", sizeof(sprite));
-  Serial.printf("      sprite image: %zu B\n", sizeof(sprite1_data));
   Serial.printf("              tile: %zu B\n", sizeof(tile));
   Serial.printf("--------------------------------------------------------------"
                 "----------------\n");
@@ -484,7 +480,7 @@ void setup(void) {
     // sprite[0] is unused / reserved. start from sprite[1]
     sprite *spr = &sprites[1];
     for (unsigned i = 1; i < sprite_count; i++, spr++) {
-      spr->data = sprite1_data;
+      spr->data = sprites_data[0];
       spr->x = spr_x;
       spr->y = spr_y;
       spr->dx = 0.5f;
@@ -534,7 +530,7 @@ void loop() {
   }
 
   // clear collisions map
-  memset(collision_map, 0, sizeof(collision_map));
+  memset(collision_map, 0, collision_map_size);
 
   // render tiles, sprites and collision map
   tft.startWrite();

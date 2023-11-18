@@ -1,4 +1,4 @@
 [ ] objects composed of several sprites
 [ ] separate concept of sprite and object
-[ ] sprite allocation for visible objects
+[ ] sprite allocation for active objects
 [ ] horizontal, vertical flip of sprite

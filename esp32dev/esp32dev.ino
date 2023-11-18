@@ -208,12 +208,20 @@ public:
 
 } static fps{};
 
-static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
-                            const unsigned tile_x, const unsigned tile_dx,
-                            const unsigned tile_width_minus_dx,
-                            const tile_ix *tiles_map_row_ptr,
-                            const unsigned tile_sub_y,
-                            const unsigned tile_sub_y_times_tile_width) {
+// clang-format off
+// note. not formatted because compiler gets confused and issues invalid error
+static void render_scanline(
+    uint16_t *render_buf_ptr,
+    sprite_ix *collision_map_scanline_ptr,
+    const int16_t scanline_y,
+    const unsigned tile_x,
+    const unsigned tile_dx,
+    const unsigned tile_width_minus_dx,
+    const tile_ix *tiles_map_row_ptr,
+    const unsigned tile_sub_y,
+    const unsigned tile_sub_y_times_tile_width
+) {
+  // clang-format on
   // used later by sprite renderer to overwrite tiles pixels
   uint16_t *scanline_ptr = render_buf_ptr;
 
@@ -269,8 +277,7 @@ static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
         spr->img + (scanline_y - spr->scr_y) * sprite_width;
     uint16_t *scanline_dst_ptr = scanline_ptr + spr->scr_x;
     unsigned render_width = sprite_width;
-    sprite_ix *collision_pixel =
-        collision_map + scanline_y * frame_width + spr->scr_x;
+    sprite_ix *collision_pixel = collision_map_scanline_ptr + spr->scr_x;
     if (spr->scr_x < 0) {
       // adjustment if x is negative
       spr_data_ptr -= spr->scr_x;
@@ -320,6 +327,8 @@ static void render(const unsigned x, const unsigned y) {
   int16_t scanline_y = 0;
   // pointer to start of current row of tiles
   const tile_ix *tiles_map_row_ptr = tiles_map.cell[tile_y];
+  // pointer to collision map starting at top left of screen
+  sprite_ix *collision_map_scanline_ptr = collision_map;
   if (tile_dy) {
     // render the partial top tile
     // swap between two rendering buffers to not overwrite DMA accessed buffer
@@ -332,12 +341,12 @@ static void render(const unsigned x, const unsigned y) {
                   tile_sub_y_times_tile_width = tile_dy * tile_width;
          tile_sub_y < tile_height;
          tile_sub_y++, tile_sub_y_times_tile_width += tile_width,
-                  render_buf_ptr += frame_width) {
+                  render_buf_ptr += frame_width,
+                  collision_map_scanline_ptr += frame_width, scanline_y++) {
 
-      render_scanline(render_buf_ptr, scanline_y, tile_x, tile_dx,
-                      tile_width_minus_dx, tiles_map_row_ptr, tile_sub_y,
-                      tile_sub_y_times_tile_width);
-      scanline_y++;
+      render_scanline(render_buf_ptr, collision_map_scanline_ptr, scanline_y,
+                      tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
+                      tile_sub_y, tile_sub_y_times_tile_width);
     }
     tft.setAddrWindow(0, frame_y, frame_width, tile_height_minus_dy);
     tft.pushPixelsDMA(dma_buf, frame_width * tile_height_minus_dy);
@@ -346,7 +355,7 @@ static void render(const unsigned x, const unsigned y) {
   }
   // for each row of full tiles
   for (; tile_y < tile_y_max;
-       tile_y++, tiles_map_row_ptr += tiles_map_width, frame_y += tile_height) {
+       tile_y++, frame_y += tile_height, tiles_map_row_ptr += tiles_map_width) {
     // swap between two rendering buffers to not overwrite DMA accessed buffer
     uint16_t *render_buf_ptr = dma_buf_use_first ? dma_buf_1 : dma_buf_2;
     dma_buf_use_first = not dma_buf_use_first;
@@ -357,12 +366,12 @@ static void render(const unsigned x, const unsigned y) {
     for (unsigned tile_sub_y = 0, tile_sub_y_times_tile_width = 0;
          tile_sub_y < tile_height;
          tile_sub_y++, tile_sub_y_times_tile_width += tile_height,
-                  render_buf_ptr += frame_width) {
+                  render_buf_ptr += frame_width,
+                  collision_map_scanline_ptr += frame_width, scanline_y++) {
 
-      render_scanline(render_buf_ptr, scanline_y, tile_x, tile_dx,
-                      tile_width_minus_dx, tiles_map_row_ptr, tile_sub_y,
-                      tile_sub_y_times_tile_width);
-      scanline_y++;
+      render_scanline(render_buf_ptr, collision_map_scanline_ptr, scanline_y,
+                      tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
+                      tile_sub_y, tile_sub_y_times_tile_width);
     }
     tft.setAddrWindow(0, frame_y, frame_width, tile_height);
     tft.pushPixelsDMA(dma_buf, frame_width * tile_height);
@@ -378,12 +387,12 @@ static void render(const unsigned x, const unsigned y) {
     for (unsigned tile_sub_y = 0, tile_sub_y_times_tile_width = 0;
          tile_sub_y < tile_dy;
          tile_sub_y++, tile_sub_y_times_tile_width += tile_width,
-                  render_buf_ptr += frame_width) {
+                  render_buf_ptr += frame_width,
+                  collision_map_scanline_ptr += frame_width, scanline_y++) {
 
-      render_scanline(render_buf_ptr, scanline_y, tile_x, tile_dx,
-                      tile_width_minus_dx, tiles_map_row_ptr, tile_sub_y,
-                      tile_sub_y_times_tile_width);
-      scanline_y++;
+      render_scanline(render_buf_ptr, collision_map_scanline_ptr, scanline_y,
+                      tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
+                      tile_sub_y, tile_sub_y_times_tile_width);
     }
     tft.setAddrWindow(0, frame_y, frame_width, tile_dy);
     tft.pushPixelsDMA(dma_buf, frame_width * tile_dy);

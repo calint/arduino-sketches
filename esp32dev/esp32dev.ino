@@ -126,8 +126,9 @@ using sprite_ix = uint8_t;
 // used when rendering
 static constexpr int16_t sprite_width_neg = -int16_t(sprite_width);
 
-static constexpr uint8_t sprites_data[256][sprite_width * sprite_height]{
-#include "sprites_data.h"
+// images used by sprites
+static constexpr uint8_t sprite_imgs[256][sprite_width * sprite_height]{
+#include "sprite_imgs.h"
 };
 
 struct sprite {
@@ -135,7 +136,7 @@ struct sprite {
   float y;
   float dx;
   float dy;
-  const uint8_t *data;
+  const uint8_t *img;
   int16_t scr_x;
   int16_t scr_y;
   sprite_ix collision_with;
@@ -250,7 +251,7 @@ static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
     if (spr->scr_y > scanline_y or
         spr->scr_y + int16_t(sprite_height) <= scanline_y or
         spr->scr_x <= sprite_width_neg or spr->scr_x > int16_t(frame_width) or
-        spr->data == nullptr) {
+        spr->img == nullptr) {
       // not within scan line or
       // is outside the screen x-wise or
       // sprite has no data
@@ -258,7 +259,7 @@ static void render_scanline(uint16_t *render_buf_ptr, const int16_t scanline_y,
       continue;
     }
     const uint8_t *spr_data_ptr =
-        spr->data + (scanline_y - spr->scr_y) * sprite_width;
+        spr->img + (scanline_y - spr->scr_y) * sprite_width;
     uint16_t *scanline_dst_ptr = scanline_ptr + spr->scr_x;
     unsigned render_width = sprite_width;
     sprite_ix *collision_pixel =
@@ -424,7 +425,7 @@ void setup(void) {
                 "----------------\n");
   Serial.printf("   DMA buf 1 and 2: %zu B\n", 2 * dma_buf_size);
   Serial.printf("  sprite instances: %zu B\n", sizeof(sprites));
-  Serial.printf("     sprite images: %zu B\n", sizeof(sprites_data));
+  Serial.printf("     sprite images: %zu B\n", sizeof(sprite_imgs));
   Serial.printf("     collision_map: %zu B\n", collision_map_size);
   Serial.printf("         tiles_map: %zu B\n", sizeof(tiles_map));
   Serial.printf("             tiles: %zu B\n", sizeof(tiles));
@@ -480,7 +481,7 @@ void setup(void) {
     // sprite[0] is unused / reserved. start from sprite[1]
     sprite *spr = &sprites[1];
     for (unsigned i = 1; i < sprite_count; i++, spr++) {
-      spr->data = sprites_data[0];
+      spr->img = sprite_imgs[0];
       spr->x = spr_x;
       spr->y = spr_y;
       spr->dx = 0.5f;
@@ -543,7 +544,7 @@ void loop() {
     for (unsigned i = 1; i < sprite_count; i++, spr++) {
       if (spr->collision_with) {
         Serial.printf("sprite %d collision with %d\n", i, spr->collision_with);
-        spr->data = nullptr; // hide sprite
+        spr->img = nullptr; // hide sprite
       }
     }
   }

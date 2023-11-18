@@ -2,3 +2,4 @@
 [ ] separate concept of sprite and object
 [ ] sprite allocation for active objects
 [ ] horizontal, vertical flip of sprite
+[ ] modifiable tiles map

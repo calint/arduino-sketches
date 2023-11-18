@@ -46,6 +46,12 @@
 #include <TFT_eSPI.h>
 #include <XPT2046_Touchscreen.h>
 
+// #define USE_WIFI
+#ifdef USE_WIFI
+#include "WiFi.h"
+#include "secrets.h"
+#endif
+
 // ldr (light dependant resistor)
 // analog read of pin gives: 0 for full brightness, higher values is darker
 #define LDR_PIN 34
@@ -66,13 +72,6 @@
 static SPIClass spi{HSPI};
 static XPT2046_Touchscreen ts{XPT2046_SS, XPT2046_IRQ};
 static TFT_eSPI tft{};
-
-// #define USE_WIFI
-
-#ifdef USE_WIFI
-#include "WiFi.h"
-#include "secrets.h"
-#endif
 
 class fps {
   unsigned interval_ms_ = 5000;

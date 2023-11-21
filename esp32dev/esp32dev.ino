@@ -389,20 +389,18 @@ static void render_scanline(
       render_width = frame_width - spr->scr_x;
     }
     // render line of sprite
-    for (unsigned j = 0; j < render_width; j++) {
-      if (*collision_pixel) {
-        // collision
-        spr->collision_with = *collision_pixel;
-        sprites.at(*collision_pixel).collision_with = i;
-      }
-      // set pixel collision value to sprite index
-      *collision_pixel++ = i;
+    for (unsigned j = 0; j < render_width;
+         j++, collision_pixel++, scanline_dst_ptr++) {
       // write pixel from sprite data or skip if 0
       const uint8_t color_ix = *spr_data_ptr++;
       if (color_ix) {
-        *scanline_dst_ptr++ = palette[color_ix];
-      } else {
-        scanline_dst_ptr++;
+        *scanline_dst_ptr = palette[color_ix];
+        if (*collision_pixel) {
+          spr->collision_with = *collision_pixel;
+          sprites.at(*collision_pixel).collision_with = i;
+        }
+        // set pixel collision value to sprite index
+        *collision_pixel = i;
       }
     }
   }
@@ -547,6 +545,10 @@ void setup(void) {
   Serial.printf("------------------- on heap ------------------------------\n");
   Serial.printf("   DMA buf 1 and 2: %zu B\n", 2 * dma_buf_size);
   Serial.printf("     collision map: %zu B\n", collision_map_size);
+  Serial.printf("           sprites: %zu B\n",
+                sprite_count * sizeof(sprite) +
+                    3 * sprite_count * sizeof(sprite_ix));
+
   Serial.printf("------------------- object sizes -------------------------\n");
   Serial.printf("            sprite: %zu B\n", sizeof(sprite));
   Serial.printf("              tile: %zu B\n", sizeof(tile));
@@ -597,13 +599,13 @@ void setup(void) {
     // sprite 0 is reserved.
     for (unsigned i = 1; i < sprite_count; i++) {
       sprite &spr = sprites.allocate_sprite();
-      spr.img = sprite_imgs[i == 24 ? 1 : 0];
+      spr.img = sprite_imgs[i % 2];
       spr.x = spr_x;
       spr.y = spr_y;
       spr.dx = 0.5f;
       spr.dy = 2.0f - float(rand() % 4);
       spr_x += 24;
-      if (spr_x > (frame_width + sprite_width)) {
+      if (spr_x > frame_width) {
         spr_x = -24;
         spr_y += 24;
       }

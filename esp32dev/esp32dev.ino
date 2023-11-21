@@ -414,7 +414,7 @@ void setup(void) {
   Serial.printf("     free heap mem: %d B\n", ESP.getFreeHeap());
   Serial.printf("largest free block: %d B\n", ESP.getMaxAllocHeap());
 #ifdef USE_WIFI
-  Serial.printf("using WiFi\n");
+  Serial.printf("              WiFi: on\n");
 #endif
 
   // allocate dma buffers
@@ -476,10 +476,10 @@ void setup(void) {
   display.initDMA(true);
 
 #ifdef USE_WIFI
-  WiFi.begin(SECRET_WIFI_NETWORK, SECRET_WIFI_PASSWORD);
+  WiFi.begin(secret_wifi_network, secret_wifi_password);
   WiFi.setAutoReconnect(true);
   Serial.print("Connecting to ");
-  Serial.print(SECRET_WIFI_NETWORK);
+  Serial.print(secret_wifi_network);
   Serial.flush();
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");

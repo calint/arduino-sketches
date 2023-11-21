@@ -41,6 +41,7 @@
 //    * task ">Arduino: Board Config"
 //        select "ESP32 Dev Module (esp32)"
 //    * install libraries (plug-in installs libraries in ~/Arduino/libraries)
+//    * replace User_Setup.h in ~/Arduino/libraries/TFT_eSPI/ with provided file
 //
 
 // note. why some buffers are allocated at 'setup'
@@ -61,24 +62,24 @@
 
 // ldr (light dependant resistor)
 // analog read of pin gives: 0 for full brightness, higher values is darker
-#define LDR_PIN 34
+static constexpr uint8_t ldr_pin = 34;
 
 // rgb led
-#define CYD_LED_BLUE 17
-#define CYD_LED_RED 4
-#define CYD_LED_GREEN 16
+static constexpr uint8_t cyd_led_blue = 17;
+static constexpr uint8_t cyd_led_red = 4;
+static constexpr uint8_t cyd_led_green = 16;
 
 // setting up screen and touch from:
 // https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/Examples/Basics/2-TouchTest/2-TouchTest.ino
-#define XPT2046_IRQ 36
-#define XPT2046_MOSI 32 // Master Out Slave In
-#define XPT2046_MISO 39 // Master In Slave Out
-#define XPT2046_CLK 25  // Clock
-#define XPT2046_CS 33   // Chip Select
+static constexpr uint8_t xpt2046_irq = 36;
+static constexpr uint8_t xpt2046_mosi = 32; // Master Out Slave In
+static constexpr uint8_t xpt2046_miso = 39; // Master In Slave Out
+static constexpr uint8_t xpt2046_clk = 25;  // Clock
+static constexpr uint8_t xpt2046_cs = 33;   // Chip Select
 
 static SPIClass spi{HSPI};
-static XPT2046_Touchscreen touch_screen{XPT2046_CS, XPT2046_IRQ};
-static TFT_eSPI tft_display{};
+static XPT2046_Touchscreen touch_screen{xpt2046_cs, xpt2046_irq};
+static TFT_eSPI display{};
 
 // palette used to convert uint8_t to uint16_t rgb 565
 // lower and higher byte swapped (red being the highest bits)
@@ -348,8 +349,8 @@ static void render(const unsigned x, const unsigned y) {
                       tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
                       tile_sub_y, tile_sub_y_times_tile_width);
     }
-    tft_display.setAddrWindow(0, frame_y, frame_width, tile_height_minus_dy);
-    tft_display.pushPixelsDMA(dma_buf, frame_width * tile_height_minus_dy);
+    display.setAddrWindow(0, frame_y, frame_width, tile_height_minus_dy);
+    display.pushPixelsDMA(dma_buf, frame_width * tile_height_minus_dy);
     tile_y++;
     frame_y += tile_height_minus_dy;
   }
@@ -373,8 +374,8 @@ static void render(const unsigned x, const unsigned y) {
                       tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
                       tile_sub_y, tile_sub_y_times_tile_width);
     }
-    tft_display.setAddrWindow(0, frame_y, frame_width, tile_height);
-    tft_display.pushPixelsDMA(dma_buf, frame_width * tile_height);
+    display.setAddrWindow(0, frame_y, frame_width, tile_height);
+    display.pushPixelsDMA(dma_buf, frame_width * tile_height);
   }
   if (tile_dy) {
     // render last partial tile
@@ -394,8 +395,8 @@ static void render(const unsigned x, const unsigned y) {
                       tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
                       tile_sub_y, tile_sub_y_times_tile_width);
     }
-    tft_display.setAddrWindow(0, frame_y, frame_width, tile_dy);
-    tft_display.pushPixelsDMA(dma_buf, frame_width * tile_dy);
+    display.setAddrWindow(0, frame_y, frame_width, tile_dy);
+    display.pushPixelsDMA(dma_buf, frame_width * tile_dy);
   }
 }
 
@@ -453,26 +454,26 @@ void setup(void) {
   Serial.printf("----------------------------------------------------------\n");
 
   // setup rgb led
-  pinMode(CYD_LED_RED, OUTPUT);
-  pinMode(CYD_LED_GREEN, OUTPUT);
-  pinMode(CYD_LED_BLUE, OUTPUT);
+  pinMode(cyd_led_red, OUTPUT);
+  pinMode(cyd_led_green, OUTPUT);
+  pinMode(cyd_led_blue, OUTPUT);
 
   // set rgb led to green
-  digitalWrite(CYD_LED_RED, HIGH);
-  digitalWrite(CYD_LED_GREEN, LOW);
-  digitalWrite(CYD_LED_BLUE, HIGH);
+  digitalWrite(cyd_led_red, HIGH);
+  digitalWrite(cyd_led_green, LOW);
+  digitalWrite(cyd_led_blue, HIGH);
 
   // setup ldr
-  pinMode(LDR_PIN, INPUT);
+  pinMode(ldr_pin, INPUT);
 
   // start the SPI for the touch screen and init the TS library
-  spi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
+  spi.begin(xpt2046_clk, xpt2046_miso, xpt2046_mosi, xpt2046_cs);
   touch_screen.begin(spi);
   touch_screen.setRotation(1);
 
-  tft_display.init();
-  tft_display.setRotation(1);
-  tft_display.initDMA(true);
+  display.init();
+  display.setRotation(1);
+  display.initDMA(true);
 
 #ifdef USE_WIFI
   WiFi.begin(SECRET_WIFI_NETWORK, SECRET_WIFI_PASSWORD);
@@ -517,7 +518,7 @@ void loop() {
   // frames per second update
   if (fps.on_frame(millis())) {
     Serial.printf("t=%lu  fps=%u  ldr=%u\n", fps.now_ms(), fps.get(),
-                  analogRead(LDR_PIN));
+                  analogRead(ldr_pin));
   }
 
   // check touch screen
@@ -550,9 +551,9 @@ void loop() {
   memset(collision_map, 0, collision_map_size);
 
   // render tiles, sprites and collision map
-  tft_display.startWrite();
+  display.startWrite();
   render(unsigned(x), unsigned(y));
-  tft_display.endWrite();
+  display.endWrite();
 
   // handle collisions
   {

@@ -3,3 +3,6 @@
 [ ] sprite allocation for active objects
 [ ] horizontal, vertical flip of sprite
 [ ] modifiable tiles map
+[x] replace #define with constexpr
+    => somewhat worse because it is unclear by naming what is constant
+       consider reverting to 'defines' including other constexpr?

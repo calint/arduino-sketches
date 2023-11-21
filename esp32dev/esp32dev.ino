@@ -148,7 +148,106 @@ struct sprite {
   int16_t scr_x;
   int16_t scr_y;
   sprite_ix collision_with;
-} static sprites[sprite_count];
+  sprite_ix alloc_ix;
+};
+
+class sprites {
+  sprite *all_ = nullptr;
+  sprite_ix *free_ = nullptr;
+  sprite_ix free_ix_ = 1; // note. all_[0] is reserved
+  sprite_ix *alloc_ = nullptr;
+  sprite_ix alloc_ix_ = 0;
+  sprite_ix *del_ = nullptr;
+  sprite_ix del_ix_ = 0;
+
+  void apply_del() {
+    // Serial.printf("apply delete %u\n", del_ix_);
+    sprite_ix *del = del_;
+    for (unsigned i = 0; i < del_ix_; i++, del++) {
+      sprite &spr_deleted = all_[*del];
+      sprite_ix spr_ix_to_move = alloc_[alloc_ix_ - 1];
+      sprite &spr_to_move = all_[spr_ix_to_move];
+      spr_to_move.alloc_ix = spr_deleted.alloc_ix;
+      alloc_[spr_deleted.alloc_ix] = spr_ix_to_move;
+      alloc_ix_--;
+      free_ix_--;
+      free_[free_ix_] = *del;
+      spr_deleted.img = nullptr;
+    }
+    del_ix_ = 0;
+  }
+
+public:
+  sprites() {
+    all_ = (sprite *)calloc(sprite_count, sizeof(sprite));
+    free_ = (sprite_ix *)calloc(sprite_count, sizeof(sprite_ix));
+    alloc_ = (sprite_ix *)calloc(sprite_count, sizeof(sprite_ix));
+    del_ = (sprite_ix *)calloc(sprite_count, sizeof(sprite_ix));
+    if (!all_ or !free_ or !alloc_ or !del_) {
+      Serial.printf("!!! could not allocate 'sprites'\n");
+      while (true)
+        ;
+    }
+    for (unsigned i = 0; i < sprite_count; i++) {
+      free_[i] = i;
+    }
+  }
+
+  inline auto at(unsigned ix) -> sprite & { return all_[ix]; }
+
+  auto allocate_sprite() -> sprite & {
+    if (free_ix_ == sprite_count) {
+      Serial.printf("!!! allocate_sprite overrun\n");
+      while (true)
+        ;
+    }
+    sprite_ix ix = free_[free_ix_];
+    alloc_[alloc_ix_] = ix;
+    sprite &spr = all_[ix];
+    spr.alloc_ix = alloc_ix_;
+    free_ix_++;
+    alloc_ix_++;
+    return spr;
+  }
+
+  void free_sprite(const sprite &spr) {
+    if (del_ix_ == sprite_count) {
+      Serial.printf("!!! free_sprite overrun\n");
+      while (true)
+        ;
+    }
+    del_[del_ix_++] = alloc_[spr.alloc_ix];
+  }
+
+  void update(const float dt_s) {
+    // handle collisions
+    sprite_ix *alloc = alloc_;
+    for (unsigned i = 0; i < alloc_ix_; i++, alloc++) {
+      sprite &spr = all_[*alloc];
+      if (spr.collision_with) {
+        // Serial.printf("sprite %d collision with %d\n", *alloc,
+        //               spr.collision_with);
+        free_sprite(spr);
+      }
+    }
+
+    apply_del();
+
+    // Serial.printf("updating %u sprites\n", alloc_ix_ - 1);
+    alloc = alloc_;
+    for (unsigned i = 0; i < alloc_ix_; i++, alloc++) {
+      sprite &spr = all_[*alloc];
+      // update physics
+      spr.x += spr.dx * dt_s;
+      spr.y += spr.dy * dt_s;
+      // set rendering info
+      spr.scr_x = int16_t(spr.x);
+      spr.scr_y = int16_t(spr.y);
+      // clear collision info
+      spr.collision_with = 0;
+    }
+  }
+} sprites{};
 
 static constexpr unsigned frame_width = 320;
 static constexpr unsigned frame_height = 240;
@@ -262,7 +361,7 @@ static void render_scanline(
 
   // i not from 0 because sprite[0] is unused and represents 'no sprite'
   // in collision map
-  sprite *spr = &sprites[1];
+  sprite *spr = &sprites.at(1);
   for (unsigned i = 1; i < sprite_count; i++, spr++) {
     if (spr->scr_y > scanline_y or
         spr->scr_y + int16_t(sprite_height) <= scanline_y or
@@ -294,7 +393,7 @@ static void render_scanline(
       if (*collision_pixel) {
         // collision
         spr->collision_with = *collision_pixel;
-        sprites[*collision_pixel].collision_with = i;
+        sprites.at(*collision_pixel).collision_with = i;
       }
       // set pixel collision value to sprite index
       *collision_pixel++ = i;
@@ -495,21 +594,34 @@ void setup(void) {
   // initiate sprites
   {
     float spr_x = -24, spr_y = -24;
-    // sprite[0] is unused / reserved. start from sprite[1]
-    sprite *spr = &sprites[1];
-    for (unsigned i = 1; i < sprite_count; i++, spr++) {
-      spr->img = sprite_imgs[0];
-      spr->x = spr_x;
-      spr->y = spr_y;
-      spr->dx = 0.5f;
-      spr->dy = 2.0f - float(rand() % 4);
+    // sprite 0 is reserved.
+    for (unsigned i = 1; i < sprite_count; i++) {
+      sprite &spr = sprites.allocate_sprite();
+      spr.img = sprite_imgs[i == 24 ? 1 : 0];
+      spr.x = spr_x;
+      spr.y = spr_y;
+      spr.dx = 0.5f;
+      spr.dy = 2.0f - float(rand() % 4);
       spr_x += 24;
       if (spr_x > (frame_width + sprite_width)) {
         spr_x = -24;
         spr_y += 24;
       }
+      // Serial.printf("%u: alloc_ix=%u\n", i, spr.alloc_ix);
     }
   }
+
+  // sprite &spr1 = sprites.allocate_sprite();
+  // spr1.x = 150;
+  // spr1.y = 50;
+  // spr1.dy = 2;
+  // spr1.img = sprite_imgs[0];
+
+  // sprite &spr2 = sprites.allocate_sprite();
+  // spr2.x = 150;
+  // spr2.y = 100;
+  // spr2.dy = -2;
+  // spr2.img = sprite_imgs[0];
 
   fps.init(millis());
 }
@@ -531,21 +643,7 @@ void loop() {
                   dx_per_s);
   }
 
-  // update physics (todo. do on other core)
-  {
-    const float dt_s = fps.dt_s();
-    sprite *spr = &sprites[1]; // 1 because sprite[0] is reserved
-    for (unsigned i = 1; i < sprite_count; i++, spr++) {
-      // update physics
-      spr->x += spr->dx * dt_s;
-      spr->y += spr->dy * dt_s;
-      // set rendering info
-      spr->scr_x = int16_t(spr->x);
-      spr->scr_y = int16_t(spr->y);
-      // clear collision info
-      spr->collision_with = 0;
-    }
-  }
+  sprites.update(fps.dt_s());
 
   // clear collisions map
   memset(collision_map, 0, collision_map_size);
@@ -554,17 +652,6 @@ void loop() {
   display.startWrite();
   render(unsigned(x), unsigned(y));
   display.endWrite();
-
-  // handle collisions
-  {
-    sprite *spr = &sprites[1]; // 1 because sprite[0] is reserved
-    for (unsigned i = 1; i < sprite_count; i++, spr++) {
-      if (spr->collision_with) {
-        Serial.printf("sprite %d collision with %d\n", i, spr->collision_with);
-        spr->img = nullptr; // hide sprite
-      }
-    }
-  }
 
   // update x position in pixels in the tile map
   x += dx_per_s * fps.dt_s();

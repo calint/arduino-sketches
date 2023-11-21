@@ -363,13 +363,12 @@ static void render_scanline(
   // in collision map
   sprite *spr = &sprites.at(1);
   for (unsigned i = 1; i < sprite_count; i++, spr++) {
-    if (spr->scr_y > scanline_y or
+    if (spr->img == nullptr or spr->scr_y > scanline_y or
         spr->scr_y + int16_t(sprite_height) <= scanline_y or
-        spr->scr_x <= sprite_width_neg or spr->scr_x > int16_t(frame_width) or
-        spr->img == nullptr) {
+        spr->scr_x <= sprite_width_neg or spr->scr_x > int16_t(frame_width)) {
+      // sprite has no data or
       // not within scan line or
-      // is outside the screen x-wise or
-      // sprite has no data
+      // is outside the screen x-wise
       // Serial.printf("skipped sprite %d\n", i);
       continue;
     }

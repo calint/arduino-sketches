@@ -1,6 +1,7 @@
 [ ] objects composed of several sprites
 [ ] separate concept of sprite and object
-[ ] sprite allocation for active objects
+[x] sprite allocation for active objects
+    => O(1) sprite allocation and free
 [ ] horizontal, vertical flip of sprite
 [ ] modifiable tiles map
 [x] replace #define with constexpr

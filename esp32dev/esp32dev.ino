@@ -140,7 +140,7 @@ static constexpr uint8_t sprite_imgs[256][sprite_width * sprite_height]{
 
 using sprite_ix = uint8_t;
 // data type used to index a sprite
-// for collision map to fit in heap it has to be 8-bit
+// note. for collision map to fit in heap it must be 8-bit
 
 struct sprite {
   float x;
@@ -156,12 +156,13 @@ struct sprite {
 
 using sprite_store = o1store<sprite, 255, sprite_ix, true>;
 // note. 255 because uint8_t max size is 255
+// note. sprite 0 is reserved which gives 254 usable sprites
 
 class sprites : public sprite_store {
 public:
   void update(const float dt_s) {
-    // handle collisions
     {
+      // handle collisions
       sprite_ix *alloc = get_allocated_list();
       const unsigned len = get_allocated_list_len();
       for (unsigned i = 0; i < len; i++, alloc++) {
@@ -177,7 +178,7 @@ public:
     apply_free();
 
     {
-      // Serial.printf("updating %u sprites\n", alloc_ix_ - 1);
+      // update physics
       sprite_ix *alloc = get_allocated_list();
       const unsigned len = get_allocated_list_len();
       for (unsigned i = 0; i < len; i++, alloc++) {

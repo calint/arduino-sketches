@@ -50,6 +50,7 @@
 // allocated at runtime as heap.
 // -- https://stackoverflow.com/questions/71085927/how-to-extend-esp32-heap-size
 
+#include "o1store.hpp"
 #include <SPI.h>
 #include <TFT_eSPI.h>
 #include <XPT2046_Touchscreen.h>
@@ -128,8 +129,6 @@ struct tiles_map {
 
 static constexpr unsigned sprite_width = 16;
 static constexpr unsigned sprite_height = 16;
-static constexpr unsigned sprite_count = 256;
-using sprite_ix = uint8_t;
 
 // used when rendering
 static constexpr int16_t sprite_width_neg = -int16_t(sprite_width);
@@ -138,6 +137,10 @@ static constexpr int16_t sprite_width_neg = -int16_t(sprite_width);
 static constexpr uint8_t sprite_imgs[256][sprite_width * sprite_height]{
 #include "sprite_imgs.h"
 };
+
+using sprite_ix = uint8_t;
+// data type used to index a sprite
+// for collision map to fit in heap it has to be 8-bit
 
 struct sprite {
   float x;
@@ -151,103 +154,46 @@ struct sprite {
   sprite_ix alloc_ix;
 };
 
-class sprites {
-  sprite *all_ = nullptr;
-  sprite_ix *free_ = nullptr;
-  sprite_ix free_ix_ = 1; // note. all_[0] is reserved
-  sprite_ix *alloc_ = nullptr;
-  sprite_ix alloc_ix_ = 0;
-  sprite_ix *del_ = nullptr;
-  sprite_ix del_ix_ = 0;
+using sprite_store = o1store<sprite, 255, sprite_ix, true>;
+// note. 255 because uint8_t max size is 255
 
-  void apply_del() {
-    // Serial.printf("apply delete %u\n", del_ix_);
-    sprite_ix *del = del_;
-    for (unsigned i = 0; i < del_ix_; i++, del++) {
-      sprite &spr_deleted = all_[*del];
-      sprite_ix spr_ix_to_move = alloc_[alloc_ix_ - 1];
-      sprite &spr_to_move = all_[spr_ix_to_move];
-      spr_to_move.alloc_ix = spr_deleted.alloc_ix;
-      alloc_[spr_deleted.alloc_ix] = spr_ix_to_move;
-      alloc_ix_--;
-      free_ix_--;
-      free_[free_ix_] = *del;
-      spr_deleted.img = nullptr;
-    }
-    del_ix_ = 0;
-  }
-
+class sprites : public sprite_store {
 public:
-  sprites() {
-    all_ = (sprite *)calloc(sprite_count, sizeof(sprite));
-    free_ = (sprite_ix *)calloc(sprite_count, sizeof(sprite_ix));
-    alloc_ = (sprite_ix *)calloc(sprite_count, sizeof(sprite_ix));
-    del_ = (sprite_ix *)calloc(sprite_count, sizeof(sprite_ix));
-    if (!all_ or !free_ or !alloc_ or !del_) {
-      Serial.printf("!!! could not allocate 'sprites'\n");
-      while (true)
-        ;
-    }
-    for (unsigned i = 0; i < sprite_count; i++) {
-      free_[i] = i;
-    }
-  }
-
-  inline auto at(unsigned ix) -> sprite & { return all_[ix]; }
-
-  auto allocate_sprite() -> sprite & {
-    if (free_ix_ == sprite_count) {
-      Serial.printf("!!! allocate_sprite overrun\n");
-      while (true)
-        ;
-    }
-    sprite_ix ix = free_[free_ix_];
-    alloc_[alloc_ix_] = ix;
-    sprite &spr = all_[ix];
-    spr.alloc_ix = alloc_ix_;
-    free_ix_++;
-    alloc_ix_++;
-    return spr;
-  }
-
-  void free_sprite(const sprite &spr) {
-    if (del_ix_ == sprite_count) {
-      Serial.printf("!!! free_sprite overrun\n");
-      while (true)
-        ;
-    }
-    del_[del_ix_++] = alloc_[spr.alloc_ix];
-  }
-
   void update(const float dt_s) {
     // handle collisions
-    sprite_ix *alloc = alloc_;
-    for (unsigned i = 0; i < alloc_ix_; i++, alloc++) {
-      sprite &spr = all_[*alloc];
-      if (spr.collision_with) {
-        // Serial.printf("sprite %d collision with %d\n", *alloc,
-        //               spr.collision_with);
-        free_sprite(spr);
+    {
+      sprite_ix *alloc = get_allocated_list();
+      const unsigned len = get_allocated_list_len();
+      for (unsigned i = 0; i < len; i++, alloc++) {
+        sprite &spr = get(*alloc);
+        if (spr.collision_with) {
+          // Serial.printf("sprite %d collision with %d\n", *alloc,
+          //               spr.collision_with);
+          free(spr);
+        }
       }
     }
 
-    apply_del();
+    apply_free();
 
-    // Serial.printf("updating %u sprites\n", alloc_ix_ - 1);
-    alloc = alloc_;
-    for (unsigned i = 0; i < alloc_ix_; i++, alloc++) {
-      sprite &spr = all_[*alloc];
-      // update physics
-      spr.x += spr.dx * dt_s;
-      spr.y += spr.dy * dt_s;
-      // set rendering info
-      spr.scr_x = int16_t(spr.x);
-      spr.scr_y = int16_t(spr.y);
-      // clear collision info
-      spr.collision_with = 0;
+    {
+      // Serial.printf("updating %u sprites\n", alloc_ix_ - 1);
+      sprite_ix *alloc = get_allocated_list();
+      const unsigned len = get_allocated_list_len();
+      for (unsigned i = 0; i < len; i++, alloc++) {
+        sprite &spr = get(*alloc);
+        // update physics
+        spr.x += spr.dx * dt_s;
+        spr.y += spr.dy * dt_s;
+        // set rendering info
+        spr.scr_x = int16_t(spr.x);
+        spr.scr_y = int16_t(spr.y);
+        // clear collision info
+        spr.collision_with = 0;
+      }
     }
   }
-} sprites{};
+} static sprites{};
 
 static constexpr unsigned frame_width = 320;
 static constexpr unsigned frame_height = 240;
@@ -361,8 +307,8 @@ static void render_scanline(
 
   // i not from 0 because sprite[0] is unused and represents 'no sprite'
   // in collision map
-  sprite *spr = &sprites.at(1);
-  for (unsigned i = 1; i < sprite_count; i++, spr++) {
+  sprite *spr = &sprites.get(1);
+  for (unsigned i = 1; i < sprites.size(); i++, spr++) {
     if (spr->img == nullptr or spr->scr_y > scanline_y or
         spr->scr_y + int16_t(sprite_height) <= scanline_y or
         spr->scr_x <= sprite_width_neg or spr->scr_x > int16_t(frame_width)) {
@@ -396,7 +342,7 @@ static void render_scanline(
         *scanline_dst_ptr = palette[color_ix];
         if (*collision_pixel) {
           spr->collision_with = *collision_pixel;
-          sprites.at(*collision_pixel).collision_with = i;
+          sprites.get(*collision_pixel).collision_with = i;
         }
         // set pixel collision value to sprite index
         *collision_pixel = i;
@@ -542,12 +488,9 @@ void setup(void) {
   Serial.printf("------------------- globals ------------------------------\n");
   Serial.printf("           sprites: %zu B\n", sizeof(sprites));
   Serial.printf("------------------- on heap ------------------------------\n");
-  Serial.printf("   DMA buf 1 and 2: %zu B\n", 2 * dma_buf_size);
+  Serial.printf("      sprites data: %zu B\n", sprites.data_size_B());
   Serial.printf("     collision map: %zu B\n", collision_map_size);
-  Serial.printf("           sprites: %zu B\n",
-                sprite_count * sizeof(sprite) +
-                    3 * sprite_count * sizeof(sprite_ix));
-
+  Serial.printf("   DMA buf 1 and 2: %zu B\n", 2 * dma_buf_size);
   Serial.printf("------------------- object sizes -------------------------\n");
   Serial.printf("            sprite: %zu B\n", sizeof(sprite));
   Serial.printf("              tile: %zu B\n", sizeof(tile));
@@ -595,9 +538,10 @@ void setup(void) {
   // initiate sprites
   {
     float spr_x = -24, spr_y = -24;
-    // sprite 0 is reserved.
-    for (unsigned i = 1; i < sprite_count; i++) {
-      sprite &spr = sprites.allocate_sprite();
+    // sprite 0 is reserved
+    // size is limited by to maximum value of sprite_ix (8 bit <= 255)
+    for (unsigned i = 1; i < sprites.size() - 1; i++) {
+      sprite &spr = sprites.allocate();
       spr.img = sprite_imgs[i % 2];
       spr.x = spr_x;
       spr.y = spr_y;

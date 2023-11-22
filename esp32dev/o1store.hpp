@@ -40,6 +40,7 @@ public:
     }
   }
 
+  // allocates an instance
   auto allocate() -> Type & {
     if (free_ix_ == Size) {
       Serial.printf("!!! o1store: allocate overrun\n");
@@ -55,6 +56,7 @@ public:
     return inst;
   }
 
+  // adds object to a list that is applied with 'apply_free()'
   void free(const Type &spr) {
     if (del_ix_ == Size) {
       Serial.printf("!!! o1store: free overrun\n");
@@ -64,30 +66,36 @@ public:
     del_[del_ix_++] = alloc_[spr.alloc_ix];
   }
 
+  // de-allocates the objects that have been freed
   void apply_free() {
-    IxType *del = del_;
-    for (unsigned i = 0; i < del_ix_; i++, del++) {
-      Type &inst_deleted = all_[*del];
+    IxType *it = del_;
+    for (unsigned i = 0; i < del_ix_; i++, it++) {
+      Type &inst_deleted = all_[*it];
       IxType inst_ix_to_move = alloc_[alloc_ix_ - 1];
       Type &inst_to_move = all_[inst_ix_to_move];
       inst_to_move.alloc_ix = inst_deleted.alloc_ix;
       alloc_[inst_deleted.alloc_ix] = inst_ix_to_move;
       alloc_ix_--;
       free_ix_--;
-      free_[free_ix_] = *del;
+      free_[free_ix_] = *it;
       inst_deleted.img = nullptr;
     }
     del_ix_ = 0;
   }
 
+  // returns pointer to list of allocated sprites
   inline auto get_allocated_list() -> IxType * { return alloc_; }
 
+  // returns size of list of allocated sprites
   inline auto get_allocated_list_len() -> IxType { return alloc_ix_; }
 
+  // returns object from 'all' list at index 'ix'
   inline auto get(IxType ix) -> Type & { return all_[ix]; }
 
+  // returns the size of 'all' list
   constexpr inline auto size() -> unsigned { return Size; }
 
+  // returns the size in bytes of heap allocated memory
   constexpr inline auto data_size_B() -> size_t {
     return Size * sizeof(Type) + 3 * Size * sizeof(IxType);
   }

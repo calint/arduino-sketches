@@ -163,12 +163,12 @@ public:
   void update(const float dt_s) {
     {
       // handle collisions
-      sprite_ix *alloc = get_allocated_list();
+      sprite_ix *it = get_allocated_list();
       const unsigned len = get_allocated_list_len();
-      for (unsigned i = 0; i < len; i++, alloc++) {
-        sprite &spr = get(*alloc);
+      for (unsigned i = 0; i < len; i++, it++) {
+        sprite &spr = get(*it);
         if (spr.collision_with) {
-          // Serial.printf("sprite %d collision with %d\n", *alloc,
+          // Serial.printf("sprite %d collision with %d\n", *it,
           //               spr.collision_with);
           free(spr);
         }
@@ -179,10 +179,10 @@ public:
 
     {
       // update physics
-      sprite_ix *alloc = get_allocated_list();
+      sprite_ix *it = get_allocated_list();
       const unsigned len = get_allocated_list_len();
-      for (unsigned i = 0; i < len; i++, alloc++) {
-        sprite &spr = get(*alloc);
+      for (unsigned i = 0; i < len; i++, it++) {
+        sprite &spr = get(*it);
         // update physics
         spr.x += spr.dx * dt_s;
         spr.y += spr.dy * dt_s;

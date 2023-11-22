@@ -56,7 +56,7 @@ public:
     return inst;
   }
 
-  // adds object to a list that is applied with 'apply_free()'
+  // adds instance to a list that is applied with 'apply_free()'
   void free(const Type &spr) {
     if (del_ix_ == Size) {
       Serial.printf("!!! o1store: free overrun\n");
@@ -66,7 +66,7 @@ public:
     del_[del_ix_++] = alloc_[spr.alloc_ix];
   }
 
-  // de-allocates the objects that have been freed
+  // de-allocates the instances that have been freed
   void apply_free() {
     IxType *it = del_;
     for (unsigned i = 0; i < del_ix_; i++, it++) {

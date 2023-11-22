@@ -5,7 +5,7 @@
 // Type is object type. Type must contain public field 'IxType alloc_ix'
 // Size is number of pre-allocated objects
 // IxType is type used to index in lists
-// index_0_reserved true if object at index 0 is un-allocatable / reserved
+// index_0_reserved is true if object at index 0 is un-allocatable / reserved
 //
 // example:
 //   Type = sprite, Size = 255, IxType = uint8_t gives 255 allocatable objects
@@ -14,7 +14,7 @@
 //         if index_0_reserved than there are 254 allocatable objects
 //
 template <typename Type, const unsigned Size, typename IxType,
-          const bool index_0_reserved>
+          const bool index_0_reserved = false>
 class o1store {
   Type *all_ = nullptr;
   IxType *free_ = nullptr;

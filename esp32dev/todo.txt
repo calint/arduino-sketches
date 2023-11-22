@@ -2,6 +2,8 @@
 [ ] separate concept of sprite and object
 [x] sprite allocation for active objects
     => O(1) sprite allocation and free
+[x] make sprite allocation class into a template
+    => o1store
 [ ] render_scanline(...) consider looping through allocated sprites instead of all
 [ ] consider std::array in 'o1store' instead of pointers
 [ ] #define O1STORE_DEBUG to check for double free

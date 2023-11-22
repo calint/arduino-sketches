@@ -2,7 +2,7 @@
 //
 // implements a O(1) store of objects
 //
-// Type is object type. Type must contain field 'IxType alloc_ix'
+// Type is object type. Type must contain public field 'IxType alloc_ix'
 // Size is number of pre-allocated objects
 // IxType is type used to index in lists
 // index_0_reserved true if object at index 0 is un-allocatable / reserved
@@ -31,7 +31,7 @@ public:
     alloc_ = (IxType *)calloc(Size, sizeof(IxType));
     del_ = (IxType *)calloc(Size, sizeof(IxType));
     if (!all_ or !free_ or !alloc_ or !del_) {
-      Serial.printf("!!! could not allocate 'sprites'\n");
+      Serial.printf("!!! o1store: could not allocate arrays\n");
       while (true)
         ;
     }
@@ -42,7 +42,7 @@ public:
 
   auto allocate() -> Type & {
     if (free_ix_ == Size) {
-      Serial.printf("!!! allocate overrun\n");
+      Serial.printf("!!! o1store: allocate overrun\n");
       while (true)
         ;
     }
@@ -57,7 +57,7 @@ public:
 
   void free(const Type &spr) {
     if (del_ix_ == Size) {
-      Serial.printf("!!! free overrun\n");
+      Serial.printf("!!! o1store: free overrun\n");
       while (true)
         ;
     }

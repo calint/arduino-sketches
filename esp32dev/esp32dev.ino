@@ -161,8 +161,8 @@ using sprite_store = o1store<sprite, 255, sprite_ix, true>;
 class sprites : public sprite_store {
 public:
   void update(const float dt_s) {
+    // handle collisions
     {
-      // handle collisions
       sprite_ix *it = get_allocated_list();
       const unsigned len = get_allocated_list_len();
       for (unsigned i = 0; i < len; i++, it++) {
@@ -175,10 +175,11 @@ public:
       }
     }
 
+    // applied the free list
     apply_free();
 
+    // update physics
     {
-      // update physics
       sprite_ix *it = get_allocated_list();
       const unsigned len = get_allocated_list_len();
       for (unsigned i = 0; i < len; i++, it++) {
@@ -540,7 +541,7 @@ void setup(void) {
   {
     float spr_x = -24, spr_y = -24;
     // sprite 0 is reserved
-    // size is limited by to maximum value of sprite_ix (8 bit <= 255)
+    // size is limited by maximum value of sprite_ix (8 bit <= 255)
     for (unsigned i = 1; i < sprites.size(); i++) {
       sprite &spr = sprites.allocate();
       spr.img = sprite_imgs[i % 2];
@@ -553,22 +554,10 @@ void setup(void) {
         spr_x = -24;
         spr_y += 24;
       }
-      // Serial.printf("%u: alloc_ix=%u\n", i, spr.alloc_ix);
     }
   }
 
-  // sprite &spr1 = sprites.allocate_sprite();
-  // spr1.x = 150;
-  // spr1.y = 50;
-  // spr1.dy = 2;
-  // spr1.img = sprite_imgs[0];
-
-  // sprite &spr2 = sprites.allocate_sprite();
-  // spr2.x = 150;
-  // spr2.y = 100;
-  // spr2.dy = -2;
-  // spr2.img = sprite_imgs[0];
-
+  // initiate frames-per-second and dt keeper
   fps.init(millis());
 }
 

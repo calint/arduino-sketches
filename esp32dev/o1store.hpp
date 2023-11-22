@@ -83,10 +83,10 @@ public:
     del_ix_ = 0;
   }
 
-  // returns pointer to list of allocated sprites
+  // returns pointer to list of allocated instances
   inline auto get_allocated_list() -> IxType * { return alloc_; }
 
-  // returns size of list of allocated sprites
+  // returns size of list of allocated instances
   inline auto get_allocated_list_len() -> IxType { return alloc_ix_; }
 
   // returns object from 'all' list at index 'ix'

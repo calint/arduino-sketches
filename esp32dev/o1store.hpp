@@ -1,16 +1,18 @@
 #pragma once
 //
 // implements a O(1) store of objects
-// example:
-//   Size = 256, IxType = uint8_t gives 255 allocatable objects
-//   why 255 and not 256?
-//   get_allocated_list_len() returns the type IxType with maximum number 255
 //
-// Type is object type
+// Type is object type. Type must contain field 'IxType alloc_ix'
 // Size is number of pre-allocated objects
 // IxType is type used to index in lists
-// index_0_reserved true if object at index 0 is un-allocatable and has reserved
-// meaning
+// index_0_reserved true if object at index 0 is un-allocatable / reserved
+//
+// example:
+//   Type = sprite, Size = 255, IxType = uint8_t gives 255 allocatable objects
+//   note. size should be maximum the number that fits in IxType
+//         in example uint8_t fits 255 indexes
+//         if index_0_reserved than there are 254 allocatable objects
+//
 template <typename Type, const unsigned Size, typename IxType,
           const bool index_0_reserved>
 class o1store {

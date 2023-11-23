@@ -142,6 +142,9 @@ using sprite_ix = uint8_t;
 // data type used to index a sprite
 // note. for collision map to fit in heap it must be 8-bit
 
+// the reserved sprite_ix in collision map representing 'no sprite pixel'
+static constexpr sprite_ix sprite_ix_reserved = 0xff;
+
 struct sprite {
   float x;
   float y;
@@ -154,9 +157,9 @@ struct sprite {
   sprite_ix alloc_ix;
 };
 
-using sprite_store = o1store<sprite, 255, sprite_ix, true>;
+using sprite_store = o1store<sprite, 255, sprite_ix>;
 // note. 255 because uint8_t max size is 255
-// note. sprite 0 is reserved which gives 254 usable sprites
+// note. sprite 255 is reserved which gives 255 [0:254] usable sprites
 
 class sprites : public sprite_store {
 public:
@@ -342,7 +345,7 @@ static void render_scanline(
       const uint8_t color_ix = *spr_data_ptr++;
       if (color_ix) {
         *scanline_dst_ptr = palette[color_ix];
-        if (*collision_pixel) {
+        if (*collision_pixel != sprite_ix_reserved) {
           spr->collision_with = *collision_pixel;
           sprites.get(*collision_pixel).collision_with = i;
         }
@@ -581,7 +584,7 @@ void loop() {
   sprites.update(fps.dt_s());
 
   // clear collisions map
-  memset(collision_map, 0, collision_map_size);
+  memset(collision_map, sprite_ix_reserved, collision_map_size);
 
   // render tiles, sprites and collision map
   display.startWrite();

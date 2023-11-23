@@ -312,10 +312,8 @@ static void render_scanline(
   // rendering one tile height of sprites and tiles. core 0 will do graphics
   // and core 1 will do game logic.
 
-  // i not from 0 because sprite[0] is unused and represents 'no sprite'
-  // in collision map
-  sprite *spr = &sprites.get(1);
-  for (unsigned i = 1; i < sprites.size(); i++, spr++) {
+  sprite *spr = sprites.get_all_list();
+  for (unsigned i = 0; i < sprites.size(); i++, spr++) {
     if (!spr->img or spr->scr_y > scanline_y or
         spr->scr_y + int16_t(sprite_height) <= scanline_y or
         spr->scr_x <= sprite_width_neg or spr->scr_x > int16_t(frame_width)) {

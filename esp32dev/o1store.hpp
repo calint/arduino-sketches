@@ -98,6 +98,9 @@ public:
   // returns object from 'all' list at index 'ix'
   inline auto get(IxType ix) -> Type & { return all_[ix]; }
 
+  // returns the list with all pre-allocated instances
+  inline auto get_all_list() -> Type * { return all_; }
+
   // returns the size of 'all' list
   constexpr inline auto size() -> unsigned { return Size; }
 

@@ -102,10 +102,10 @@ public:
   inline auto get_all_list() -> Type * { return all_; }
 
   // returns the size of 'all' list
-  constexpr inline auto size() -> unsigned { return Size; }
+  constexpr auto size() -> unsigned { return Size; }
 
   // returns the size in bytes of heap allocated memory
-  constexpr inline auto data_size_B() -> size_t {
+  constexpr auto data_size_B() -> size_t {
     return Size * sizeof(Type) + 3 * Size * sizeof(IxType);
   }
 };

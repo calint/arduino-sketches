@@ -12,6 +12,8 @@
 //   note. size should be at most the number that fits in IxType
 //         in example uint8_t fits 255 indexes
 //
+// note. no destructor since life-time is program life-time
+//
 template <typename Type, const unsigned Size, typename IxType> class o1store {
   Type *all_ = nullptr;
   IxType *free_ = nullptr;
@@ -36,6 +38,13 @@ public:
       free_[i] = i;
     }
   }
+
+  // ~o1store() {
+  //   free(all_);
+  //   free(free_);
+  //   free(alloc_);
+  //   free(del_);
+  // }
 
   // allocates an instance
   auto allocate() -> Type & {

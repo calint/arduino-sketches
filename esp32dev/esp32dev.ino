@@ -212,7 +212,7 @@ static constexpr unsigned collision_map_size =
     sizeof(sprite_ix) * frame_width * frame_height;
 
 // buffers for rendering a chunk while the other is transferred to the screen
-// using DMA. allocated in setup.
+// using DMA. allocated in setup
 static uint16_t *dma_buf_1;
 static uint16_t *dma_buf_2;
 static constexpr unsigned dma_buf_size =

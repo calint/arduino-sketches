@@ -2,13 +2,14 @@
 //
 // implements a O(1) store of objects
 //
-// Type is object type. Type must contain public field 'IxType alloc_ix'
-// Size is number of pre-allocated objects
-// IxType is type used to index in lists
+// * Type is object type. 'Type' must contain public field '<IxType> alloc_ix'
+// * Size is number of pre-allocated objects
+// * IxType is type used to index in lists and should be unsigned with a bit
+//   width that fits 'Size'
 //
 // example:
 //   Type = sprite, Size = 255, IxType = uint8_t gives 255 allocatable sprites
-//   note. size should be maximum the number that fits in IxType
+//   note. size should be at most the number that fits in IxType
 //         in example uint8_t fits 255 indexes
 //
 template <typename Type, const unsigned Size, typename IxType> class o1store {

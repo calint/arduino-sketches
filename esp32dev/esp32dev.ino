@@ -320,7 +320,6 @@ static void render_scanline(
       // sprite has no image or
       // not within scanline or
       // is outside the screen x-wise
-      // Serial.printf("skipped sprite %d\n", i);
       continue;
     }
     const uint8_t *spr_data_ptr =

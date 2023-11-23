@@ -545,9 +545,7 @@ void setup(void) {
   // initiate sprites
   {
     float spr_x = -24, spr_y = -24;
-    // sprite 0 is reserved
-    // size is limited by maximum value of sprite_ix (8 bit <= 255)
-    for (unsigned i = 1; i < sprites.size(); i++) {
+    for (unsigned i = 0; i < sprites.size(); i++) {
       sprite &spr = sprites.allocate();
       spr.img = sprite_imgs[i % 2];
       spr.x = spr_x;

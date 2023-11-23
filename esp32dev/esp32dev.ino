@@ -54,6 +54,7 @@
 #include <SPI.h>
 #include <TFT_eSPI.h>
 #include <XPT2046_Touchscreen.h>
+#include <limits>
 
 // #define USE_WIFI
 #ifdef USE_WIFI
@@ -140,10 +141,11 @@ static constexpr uint8_t sprite_imgs[256][sprite_width * sprite_height]{
 
 using sprite_ix = uint8_t;
 // data type used to index a sprite
-// note. for collision map to fit in heap it must be 8-bit
+// note. for 'collision_map' to fit in heap it must be 8-bit
 
-// the reserved sprite_ix in collision map representing 'no sprite pixel'
-static constexpr sprite_ix sprite_ix_reserved = 0xff;
+// the reserved 'sprite_ix' in 'collision_map' representing 'no sprite pixel'
+static constexpr sprite_ix sprite_ix_reserved =
+    std::numeric_limits<sprite_ix>::max();
 
 struct sprite {
   float x;

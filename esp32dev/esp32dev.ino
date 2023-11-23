@@ -316,11 +316,11 @@ static void render_scanline(
   // in collision map
   sprite *spr = &sprites.get(1);
   for (unsigned i = 1; i < sprites.size(); i++, spr++) {
-    if (spr->img == nullptr or spr->scr_y > scanline_y or
+    if (!spr->img or spr->scr_y > scanline_y or
         spr->scr_y + int16_t(sprite_height) <= scanline_y or
         spr->scr_x <= sprite_width_neg or spr->scr_x > int16_t(frame_width)) {
-      // sprite has no data or
-      // not within scan line or
+      // sprite has no image or
+      // not within scanline or
       // is outside the screen x-wise
       // Serial.printf("skipped sprite %d\n", i);
       continue;
@@ -469,7 +469,7 @@ void setup(void) {
   // allocate dma buffers
   dma_buf_1 = (uint16_t *)malloc(dma_buf_size);
   dma_buf_2 = (uint16_t *)malloc(dma_buf_size);
-  if (dma_buf_1 == nullptr or dma_buf_2 == nullptr) {
+  if (!dma_buf_1 or !dma_buf_2) {
     Serial.printf("!!! could not allocate DMA buffers");
     while (true) {
       sleep(60);

@@ -169,8 +169,8 @@ public:
     // handle collisions
     {
       sprite_ix *it = get_allocated_list();
-      const unsigned len = get_allocated_list_len();
-      for (unsigned i = 0; i < len; i++, it++) {
+      const sprite_ix len = get_allocated_list_len();
+      for (sprite_ix i = 0; i < len; i++, it++) {
         sprite &spr = get(*it);
         if (spr.collision_with) {
           // Serial.printf("sprite %d collision with %d\n", *it,
@@ -186,8 +186,8 @@ public:
     // update physics
     {
       sprite_ix *it = get_allocated_list();
-      const unsigned len = get_allocated_list_len();
-      for (unsigned i = 0; i < len; i++, it++) {
+      const sprite_ix len = get_allocated_list_len();
+      for (sprite_ix i = 0; i < len; i++, it++) {
         sprite &spr = get(*it);
         // update physics
         spr.x += spr.dx * dt_s;

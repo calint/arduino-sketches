@@ -39,7 +39,7 @@ public:
     }
   }
 
-  // ~o1store() {
+  // virtual ~o1store() {
   //   free(all_);
   //   free(free_);
   //   free(alloc_);

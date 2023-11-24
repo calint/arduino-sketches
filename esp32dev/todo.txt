@@ -1,16 +1,18 @@
 [ ] objects composed of several sprites
 [ ] separate concept of sprite and object
 [ ] polymorphism without allocation on the heap
+[ ] horizontal, vertical flip of sprite
 [ ] collision detection: bit field for type and collision interest
 [x] sprite allocation for active objects
     => O(1) sprite allocation and free
 [x] make sprite allocation class into a template
     => o1store
 [ ] render_scanline(...) consider looping through allocated sprites instead of all
+[ ] o1store: consider using std::vector instead of calloc and free
 [ ] o1store: consider std::array instead of pointers
 [ ] o1store: consider a minimal implementation of span to return allocated list
+[ ] o1store: consider using pointers instead of indexing in arrays
 [ ] #define O1STORE_DEBUG to check for double free
-[ ] horizontal, vertical flip of sprite
 [ ] modifiable tiles map
 [x] replace #define with constexpr
     => somewhat worse because it is unclear by naming what is constant

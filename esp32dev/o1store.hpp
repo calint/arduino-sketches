@@ -47,7 +47,7 @@ public:
   // }
 
   // allocates an instance
-  auto allocate() -> Type & {
+  auto allocate_instance() -> Type & {
     if (free_ix_ == Size) {
       Serial.printf("!!! o1store: allocate overrun\n");
       while (true)
@@ -63,7 +63,7 @@ public:
   }
 
   // adds instance to a list that is applied with 'apply_free()'
-  void free(const Type &spr) {
+  void free_instance(const Type &spr) {
     if (del_ix_ == Size) {
       Serial.printf("!!! o1store: free overrun\n");
       while (true)
@@ -90,22 +90,22 @@ public:
   }
 
   // returns pointer to list of allocated instances
-  inline auto get_allocated_list() -> IxType * { return alloc_; }
+  inline auto allocated_list() -> IxType * { return alloc_; }
 
   // returns size of list of allocated instances
-  inline auto get_allocated_list_len() -> IxType { return alloc_ix_; }
-
-  // returns object from 'all' list at index 'ix'
-  inline auto get(IxType ix) -> Type & { return all_[ix]; }
+  inline auto allocated_list_len() -> IxType { return alloc_ix_; }
 
   // returns the list with all pre-allocated instances
-  inline auto get_all_list() -> Type * { return all_; }
+  inline auto all_list() -> Type * { return all_; }
 
   // returns the size of 'all' list
-  constexpr auto size() -> unsigned { return Size; }
+  constexpr auto all_list_len() -> unsigned { return Size; }
 
-  // returns the size in bytes of heap allocated memory
-  constexpr auto data_size_B() -> size_t {
+  // returns instance from 'all' list at index 'ix'
+  inline auto instance(IxType ix) -> Type & { return all_[ix]; }
+
+  // returns the size in bytes of allocated heap memory
+  constexpr auto allocated_data_size_B() -> size_t {
     return Size * sizeof(Type) + 3 * Size * sizeof(IxType);
   }
 };

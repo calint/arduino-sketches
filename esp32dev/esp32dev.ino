@@ -168,14 +168,14 @@ public:
   void update(const float dt_s) {
     // handle collisions
     {
-      sprite_ix *it = get_allocated_list();
-      const sprite_ix len = get_allocated_list_len();
+      sprite_ix *it = allocated_list();
+      const sprite_ix len = allocated_list_len();
       for (sprite_ix i = 0; i < len; i++, it++) {
-        sprite &spr = get(*it);
+        sprite &spr = instance(*it);
         if (spr.collision_with) {
           // Serial.printf("sprite %d collision with %d\n", *it,
           //               spr.collision_with);
-          free(spr);
+          free_instance(spr);
         }
       }
     }
@@ -185,10 +185,10 @@ public:
 
     // update physics
     {
-      sprite_ix *it = get_allocated_list();
-      const sprite_ix len = get_allocated_list_len();
+      sprite_ix *it = allocated_list();
+      const sprite_ix len = allocated_list_len();
       for (sprite_ix i = 0; i < len; i++, it++) {
-        sprite &spr = get(*it);
+        sprite &spr = instance(*it);
         // update physics
         spr.x += spr.dx * dt_s;
         spr.y += spr.dy * dt_s;
@@ -312,8 +312,8 @@ static void render_scanline(
   // rendering one tile height of sprites and tiles. core 0 will do graphics
   // and core 1 will do game logic.
 
-  sprite *spr = sprites.get_all_list();
-  for (unsigned i = 0; i < sprites.size(); i++, spr++) {
+  sprite *spr = sprites.all_list();
+  for (unsigned i = 0; i < sprites.all_list_len(); i++, spr++) {
     if (!spr->img or spr->scr_y > scanline_y or
         spr->scr_y + int16_t(sprite_height) <= scanline_y or
         spr->scr_x <= sprite_width_neg or spr->scr_x > int16_t(frame_width)) {
@@ -346,7 +346,7 @@ static void render_scanline(
         *scanline_dst_ptr = palette[color_ix];
         if (*collision_pixel != sprite_ix_reserved) {
           spr->collision_with = *collision_pixel;
-          sprites.get(*collision_pixel).collision_with = i;
+          sprites.instance(*collision_pixel).collision_with = i;
         }
         // set pixel collision value to sprite index
         *collision_pixel = i;
@@ -492,7 +492,8 @@ void setup(void) {
   Serial.printf("------------------- globals ------------------------------\n");
   Serial.printf("           sprites: %zu B\n", sizeof(sprites));
   Serial.printf("------------------- on heap ------------------------------\n");
-  Serial.printf("      sprites data: %zu B\n", sprites.data_size_B());
+  Serial.printf("      sprites data: %zu B\n",
+                sprites.allocated_data_size_B());
   Serial.printf("     collision map: %zu B\n", collision_map_size);
   Serial.printf("   DMA buf 1 and 2: %zu B\n", 2 * dma_buf_size);
   Serial.printf("------------------- object sizes -------------------------\n");
@@ -542,8 +543,8 @@ void setup(void) {
   // initiate sprites
   {
     float spr_x = -24, spr_y = -24;
-    for (unsigned i = 0; i < sprites.size(); i++) {
-      sprite &spr = sprites.allocate();
+    for (unsigned i = 0; i < sprites.all_list_len(); i++) {
+      sprite &spr = sprites.allocate_instance();
       spr.img = sprite_imgs[i % 2];
       spr.x = spr_x;
       spr.y = spr_y;

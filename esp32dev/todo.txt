@@ -1,6 +1,7 @@
 [ ] objects composed of several sprites
 [ ] separate concept of sprite and object
 [ ] polymorphism without allocation on the heap
+[ ] collision detection: bit field for type and collision interest
 [x] sprite allocation for active objects
     => O(1) sprite allocation and free
 [x] make sprite allocation class into a template

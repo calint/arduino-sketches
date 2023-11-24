@@ -202,6 +202,40 @@ public:
   }
 } static sprites{};
 
+class object {
+public:
+  float x = 0;
+  float y = 0;
+  float dx = 0;
+  float dy = 0;
+  float ddx = 0;
+  float ddy = 0;
+  sprite *spr = nullptr;
+  char state[256 - 6 * sizeof(float) - sizeof(sprite *)] = {};
+
+  void update(const float dt_s) {
+    dx += ddx * dt_s;
+    dy += ddy * dt_s;
+    x += dx * dt_s;
+    y += dy * dt_s;
+  }
+};
+
+using object_ix = uint8_t;
+using object_store = o1store<object, 255, object_ix>;
+// note. 255 because uint8_t max size is 255
+
+class objects : public object_store {
+public:
+  void update(const float dt_s) {
+    object_ix *it = allocated_list();
+    const object_ix len = allocated_list_len();
+    for (object_ix i = 0; i < len; i++, it++) {
+      instance(*it).update(dt_s);
+    }
+  }
+} static objects{};
+
 static constexpr unsigned frame_width = 320;
 static constexpr unsigned frame_height = 240;
 
@@ -491,13 +525,16 @@ void setup(void) {
   Serial.printf("         tiles map: %zu B\n", sizeof(tiles_map));
   Serial.printf("------------------- globals ------------------------------\n");
   Serial.printf("           sprites: %zu B\n", sizeof(sprites));
+  Serial.printf("           objects: %zu B\n", sizeof(objects));
   Serial.printf("------------------- on heap ------------------------------\n");
-  Serial.printf("      sprites data: %zu B\n",
-                sprites.allocated_data_size_B());
+  Serial.printf("      sprites data: %zu B\n", sprites.allocated_data_size_B());
+  Serial.printf("      objects data: %zu B\n", objects.allocated_data_size_B());
   Serial.printf("     collision map: %zu B\n", collision_map_size);
   Serial.printf("   DMA buf 1 and 2: %zu B\n", 2 * dma_buf_size);
   Serial.printf("------------------- object sizes -------------------------\n");
   Serial.printf("            sprite: %zu B\n", sizeof(sprite));
+  Serial.printf("            object: %zu B\n", sizeof(object));
+  Serial.printf("      object state: %zu B\n", sizeof(object::state));
   Serial.printf("              tile: %zu B\n", sizeof(tile));
   Serial.printf("----------------------------------------------------------\n");
 

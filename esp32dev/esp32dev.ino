@@ -307,6 +307,9 @@ public:
     if (spr->is_in_collision()) {
       return true;
     }
+    if (x > display_width) {
+      return true;
+    }
     return false;
   }
 };

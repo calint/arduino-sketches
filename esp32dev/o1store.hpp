@@ -27,8 +27,11 @@ class o1store {
 
 public:
   o1store() {
-    all_ = (Type *)calloc(Size, InstanceSizeInBytes ? InstanceSizeInBytes
-                                                    : sizeof(Type));
+    if constexpr (InstanceSizeInBytes) {
+      all_ = (Type *)calloc(Size, InstanceSizeInBytes);
+    } else {
+      all_ = (Type *)calloc(Size, sizeof(Type));
+    }
     free_ = (IxType *)calloc(Size, sizeof(IxType));
     alloc_ = (IxType *)calloc(Size, sizeof(IxType));
     del_ = (IxType *)calloc(Size, sizeof(IxType));
@@ -116,7 +119,9 @@ public:
 
   // returns the size in bytes of allocated heap memory
   constexpr auto allocated_data_size_B() -> size_t {
-    return Size * (InstanceSizeInBytes ? InstanceSizeInBytes : sizeof(Type)) +
-           3 * Size * sizeof(IxType);
+    if constexpr (InstanceSizeInBytes) {
+      return Size * InstanceSizeInBytes + 3 * Size * sizeof(IxType);
+    }
+    return Size * sizeof(Type) + 3 * Size * sizeof(IxType);
   }
 };

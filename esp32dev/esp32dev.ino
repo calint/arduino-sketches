@@ -157,6 +157,10 @@ struct sprite {
   sprite_ix collision_with = sprite_ix_reserved;
   sprite_ix alloc_ix = sprite_ix_reserved;
   object *obj = nullptr;
+
+  auto is_in_collision() -> bool {
+    return collision_with != sprite_ix_reserved;
+  }
 };
 
 using sprites_store = o1store<sprite, 255, sprite_ix, 1>;
@@ -232,7 +236,7 @@ public:
         y <= -float(sprite_height) or y > display_height) {
       return true;
     }
-    if (spr->collision_with != sprite_ix_reserved) {
+    if (spr->is_in_collision()) {
       return true;
     }
     return false;
@@ -278,9 +282,8 @@ public:
     }
 
     // if collision with any sprite die
-    if (spr->collision_with != sprite_ix_reserved or
-        spr_left.collision_with != sprite_ix_reserved or
-        spr_right.collision_with != sprite_ix_reserved) {
+    if (spr->is_in_collision() or spr_left.is_in_collision() or
+        spr_right.is_in_collision()) {
       return true;
     }
 
@@ -301,7 +304,7 @@ public:
     if (object::update(dt_s)) {
       return true;
     }
-    if (spr->collision_with != sprite_ix_reserved) {
+    if (spr->is_in_collision()) {
       return true;
     }
     return false;
@@ -324,7 +327,7 @@ public:
       }
     }
 
-    // apply free of objects that have dies during update
+    // apply free of objects that have died during update
     apply_free();
   }
 } static objects{};

@@ -113,7 +113,8 @@ static constexpr unsigned tile_height_and = 15;
 static constexpr unsigned tile_count = 256;
 using tile_ix = uint8_t;
 
-struct tile {
+class tile {
+public:
   const uint8_t data[tile_width * tile_height];
 } static constexpr tiles[tile_count]{
 #include "tiles.h"
@@ -122,7 +123,8 @@ struct tile {
 static constexpr unsigned tiles_map_width = 320;
 static constexpr unsigned tiles_map_height = 17;
 
-struct tiles_map {
+class tiles_map {
+public:
   tile_ix cell[tiles_map_height][tiles_map_width];
 } static constexpr tiles_map{{
 #include "tiles_map.h"
@@ -150,7 +152,8 @@ static constexpr sprite_ix sprite_ix_reserved =
 // forward declaration of type
 class object;
 
-struct sprite {
+class sprite {
+public:
   const uint8_t *img = nullptr;
   int16_t scr_x = 0;
   int16_t scr_y = 0;
@@ -158,9 +161,11 @@ struct sprite {
   sprite_ix alloc_ix = sprite_ix_reserved;
   object *obj = nullptr;
 
-  auto is_in_collision() -> bool {
+  inline auto is_in_collision() -> bool {
     return collision_with != sprite_ix_reserved;
   }
+
+  inline void clear_collision_with() { collision_with = sprite_ix_reserved; }
 };
 
 using sprites_store = o1store<sprite, 255, sprite_ix, 1>;
@@ -225,7 +230,7 @@ public:
     spr = &sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[1];
-    spr->collision_with = sprite_ix_reserved;
+    spr->clear_collision_with();
   }
 
   auto update(const float dt_s) -> bool override {
@@ -239,6 +244,9 @@ public:
     if (spr->is_in_collision()) {
       return true;
     }
+
+    // spr->clear_collision_with();
+
     return false;
   }
 };
@@ -255,15 +263,15 @@ public:
     spr = &sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[0];
-    spr->collision_with = sprite_ix_reserved;
+    spr->clear_collision_with();
 
     spr_left.obj = this;
     spr_left.img = sprite_imgs[0];
-    spr_left.collision_with = sprite_ix_reserved;
+    spr_left.clear_collision_with();
 
     spr_right.obj = this;
     spr_right.img = sprite_imgs[0];
-    spr_right.collision_with = sprite_ix_reserved;
+    spr_right.clear_collision_with();
   }
 
   void free() override {
@@ -294,6 +302,11 @@ public:
     spr_right.scr_x = spr->scr_x + sprite_width;
     spr_right.scr_y = spr->scr_y;
 
+    // reset collision information
+    // spr->clear_collision_with();
+    // spr_left.clear_collision_with();
+    // spr_right.clear_collision_with();
+
     return false;
   }
 };
@@ -310,6 +323,9 @@ public:
     if (x > display_width) {
       return true;
     }
+
+    // spr->clear_collision_with();I
+
     return false;
   }
 };

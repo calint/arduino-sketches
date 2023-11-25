@@ -165,6 +165,10 @@ using sprites_store = o1store<sprite, 255, sprite_ix>;
 
 static sprites_store sprites{};
 
+// display dimensions
+static constexpr unsigned display_width = 320;
+static constexpr unsigned display_height = 240;
+
 using object_ix = uint8_t;
 
 class object {
@@ -179,14 +183,34 @@ public:
   sprite *spr = nullptr;
   char state[256 - 6 * sizeof(float) - sizeof(sprite *)] = {};
 
-  void update(const float dt_s) {
+  // returns false if object has died
+  auto update(const float dt_s) -> bool {
     dx += ddx * dt_s;
     dy += ddy * dt_s;
     x += dx * dt_s;
     y += dy * dt_s;
+
+    if (x > display_width) {
+      return true;
+    }
+
     // update rendering info
     spr->scr_x = int16_t(x);
     spr->scr_y = int16_t(y);
+
+    return false;
+  }
+
+  // returns false if object has died
+  auto handle_collision_with(object &obj) -> bool {
+    return true;
+  }
+
+  void free() {
+    // turn off sprite
+    spr->img = nullptr;
+    // free instances
+    sprites.free_instance(*spr);
   }
 };
 
@@ -200,9 +224,12 @@ class objects : public object_store {
     for (object_ix i = 0; i < len; i++, it++) {
       object &obj = instance(*it);
       if (obj.spr->collision_with != sprite_ix_reserved) {
-        obj.spr->img = nullptr;
-        sprites.free_instance(*obj.spr);
-        free_instance(obj);
+        sprite &collision_sprite = sprites.instance(obj.spr->collision_with);
+        object &collision_object = *collision_sprite.obj;
+        if (obj.handle_collision_with(collision_object)) {
+          obj.free();
+          free_instance(obj);
+        }
       }
     }
   }
@@ -211,35 +238,39 @@ public:
   void update(const float dt_s) {
     handle_collisions();
 
+    // apply free of objects destroyed in collision detections
     apply_free();
 
     object_ix *it = allocated_list();
     const object_ix len = allocated_list_len();
     for (object_ix i = 0; i < len; i++, it++) {
       object &obj = instance(*it);
-      obj.update(dt_s);
+      if (obj.update(dt_s)) {
+        obj.free();
+        free_instance(obj);
+      }
     }
+
+    // apply free of objects destroyed by update
+    apply_free();
   }
 } static objects{};
-
-static constexpr unsigned frame_width = 320;
-static constexpr unsigned frame_height = 240;
 
 // pixel precision collision detection between on screen sprites
 // allocated in setup
 static sprite_ix *collision_map;
 static constexpr unsigned collision_map_size =
-    sizeof(sprite_ix) * frame_width * frame_height;
+    sizeof(sprite_ix) * display_width * display_height;
 
 // buffers for rendering a chunk while the other is transferred to the screen
 // using DMA. allocated in setup
 static uint16_t *dma_buf_1;
 static uint16_t *dma_buf_2;
 static constexpr unsigned dma_buf_size =
-    sizeof(uint16_t) * frame_width * tile_height;
+    sizeof(uint16_t) * display_width * tile_height;
 
 // scrolling from right to left / down up
-static float x = tiles_map_width * tile_width - frame_width;
+static float x = tiles_map_width * tile_width - display_width;
 static float dx_per_s = -16;
 static float y = 1;
 static float dy_per_s = 1;
@@ -308,7 +339,7 @@ static void render_scanline(
     }
   }
   // render full tiles
-  const unsigned tx_max = tile_x + (frame_width / tile_width);
+  const unsigned tx_max = tile_x + (display_width / tile_width);
   for (unsigned tx = tile_x + 1; tx < tx_max; tx++) {
     const tile_ix tile_index = *(tiles_map_row_ptr + tx);
     const uint8_t *tile_data_ptr =
@@ -336,7 +367,7 @@ static void render_scanline(
   for (unsigned i = 0; i < sprites.all_list_len(); i++, spr++) {
     if (!spr->img or spr->scr_y > scanline_y or
         spr->scr_y + int16_t(sprite_height) <= scanline_y or
-        spr->scr_x <= sprite_width_neg or spr->scr_x > int16_t(frame_width)) {
+        spr->scr_x <= sprite_width_neg or spr->scr_x > int16_t(display_width)) {
       // sprite has no image or
       // not within scanline or
       // is outside the screen x-wise
@@ -353,9 +384,9 @@ static void render_scanline(
       scanline_dst_ptr -= spr->scr_x;
       render_width = sprite_width + spr->scr_x;
       collision_pixel -= spr->scr_x;
-    } else if (spr->scr_x + sprite_width > frame_width) {
+    } else if (spr->scr_x + sprite_width > display_width) {
       // adjustment if sprite partially outside screen (x-wise)
-      render_width = frame_width - spr->scr_x;
+      render_width = display_width - spr->scr_x;
     }
     // render line of sprite
     for (unsigned j = 0; j < render_width;
@@ -383,7 +414,7 @@ static void render(const unsigned x, const unsigned y) {
   const unsigned tile_width_minus_dx = tile_width - tile_dx;
   unsigned tile_y = y >> tile_height_shift;
   const unsigned tile_dy = y & tile_height_and;
-  const unsigned tile_y_max = tile_y + (frame_height / tile_height);
+  const unsigned tile_y_max = tile_y + (display_height / tile_height);
   const unsigned tile_height_minus_dy = tile_height - tile_dy;
 
   // selects buffer to write while DMA reads the other buffer
@@ -408,15 +439,15 @@ static void render(const unsigned x, const unsigned y) {
                   tile_sub_y_times_tile_width = tile_dy * tile_width;
          tile_sub_y < tile_height;
          tile_sub_y++, tile_sub_y_times_tile_width += tile_width,
-                  render_buf_ptr += frame_width,
-                  collision_map_scanline_ptr += frame_width, scanline_y++) {
+                  render_buf_ptr += display_width,
+                  collision_map_scanline_ptr += display_width, scanline_y++) {
 
       render_scanline(render_buf_ptr, collision_map_scanline_ptr, scanline_y,
                       tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
                       tile_sub_y, tile_sub_y_times_tile_width);
     }
-    display.setAddrWindow(0, frame_y, frame_width, tile_height_minus_dy);
-    display.pushPixelsDMA(dma_buf, frame_width * tile_height_minus_dy);
+    display.setAddrWindow(0, frame_y, display_width, tile_height_minus_dy);
+    display.pushPixelsDMA(dma_buf, display_width * tile_height_minus_dy);
     tile_y++;
     frame_y += tile_height_minus_dy;
   }
@@ -433,15 +464,15 @@ static void render(const unsigned x, const unsigned y) {
     for (unsigned tile_sub_y = 0, tile_sub_y_times_tile_width = 0;
          tile_sub_y < tile_height;
          tile_sub_y++, tile_sub_y_times_tile_width += tile_height,
-                  render_buf_ptr += frame_width,
-                  collision_map_scanline_ptr += frame_width, scanline_y++) {
+                  render_buf_ptr += display_width,
+                  collision_map_scanline_ptr += display_width, scanline_y++) {
 
       render_scanline(render_buf_ptr, collision_map_scanline_ptr, scanline_y,
                       tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
                       tile_sub_y, tile_sub_y_times_tile_width);
     }
-    display.setAddrWindow(0, frame_y, frame_width, tile_height);
-    display.pushPixelsDMA(dma_buf, frame_width * tile_height);
+    display.setAddrWindow(0, frame_y, display_width, tile_height);
+    display.pushPixelsDMA(dma_buf, display_width * tile_height);
   }
   if (tile_dy) {
     // render last partial tile
@@ -454,15 +485,15 @@ static void render(const unsigned x, const unsigned y) {
     for (unsigned tile_sub_y = 0, tile_sub_y_times_tile_width = 0;
          tile_sub_y < tile_dy;
          tile_sub_y++, tile_sub_y_times_tile_width += tile_width,
-                  render_buf_ptr += frame_width,
-                  collision_map_scanline_ptr += frame_width, scanline_y++) {
+                  render_buf_ptr += display_width,
+                  collision_map_scanline_ptr += display_width, scanline_y++) {
 
       render_scanline(render_buf_ptr, collision_map_scanline_ptr, scanline_y,
                       tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
                       tile_sub_y, tile_sub_y_times_tile_width);
     }
-    display.setAddrWindow(0, frame_y, frame_width, tile_dy);
-    display.pushPixelsDMA(dma_buf, frame_width * tile_dy);
+    display.setAddrWindow(0, frame_y, display_width, tile_dy);
+    display.pushPixelsDMA(dma_buf, display_width * tile_dy);
   }
 }
 
@@ -476,7 +507,8 @@ void setup(void) {
   Serial.printf("\n\n");
   Serial.printf("------------------- info ---------------------------------\n");
   Serial.printf("        chip model: %s\n", ESP.getChipModel());
-  Serial.printf("            screen: %d x %d px\n", frame_width, frame_height);
+  Serial.printf("            screen: %d x %d px\n", display_width,
+                display_height);
   Serial.printf("     free heap mem: %d B\n", ESP.getFreeHeap());
   Serial.printf("largest free block: %d B\n", ESP.getMaxAllocHeap());
 #ifdef USE_WIFI
@@ -578,7 +610,7 @@ void setup(void) {
       obj.dx = 0.5f;
       obj.dy = 2.0f - float(rand() % 4);
       x += 24;
-      if (x > frame_width) {
+      if (x > display_width) {
         x = -24;
         y += 24;
       }
@@ -624,8 +656,8 @@ void loop() {
   if (x < 0) {
     x = 0;
     dx_per_s = -dx_per_s;
-  } else if (x > (tiles_map_width * tile_width - frame_width)) {
-    x = tiles_map_width * tile_width - frame_width;
+  } else if (x > (tiles_map_width * tile_width - display_width)) {
+    x = tiles_map_width * tile_width - display_width;
     dx_per_s = -dx_per_s;
   }
   // update y position in pixels in the tile map
@@ -635,8 +667,8 @@ void loop() {
     Serial.printf("y < 0\n");
     y = 0;
     dy_per_s = -dy_per_s;
-  } else if (y > (tiles_map_height * tile_height - frame_height)) {
-    y = tiles_map_height * tile_height - frame_height;
+  } else if (y > (tiles_map_height * tile_height - display_height)) {
+    y = tiles_map_height * tile_height - display_height;
     dy_per_s = -dy_per_s;
   }
 }

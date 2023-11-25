@@ -1,6 +1,7 @@
 [ ] objects composed of several sprites
-[ ] separate concept of sprite and object
+[x] separate concept of sprite and object
 [ ] polymorphism without allocation on the heap
+    => 'new' in place
 [ ] horizontal, vertical flip of sprite
 [ ] collision detection: bit field for type and collision interest
 [x] sprite allocation for active objects

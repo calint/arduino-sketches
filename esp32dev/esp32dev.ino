@@ -298,6 +298,23 @@ public:
   }
 };
 
+class dummy final : public object {
+public:
+  // note. default constructor must be defined because the default constructor
+  // overwrites the 'o1store' assigned 'alloc_ix'
+  dummy() {}
+
+  auto update(const float dt_s) -> bool override {
+    if (object::update(dt_s)) {
+      return true;
+    }
+    if (spr->collision_with != sprite_ix_reserved) {
+      return true;
+    }
+    return false;
+  }
+};
+
 using object_store = o1store<object, 255, object_ix, 2, 256>;
 // note. 255 because object_ix a.k.a. uint8_t max size is 255
 
@@ -308,7 +325,9 @@ public:
     const object_ix len = allocated_list_len();
     for (object_ix i = 0; i < len; i++, it++) {
       object &obj = instance(*it);
+      // Serial.printf("update object %u\n", obj.alloc_ix);
       if (obj.update(dt_s)) {
+        // Serial.printf("free object %u\n", obj.alloc_ix);
         obj.free();
         free_instance(obj);
       }
@@ -659,37 +678,38 @@ void setup(void) {
   randomSeed(0);
 
   // initiate objects
-  hero &hro = *new (&objects.allocate_instance()) hero{};
-  // Serial.printf("hero alloc_ix %u\n", hro.alloc_ix);
-  hro.x = 250;
-  hro.y = 100;
+  // hero &hro = *new (&objects.allocate_instance()) hero{};
+  // // Serial.printf("hero alloc_ix %u\n", hro.alloc_ix);
+  // hro.x = 250;
+  // hro.y = 100;
 
-  bullet &blt = *new (&objects.allocate_instance()) bullet{};
-  // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
-  blt.x = 50;
-  blt.y = 100;
-  blt.dx = 40;
+  // bullet &blt = *new (&objects.allocate_instance()) bullet{};
+  // // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
+  // blt.x = 50;
+  // blt.y = 100;
+  // blt.dx = 40;
 
-  // {
-  //   float x = -24, y = -24;
-  //   for (object_ix i = 0; i < objects.all_list_len(); i++) {
-  //     sprite &spr = sprites.allocate_instance();
-  //     spr.img = sprite_imgs[i % 2];
-  //     spr.collision_with = sprite_ix_reserved;
+  {
+    float x = -24, y = -24;
+    for (object_ix i = 0; i < objects.all_list_len(); i++) {
+      sprite &spr = sprites.allocate_instance();
+      spr.img = sprite_imgs[i % 2];
+      spr.collision_with = sprite_ix_reserved;
 
-  //     object &obj = *new (&objects.allocate_instance()) object{};
-  //     obj.spr = &spr;
-  //     obj.x = x;
-  //     obj.y = y;
-  //     obj.dx = 0.5f;
-  //     obj.dy = 2.0f - float(rand() % 4);
-  //     x += 24;
-  //     if (x > display_width) {
-  //       x = -24;
-  //       y += 24;
-  //     }
-  //   }
-  // }
+      dummy &obj = *new (&objects.allocate_instance()) dummy{};
+      // Serial.printf("object alloc ix: %u\n", obj.alloc_ix);
+      obj.spr = &spr;
+      obj.x = x;
+      obj.y = y;
+      obj.dx = 0.5f;
+      obj.dy = 2.0f - float(rand() % 4);
+      x += 24;
+      if (x > display_width) {
+        x = -24;
+        y += 24;
+      }
+    }
+  }
 
   // initiate frames-per-second and dt keeper
   fps.init(millis());
@@ -716,11 +736,13 @@ void loop() {
     // fire four times a second
     if (fps.now_ms() - last_fire_ms > 250) {
       last_fire_ms = fps.now_ms();
-      bullet &blt = *new (&objects.allocate_instance()) bullet{};
-      // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
-      blt.x = 50;
-      blt.y = click_y;
-      blt.dx = 40;
+      if (objects.can_allocate()) {
+        bullet &blt = *new (&objects.allocate_instance()) bullet{};
+        // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
+        blt.x = 50;
+        blt.y = click_y;
+        blt.dx = 40;
+      }
     }
   }
 

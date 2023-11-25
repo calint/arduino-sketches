@@ -52,10 +52,13 @@ public:
   //   free(del_);
   // }
 
+  // returns true if allocatable instances available
+  auto can_allocate() -> bool { return free_ix_ < Size; }
+
   // allocates an instance
   auto allocate_instance() -> Type & {
     if (free_ix_ == Size) {
-      Serial.printf("!!! o1store: allocate overrun\n");
+      Serial.printf("!!! o1store %u: allocate overrun\n", StoreId);
       while (true)
         ;
     }
@@ -73,7 +76,7 @@ public:
   void free_instance(const Type &inst) {
     // Serial.printf("free instance: %u\n", inst.alloc_ix);
     if (del_ix_ == Size) {
-      Serial.printf("!!! o1store: free overrun\n");
+      Serial.printf("!!! o1store %u: free overrun\n", StoreId);
       while (true)
         ;
     }

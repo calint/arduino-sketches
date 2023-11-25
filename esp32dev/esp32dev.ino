@@ -174,8 +174,8 @@ using object_ix = uint8_t;
 class object {
 public:
   object_ix alloc_ix;
-  // no default value since it would overwrite the 'o1store' assigned value at
-  // 'allocate_instance()'
+  // note. no default value since it would overwrite the 'o1store' assigned
+  // value at 'allocate_instance()'
 
   float x = 0;
   float y = 0;
@@ -185,20 +185,20 @@ public:
   float ddy = 0;
   sprite *spr = nullptr;
 
-  // note. default constructor must be defined because the default constructor
-  // overwrites the 'o1store' assigned 'alloc_ix'
   object() {}
+  // note. constructor must be defined because the default constructor
+  // overwrites the 'o1store' assigned 'alloc_ix'
 
   virtual ~object() {}
 
   virtual void free() {
     // turn off sprite
     spr->img = nullptr;
-    // free instances
+    // free sprite instance
     sprites.free_instance(*spr);
   }
 
-  // returns false if object has died
+  // returns true if object has died
   virtual auto update(const float dt_s) -> bool {
     dx += ddx * dt_s;
     dy += ddy * dt_s;
@@ -214,11 +214,10 @@ public:
 };
 
 class bullet final : public object {
-  uint16_t strength = 0;
+  uint16_t damage = 0;
 
 public:
   bullet() {
-    // Serial.printf("bullet: constructor %u\n", alloc_ix);
     spr = &sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[1];
@@ -226,7 +225,6 @@ public:
   }
 
   auto update(const float dt_s) -> bool override {
-    // Serial.printf("bullet: update %u\n", alloc_ix);
     if (object::update(dt_s)) {
       return true;
     }
@@ -249,7 +247,6 @@ public:
   hero()
       : spr_left{sprites.allocate_instance()},
         spr_right{sprites.allocate_instance()} {
-    // Serial.printf("hero: constructor\n");
 
     spr = &sprites.allocate_instance();
     spr->obj = this;
@@ -266,21 +263,16 @@ public:
   }
 
   void free() override {
-    // Serial.printf("hero: free %u\n", alloc_ix);
-
     object::free();
     // turn off sprites
     spr_left.img = nullptr;
     spr_right.img = nullptr;
-    // free instances
+    // free sprite instances
     sprites.free_instance(spr_left);
     sprites.free_instance(spr_right);
   }
 
   auto update(const float dt_s) -> bool override {
-    // Serial.printf("hero: update %u\n", alloc_ix);
-
-    // allow parent to do update and return if dead
     if (object::update(dt_s)) {
       return true;
     }
@@ -298,6 +290,7 @@ public:
 
     spr_right.scr_x = spr->scr_x + sprite_width;
     spr_right.scr_y = spr->scr_y;
+
     return false;
   }
 };
@@ -325,15 +318,13 @@ public:
     const object_ix len = allocated_list_len();
     for (object_ix i = 0; i < len; i++, it++) {
       object &obj = instance(*it);
-      // Serial.printf("update object %u\n", obj.alloc_ix);
       if (obj.update(dt_s)) {
-        // Serial.printf("free object %u\n", obj.alloc_ix);
         obj.free();
         free_instance(obj);
       }
     }
 
-    // apply free of objects destroyed by update
+    // apply free of objects that have dies during update
     apply_free();
   }
 } static objects{};

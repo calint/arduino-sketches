@@ -84,7 +84,6 @@ public:
       alloc_ix_--;
       free_ix_--;
       free_[free_ix_] = *it;
-      inst_deleted.img = nullptr;
     }
     del_ix_ = 0;
   }

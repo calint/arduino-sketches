@@ -147,63 +147,29 @@ using sprite_ix = uint8_t;
 static constexpr sprite_ix sprite_ix_reserved =
     std::numeric_limits<sprite_ix>::max();
 
+// forward declaration of type
+class object;
+
 struct sprite {
-  float x;
-  float y;
-  float dx;
-  float dy;
-  const uint8_t *img;
-  int16_t scr_x;
-  int16_t scr_y;
-  sprite_ix collision_with;
-  sprite_ix alloc_ix;
+  const uint8_t *img = nullptr;
+  int16_t scr_x = 0;
+  int16_t scr_y = 0;
+  sprite_ix collision_with = sprite_ix_reserved;
+  sprite_ix alloc_ix = sprite_ix_reserved;
+  object *obj = nullptr;
 };
 
-using sprite_store = o1store<sprite, 255, sprite_ix>;
+using sprites_store = o1store<sprite, 255, sprite_ix>;
 // note. 255 because uint8_t max size is 255
 // note. sprite 255 is reserved which gives 255 [0:254] usable sprites
 
-class sprites : public sprite_store {
-public:
-  void update(const float dt_s) {
-    // handle collisions
-    {
-      sprite_ix *it = allocated_list();
-      const sprite_ix len = allocated_list_len();
-      for (sprite_ix i = 0; i < len; i++, it++) {
-        sprite &spr = instance(*it);
-        if (spr.collision_with) {
-          // Serial.printf("sprite %d collision with %d\n", *it,
-          //               spr.collision_with);
-          free_instance(spr);
-        }
-      }
-    }
+static sprites_store sprites{};
 
-    // applied the free list
-    apply_free();
-
-    // update physics
-    {
-      sprite_ix *it = allocated_list();
-      const sprite_ix len = allocated_list_len();
-      for (sprite_ix i = 0; i < len; i++, it++) {
-        sprite &spr = instance(*it);
-        // update physics
-        spr.x += spr.dx * dt_s;
-        spr.y += spr.dy * dt_s;
-        // set rendering info
-        spr.scr_x = int16_t(spr.x);
-        spr.scr_y = int16_t(spr.y);
-        // clear collision info
-        spr.collision_with = 0;
-      }
-    }
-  }
-} static sprites{};
+using object_ix = uint8_t;
 
 class object {
 public:
+  object_ix alloc_ix = 0;
   float x = 0;
   float y = 0;
   float dx = 0;
@@ -218,20 +184,40 @@ public:
     dy += ddy * dt_s;
     x += dx * dt_s;
     y += dy * dt_s;
+    // update rendering info
+    spr->scr_x = int16_t(x);
+    spr->scr_y = int16_t(y);
   }
 };
 
-using object_ix = uint8_t;
 using object_store = o1store<object, 255, object_ix>;
 // note. 255 because uint8_t max size is 255
 
 class objects : public object_store {
-public:
-  void update(const float dt_s) {
+  void handle_collisions() {
     object_ix *it = allocated_list();
     const object_ix len = allocated_list_len();
     for (object_ix i = 0; i < len; i++, it++) {
-      instance(*it).update(dt_s);
+      object &obj = instance(*it);
+      if (obj.spr->collision_with != sprite_ix_reserved) {
+        obj.spr->img = nullptr;
+        sprites.free_instance(*obj.spr);
+        free_instance(obj);
+      }
+    }
+  }
+
+public:
+  void update(const float dt_s) {
+    handle_collisions();
+
+    apply_free();
+
+    object_ix *it = allocated_list();
+    const object_ix len = allocated_list_len();
+    for (object_ix i = 0; i < len; i++, it++) {
+      object &obj = instance(*it);
+      obj.update(dt_s);
     }
   }
 } static objects{};
@@ -579,18 +565,22 @@ void setup(void) {
 
   // initiate sprites
   {
-    float spr_x = -24, spr_y = -24;
-    for (unsigned i = 0; i < sprites.all_list_len(); i++) {
+    float x = -24, y = -24;
+    for (object_ix i = 0; i < objects.all_list_len(); i++) {
       sprite &spr = sprites.allocate_instance();
       spr.img = sprite_imgs[i % 2];
-      spr.x = spr_x;
-      spr.y = spr_y;
-      spr.dx = 0.5f;
-      spr.dy = 2.0f - float(rand() % 4);
-      spr_x += 24;
-      if (spr_x > frame_width) {
-        spr_x = -24;
-        spr_y += 24;
+      spr.collision_with = sprite_ix_reserved;
+
+      object &obj = objects.allocate_instance();
+      obj.spr = &spr;
+      obj.x = x;
+      obj.y = y;
+      obj.dx = 0.5f;
+      obj.dy = 2.0f - float(rand() % 4);
+      x += 24;
+      if (x > frame_width) {
+        x = -24;
+        y += 24;
       }
     }
   }
@@ -602,8 +592,9 @@ void setup(void) {
 void loop() {
   // frames per second update
   if (fps.on_frame(millis())) {
-    Serial.printf("t=%lu  fps=%u  ldr=%u\n", fps.now_ms(), fps.get(),
-                  analogRead(ldr_pin));
+    Serial.printf("t=%lu  fps=%u  ldr=%u  objs=%u  sprs=%u\n", fps.now_ms(),
+                  fps.get(), analogRead(ldr_pin), objects.allocated_list_len(),
+                  sprites.allocated_list_len());
   }
 
   // check touch screen
@@ -616,7 +607,9 @@ void loop() {
                   dx_per_s);
   }
 
-  sprites.update(fps.dt_s());
+  objects.update(fps.dt_s());
+
+  sprites.apply_free();
 
   // clear collisions map
   memset(collision_map, sprite_ix_reserved, collision_map_size);

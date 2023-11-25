@@ -107,7 +107,7 @@ public:
 
   // returns instance from 'all' list at index 'ix'
   inline auto instance(IxType ix) -> Type & {
-    if (!InstanceSizeInBytes) {
+    if constexpr (!InstanceSizeInBytes) {
       return all_[ix];
     }
     // note. if instance size is specified do pointer shenanigans

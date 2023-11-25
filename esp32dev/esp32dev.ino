@@ -159,8 +159,8 @@ struct sprite {
   object *obj = nullptr;
 };
 
-using sprites_store = o1store<sprite, 255, sprite_ix>;
-// note. 255 because uint8_t max size is 255
+using sprites_store = o1store<sprite, 255, sprite_ix, 1>;
+// note. 255 because sprite_ix a.k.a. uint8_t max size is 255
 // note. sprite 255 is reserved which gives 255 [0:254] usable sprites
 
 static sprites_store sprites{};
@@ -173,7 +173,7 @@ using object_ix = uint8_t;
 
 class object {
 public:
-  object_ix alloc_ix = 0;
+  object_ix alloc_ix;
   float x = 0;
   float y = 0;
   float dx = 0;
@@ -181,18 +181,22 @@ public:
   float ddx = 0;
   float ddy = 0;
   sprite *spr = nullptr;
-  char state[256 - 6 * sizeof(float) - sizeof(sprite *)] = {};
+
+  virtual ~object() {}
+
+  virtual void free() {
+    // turn off sprite
+    spr->img = nullptr;
+    // free instances
+    sprites.free_instance(*spr);
+  }
 
   // returns false if object has died
-  auto update(const float dt_s) -> bool {
+  virtual auto update(const float dt_s) -> bool {
     dx += ddx * dt_s;
     dy += ddy * dt_s;
     x += dx * dt_s;
     y += dy * dt_s;
-
-    if (x > display_width) {
-      return true;
-    }
 
     // update rendering info
     spr->scr_x = int16_t(x);
@@ -200,47 +204,99 @@ public:
 
     return false;
   }
+};
 
-  // returns false if object has died
-  auto handle_collision_with(object &obj) -> bool {
-    return true;
+class bullet final : public object {
+  uint16_t strength = 0;
+
+public:
+  bullet() {
+    // Serial.printf("bullet: constructor %u\n", alloc_ix);
+    spr = &sprites.allocate_instance();
+    spr->obj = this;
+    spr->img = sprite_imgs[1];
+    spr->collision_with = sprite_ix_reserved;
   }
 
-  void free() {
-    // turn off sprite
-    spr->img = nullptr;
-    // free instances
-    sprites.free_instance(*spr);
+  auto update(const float dt_s) -> bool override {
+    // Serial.printf("bullet: update %u\n", alloc_ix);
+    if (object::update(dt_s)) {
+      return true;
+    }
+    if (spr->collision_with != sprite_ix_reserved) {
+      return true;
+    }
+    return false;
   }
 };
 
-using object_store = o1store<object, 255, object_ix>;
-// note. 255 because uint8_t max size is 255
-
-class objects : public object_store {
-  void handle_collisions() {
-    object_ix *it = allocated_list();
-    const object_ix len = allocated_list_len();
-    for (object_ix i = 0; i < len; i++, it++) {
-      object &obj = instance(*it);
-      if (obj.spr->collision_with != sprite_ix_reserved) {
-        sprite &collision_sprite = sprites.instance(obj.spr->collision_with);
-        object &collision_object = *collision_sprite.obj;
-        if (obj.handle_collision_with(collision_object)) {
-          obj.free();
-          free_instance(obj);
-        }
-      }
-    }
-  }
+class hero final : public object {
+  sprite &spr_left;
+  sprite &spr_right;
 
 public:
+  hero()
+      : spr_left{sprites.allocate_instance()},
+        spr_right{sprites.allocate_instance()} {
+    // Serial.printf("hero: constructor\n");
+
+    spr = &sprites.allocate_instance();
+    spr->obj = this;
+    spr->img = sprite_imgs[0];
+    spr->collision_with = sprite_ix_reserved;
+
+    spr_left.obj = this;
+    spr_left.img = sprite_imgs[0];
+    spr_left.collision_with = sprite_ix_reserved;
+
+    spr_right.obj = this;
+    spr_right.img = sprite_imgs[0];
+    spr_right.collision_with = sprite_ix_reserved;
+  }
+
+  void free() override {
+    // Serial.printf("hero: free %u\n", alloc_ix);
+
+    object::free();
+    // turn off sprites
+    spr_left.img = nullptr;
+    spr_right.img = nullptr;
+    // free instances
+    sprites.free_instance(spr_left);
+    sprites.free_instance(spr_right);
+  }
+
+  auto update(const float dt_s) -> bool override {
+    // Serial.printf("hero: update %u\n", alloc_ix);
+
+    // allow parent to do update and return if dead
+    if (object::update(dt_s)) {
+      return true;
+    }
+
+    // if collision with any sprite die
+    if (spr->collision_with != sprite_ix_reserved or
+        spr_left.collision_with != sprite_ix_reserved or
+        spr_right.collision_with != sprite_ix_reserved) {
+      return true;
+    }
+
+    // set position of additional sprites
+    spr_left.scr_x = spr->scr_x - sprite_width;
+    spr_left.scr_y = spr->scr_y;
+
+    spr_right.scr_x = spr->scr_x + sprite_width;
+    spr_right.scr_y = spr->scr_y;
+    return false;
+  }
+};
+
+using object_store = o1store<object, 255, object_ix, 2, 256>;
+// note. 255 because object_ix a.k.a. uint8_t max size is 255
+
+class objects : public object_store {
+public:
   void update(const float dt_s) {
-    handle_collisions();
-
-    // apply free of objects destroyed in collision detections
-    apply_free();
-
     object_ix *it = allocated_list();
     const object_ix len = allocated_list_len();
     for (object_ix i = 0; i < len; i++, it++) {
@@ -552,7 +608,6 @@ void setup(void) {
   Serial.printf("------------------- object sizes -------------------------\n");
   Serial.printf("            sprite: %zu B\n", sizeof(sprite));
   Serial.printf("            object: %zu B\n", sizeof(object));
-  Serial.printf("      object state: %zu B\n", sizeof(object::state));
   Serial.printf("              tile: %zu B\n", sizeof(tile));
   Serial.printf("----------------------------------------------------------\n");
 
@@ -595,27 +650,38 @@ void setup(void) {
   // set random seed to get same random every time
   randomSeed(0);
 
-  // initiate sprites
-  {
-    float x = -24, y = -24;
-    for (object_ix i = 0; i < objects.all_list_len(); i++) {
-      sprite &spr = sprites.allocate_instance();
-      spr.img = sprite_imgs[i % 2];
-      spr.collision_with = sprite_ix_reserved;
+  // initiate objects
+  hero &hro = *new (&objects.allocate_instance()) hero{};
+  // Serial.printf("hero alloc_ix %u\n", hro.alloc_ix);
+  hro.x = 250;
+  hro.y = 100;
 
-      object &obj = objects.allocate_instance();
-      obj.spr = &spr;
-      obj.x = x;
-      obj.y = y;
-      obj.dx = 0.5f;
-      obj.dy = 2.0f - float(rand() % 4);
-      x += 24;
-      if (x > display_width) {
-        x = -24;
-        y += 24;
-      }
-    }
-  }
+  bullet &blt = *new (&objects.allocate_instance()) bullet{};
+  // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
+  blt.x = 50;
+  blt.y = 100;
+  blt.dx = 40;
+
+  // {
+  //   float x = -24, y = -24;
+  //   for (object_ix i = 0; i < objects.all_list_len(); i++) {
+  //     sprite &spr = sprites.allocate_instance();
+  //     spr.img = sprite_imgs[i % 2];
+  //     spr.collision_with = sprite_ix_reserved;
+
+  //     object &obj = *new (&objects.allocate_instance()) object{};
+  //     obj.spr = &spr;
+  //     obj.x = x;
+  //     obj.y = y;
+  //     obj.dx = 0.5f;
+  //     obj.dy = 2.0f - float(rand() % 4);
+  //     x += 24;
+  //     if (x > display_width) {
+  //       x = -24;
+  //       y += 24;
+  //     }
+  //   }
+  // }
 
   // initiate frames-per-second and dt keeper
   fps.init(millis());
@@ -638,6 +704,8 @@ void loop() {
     Serial.printf("touch x=%d  y=%d  z=%d  dx=%f\n", pt.x, pt.y, pt.z,
                   dx_per_s);
   }
+
+  // Serial.printf("t=%lu\n", millis());
 
   objects.update(fps.dt_s());
 

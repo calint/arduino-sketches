@@ -175,7 +175,7 @@ class object {
 public:
   object_ix alloc_ix;
   // no default value since it would overwrite the 'o1store' assigned value at
-  // 'new' inplace
+  // 'allocate_instance()'
 
   float x = 0;
   float y = 0;
@@ -184,6 +184,10 @@ public:
   float ddx = 0;
   float ddy = 0;
   sprite *spr = nullptr;
+
+  // note. default constructor must be defined because the default constructor
+  // overwrites the 'o1store' assigned 'alloc_ix'
+  object() {}
 
   virtual ~object() {}
 
@@ -300,10 +304,6 @@ public:
 
 class dummy final : public object {
 public:
-  // note. default constructor must be defined because the default constructor
-  // overwrites the 'o1store' assigned 'alloc_ix'
-  dummy() {}
-
   auto update(const float dt_s) -> bool override {
     if (object::update(dt_s)) {
       return true;

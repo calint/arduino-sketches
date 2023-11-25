@@ -8,3 +8,6 @@ git reset --hard HEAD
 git add . && git commit -m "." && git push
 
 TAG=$(date "+%Y-%m-%d--%H-%M") && git tag $TAG && git push origin $TAG
+
+
+/home/c/.arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/esp-2021r2-patch5-8.4.0/bin/xtensa-esp32-elf-addr2line -pfiaC -e build/esp32dev.ino.elf 0x400d1bc8:0x3ffb21f0

@@ -110,7 +110,8 @@ public:
     if (!InstanceSizeInBytes) {
       return all_[ix];
     }
-    return *(all_ + InstanceSizeInBytes * ix);
+    // note. if instance size is specified do pointer shenanigans
+    return *(Type *)((void *)all_ + InstanceSizeInBytes * ix);
   }
 
   // returns the size in bytes of allocated heap memory

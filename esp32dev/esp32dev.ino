@@ -174,6 +174,9 @@ using object_ix = uint8_t;
 class object {
 public:
   object_ix alloc_ix;
+  // no default value since it would overwrite the 'o1store' assigned value at
+  // 'new' inplace
+
   float x = 0;
   float y = 0;
   float dx = 0;
@@ -221,6 +224,10 @@ public:
   auto update(const float dt_s) -> bool override {
     // Serial.printf("bullet: update %u\n", alloc_ix);
     if (object::update(dt_s)) {
+      return true;
+    }
+    if (x <= -float(sprite_width) or x > display_width or
+        y <= -float(sprite_height) or y > display_height) {
       return true;
     }
     if (spr->collision_with != sprite_ix_reserved) {
@@ -330,6 +337,7 @@ static float x = tiles_map_width * tile_width - display_width;
 static float dx_per_s = -16;
 static float y = 1;
 static float dy_per_s = 1;
+static unsigned long last_fire_ms = 0;
 
 class fps {
   unsigned interval_ms_ = 5000;
@@ -701,8 +709,19 @@ void loop() {
     const int x_relative_center = pt.x - 4096 / 2;
     constexpr float dx_factor = 200.0f / (4096 / 2);
     dx_per_s = dx_factor * x_relative_center;
-    Serial.printf("touch x=%d  y=%d  z=%d  dx=%f\n", pt.x, pt.y, pt.z,
-                  dx_per_s);
+    const float click_y = pt.y * display_height / 4096;
+    Serial.printf("touch x=%d  y=%d  z=%d  click_y=%f  dx=%f\n", pt.x, pt.y,
+                  pt.z, click_y, dx_per_s);
+
+    // fire four times a second
+    if (fps.now_ms() - last_fire_ms > 250) {
+      last_fire_ms = fps.now_ms();
+      bullet &blt = *new (&objects.allocate_instance()) bullet{};
+      // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
+      blt.x = 50;
+      blt.y = click_y;
+      blt.dx = 40;
+    }
   }
 
   // Serial.printf("t=%lu\n", millis());

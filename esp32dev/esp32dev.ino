@@ -196,7 +196,7 @@ public:
 
   object() {}
   // note. constructor must be defined because the default constructor
-  // overwrites the 'o1store' assigned 'alloc_ix'
+  // overwrites the 'o1store' assigned 'alloc_ix' at the 'new in place'
 
   virtual ~object() {}
 
@@ -204,7 +204,7 @@ public:
     // turn off sprite
     spr->img = nullptr;
     // free sprite instance
-    sprites.free_instance(*spr);
+    sprites.free_instance(spr);
   }
 
   // returns true if object has died
@@ -227,7 +227,7 @@ class bullet final : public object {
 
 public:
   bullet() {
-    spr = &sprites.allocate_instance();
+    spr = sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[1];
     spr->clear_collision_with();
@@ -252,33 +252,32 @@ public:
 };
 
 class hero final : public object {
-  sprite &spr_left;
-  sprite &spr_right;
+  sprite *spr_left;
+  sprite *spr_right;
 
 public:
-  hero()
-      : spr_left{sprites.allocate_instance()},
-        spr_right{sprites.allocate_instance()} {
-
-    spr = &sprites.allocate_instance();
+  hero() {
+    spr = sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[0];
     spr->clear_collision_with();
 
-    spr_left.obj = this;
-    spr_left.img = sprite_imgs[0];
-    spr_left.clear_collision_with();
+    spr_left = sprites.allocate_instance();
+    spr_left->obj = this;
+    spr_left->img = sprite_imgs[0];
+    spr_left->clear_collision_with();
 
-    spr_right.obj = this;
-    spr_right.img = sprite_imgs[0];
-    spr_right.clear_collision_with();
+    spr_right = sprites.allocate_instance();
+    spr_right->obj = this;
+    spr_right->img = sprite_imgs[0];
+    spr_right->clear_collision_with();
   }
 
   void free() override {
     object::free();
     // turn off sprites
-    spr_left.img = nullptr;
-    spr_right.img = nullptr;
+    spr_left->img = nullptr;
+    spr_right->img = nullptr;
     // free sprite instances
     sprites.free_instance(spr_left);
     sprites.free_instance(spr_right);
@@ -290,17 +289,17 @@ public:
     }
 
     // if collision with any sprite die
-    if (spr->is_in_collision() or spr_left.is_in_collision() or
-        spr_right.is_in_collision()) {
+    if (spr->is_in_collision() or spr_left->is_in_collision() or
+        spr_right->is_in_collision()) {
       return true;
     }
 
     // set position of additional sprites
-    spr_left.scr_x = spr->scr_x - sprite_width;
-    spr_left.scr_y = spr->scr_y;
+    spr_left->scr_x = spr->scr_x - sprite_width;
+    spr_left->scr_y = spr->scr_y;
 
-    spr_right.scr_x = spr->scr_x + sprite_width;
-    spr_right.scr_y = spr->scr_y;
+    spr_right->scr_x = spr->scr_x + sprite_width;
+    spr_right->scr_y = spr->scr_y;
 
     // reset collision information
     // spr->clear_collision_with();
@@ -332,6 +331,7 @@ public:
 
 using object_store = o1store<object, 255, object_ix, 2, 256>;
 // note. 255 because object_ix a.k.a. uint8_t max size is 255
+//       instance size 256 to fit largest sub-class of 'object'
 
 class objects : public object_store {
 public:
@@ -339,9 +339,9 @@ public:
     object_ix *it = allocated_list();
     const object_ix len = allocated_list_len();
     for (object_ix i = 0; i < len; i++, it++) {
-      object &obj = instance(*it);
-      if (obj.update(dt_s)) {
-        obj.free();
+      object *obj = instance(*it);
+      if (obj->update(dt_s)) {
+        obj->free();
         free_instance(obj);
       }
     }
@@ -493,7 +493,7 @@ static void render_scanline(
         *scanline_dst_ptr = palette[color_ix];
         if (*collision_pixel != sprite_ix_reserved) {
           spr->collision_with = *collision_pixel;
-          sprites.instance(*collision_pixel).collision_with = i;
+          sprites.instance(*collision_pixel)->collision_with = i;
         }
         // set pixel collision value to sprite index
         *collision_pixel = i;
@@ -705,17 +705,17 @@ void setup(void) {
   {
     float x = -24, y = -24;
     for (object_ix i = 0; i < objects.all_list_len(); i++) {
-      sprite &spr = sprites.allocate_instance();
-      spr.img = sprite_imgs[i % 2];
-      spr.collision_with = sprite_ix_reserved;
+      sprite *spr = sprites.allocate_instance();
+      spr->img = sprite_imgs[i % 2];
+      spr->collision_with = sprite_ix_reserved;
 
-      dummy &obj = *new (&objects.allocate_instance()) dummy{};
+      dummy *obj = new (objects.allocate_instance()) dummy{};
       // Serial.printf("object alloc ix: %u\n", obj.alloc_ix);
-      obj.spr = &spr;
-      obj.x = x;
-      obj.y = y;
-      obj.dx = 0.5f;
-      obj.dy = 2.0f - float(rand() % 4);
+      obj->spr = spr;
+      obj->x = x;
+      obj->y = y;
+      obj->dx = 0.5f;
+      obj->dy = 2.0f - float(rand() % 4);
       x += 24;
       if (x > display_width) {
         x = -24;
@@ -750,11 +750,11 @@ void loop() {
     if (fps.now_ms() - last_fire_ms > 250) {
       last_fire_ms = fps.now_ms();
       if (objects.can_allocate()) {
-        bullet &blt = *new (&objects.allocate_instance()) bullet{};
+        bullet *blt = new (objects.allocate_instance()) bullet{};
         // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
-        blt.x = 50;
-        blt.y = click_y;
-        blt.dx = 40;
+        blt->x = 50;
+        blt->y = click_y;
+        blt->dx = 40;
       }
     }
   }

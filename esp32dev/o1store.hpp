@@ -15,7 +15,7 @@
 // note. no destructor since life-time is program life-time
 //
 template <typename Type, const unsigned Size, typename IxType,
-          const char StoreId = 0, const unsigned InstanceSizeInBytes = 0>
+          const unsigned StoreId = 0, const unsigned InstanceSizeInBytes = 0>
 class o1store {
   Type *all_ = nullptr;
   IxType *free_ = nullptr;
@@ -56,42 +56,38 @@ public:
   auto can_allocate() -> bool { return free_ix_ < Size; }
 
   // allocates an instance
-  auto allocate_instance() -> Type & {
+  auto allocate_instance() -> Type * {
     if (free_ix_ == Size) {
-      Serial.printf("!!! o1store %u: allocate overrun\n", StoreId);
-      while (true)
-        ;
+      return nullptr;
     }
     IxType ix = free_[free_ix_];
     alloc_[alloc_ix_] = ix;
-    Type &inst = instance(ix);
-    inst.alloc_ix = alloc_ix_;
-    // Serial.printf("o1store %u allocate %u\n", StoreId, inst.alloc_ix);
+    Type *inst = instance(ix);
+    inst->alloc_ix = alloc_ix_;
     free_ix_++;
     alloc_ix_++;
     return inst;
   }
 
   // adds instance to a list that is applied with 'apply_free()'
-  void free_instance(const Type &inst) {
-    // Serial.printf("free instance: %u\n", inst.alloc_ix);
+  void free_instance(const Type *inst) {
     if (del_ix_ == Size) {
       Serial.printf("!!! o1store %u: free overrun\n", StoreId);
       while (true)
         ;
     }
-    del_[del_ix_++] = alloc_[inst.alloc_ix];
+    del_[del_ix_++] = alloc_[inst->alloc_ix];
   }
 
   // de-allocates the instances that have been freed
   void apply_free() {
     IxType *it = del_;
     for (unsigned i = 0; i < del_ix_; i++, it++) {
-      Type &inst_deleted = instance(*it);
+      Type *inst_deleted = instance(*it);
       IxType inst_ix_to_move = alloc_[alloc_ix_ - 1];
-      Type &inst_to_move = instance(inst_ix_to_move);
-      inst_to_move.alloc_ix = inst_deleted.alloc_ix;
-      alloc_[inst_deleted.alloc_ix] = inst_ix_to_move;
+      Type *inst_to_move = instance(inst_ix_to_move);
+      inst_to_move->alloc_ix = inst_deleted->alloc_ix;
+      alloc_[inst_deleted->alloc_ix] = inst_ix_to_move;
       alloc_ix_--;
       free_ix_--;
       free_[free_ix_] = *it;
@@ -112,12 +108,12 @@ public:
   constexpr auto all_list_len() -> unsigned { return Size; }
 
   // returns instance from 'all' list at index 'ix'
-  inline auto instance(IxType ix) -> Type & {
+  inline auto instance(IxType ix) -> Type * {
     if constexpr (!InstanceSizeInBytes) {
-      return all_[ix];
+      return &all_[ix];
     }
     // note. if instance size is specified do pointer shenanigans
-    return *(Type *)((void *)all_ + InstanceSizeInBytes * ix);
+    return (Type *)((void *)all_ + InstanceSizeInBytes * ix);
   }
 
   // returns the size in bytes of allocated heap memory

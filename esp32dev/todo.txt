@@ -1,10 +1,12 @@
 [ ] horizontal, vertical flip of sprite
 [ ] collision detection: bit field for type and collision interest
 [ ] render_scanline(...) consider looping through allocated sprites instead of all
+[x] o1store: return pointer to object instead of reference.
+    nullptr if allocation could not be done.
 [ ] o1store: consider using std::vector instead of calloc and free
 [ ] o1store: consider std::array instead of pointers
 [ ] o1store: consider a minimal implementation of span to return allocated list
-[ ] o1store: consider using pointers instead of indexing in arrays
+[ ] o1store: consider using pointers instead indexes in arrays
 [ ] #define O1STORE_DEBUG to check for double free
 [ ] modifiable tiles map
 -------------------------------------------------------------------------------

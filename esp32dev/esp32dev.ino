@@ -161,11 +161,9 @@ public:
   sprite_ix alloc_ix = sprite_ix_reserved;
   object *obj = nullptr;
 
-  inline auto is_in_collision() -> bool {
-    return collision_with != sprite_ix_reserved;
-  }
+  inline auto get_collision_with_object() -> object *;
 
-  inline void clear_collision_with() { collision_with = sprite_ix_reserved; }
+  inline void clear_collision_with_object() { collision_with = sprite_ix_reserved; }
 };
 
 using sprites_store = o1store<sprite, 255, sprite_ix, 1>;
@@ -173,6 +171,14 @@ using sprites_store = o1store<sprite, 255, sprite_ix, 1>;
 // note. sprite 255 is reserved which gives 255 [0:254] usable sprites
 
 static sprites_store sprites{};
+
+// implementation needs access to 'sprites'. solves circular reference.
+auto sprite::get_collision_with_object() -> object * {
+  if (collision_with == sprite_ix_reserved) {
+    return nullptr;
+  }
+  return sprites.instance(collision_with)->obj;
+}
 
 // display dimensions
 static constexpr unsigned display_width = 320;
@@ -230,7 +236,7 @@ public:
     spr = sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[1];
-    spr->clear_collision_with();
+    spr->clear_collision_with_object();
   }
 
   auto update(const float dt_s) -> bool override {
@@ -241,7 +247,7 @@ public:
         y <= -float(sprite_height) or y > display_height) {
       return true;
     }
-    if (spr->is_in_collision()) {
+    if (spr->get_collision_with_object()) {
       return true;
     }
 
@@ -260,17 +266,17 @@ public:
     spr = sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[0];
-    spr->clear_collision_with();
+    spr->clear_collision_with_object();
 
     spr_left = sprites.allocate_instance();
     spr_left->obj = this;
     spr_left->img = sprite_imgs[0];
-    spr_left->clear_collision_with();
+    spr_left->clear_collision_with_object();
 
     spr_right = sprites.allocate_instance();
     spr_right->obj = this;
     spr_right->img = sprite_imgs[0];
-    spr_right->clear_collision_with();
+    spr_right->clear_collision_with_object();
   }
 
   void free() override {
@@ -289,8 +295,9 @@ public:
     }
 
     // if collision with any sprite die
-    if (spr->is_in_collision() or spr_left->is_in_collision() or
-        spr_right->is_in_collision()) {
+    if (spr->get_collision_with_object() or
+        spr_left->get_collision_with_object() or
+        spr_right->get_collision_with_object()) {
       return true;
     }
 
@@ -316,7 +323,7 @@ public:
     if (object::update(dt_s)) {
       return true;
     }
-    if (spr->is_in_collision()) {
+    if (spr->get_collision_with_object()) {
       return true;
     }
     if (x > display_width) {
@@ -691,26 +698,26 @@ void setup(void) {
   randomSeed(0);
 
   // initiate objects
-  // hero &hro = *new (&objects.allocate_instance()) hero{};
+  // hero *hro = new (objects.allocate_instance()) hero{};
   // // Serial.printf("hero alloc_ix %u\n", hro.alloc_ix);
-  // hro.x = 250;
-  // hro.y = 100;
+  // hro->x = 250;
+  // hro->y = 100;
 
-  // bullet &blt = *new (&objects.allocate_instance()) bullet{};
+  // bullet *blt = new (objects.allocate_instance()) bullet{};
   // // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
-  // blt.x = 50;
-  // blt.y = 100;
-  // blt.dx = 40;
+  // blt->x = 50;
+  // blt->y = 100;
+  // blt->dx = 40;
 
   {
     float x = -24, y = -24;
     for (object_ix i = 0; i < objects.all_list_len(); i++) {
-      sprite *spr = sprites.allocate_instance();
-      spr->img = sprite_imgs[i % 2];
-      spr->collision_with = sprite_ix_reserved;
 
       dummy *obj = new (objects.allocate_instance()) dummy{};
-      // Serial.printf("object alloc ix: %u\n", obj.alloc_ix);
+      sprite *spr = sprites.allocate_instance();
+      spr->clear_collision_with_object();
+      spr->img = sprite_imgs[i % 2];
+      spr->obj = obj;
       obj->spr = spr;
       obj->x = x;
       obj->y = y;

@@ -191,12 +191,8 @@ static constexpr unsigned display_height = 240;
 using object_ix = uint8_t;
 // data type used to index an object in 'o1store'
 
-enum object_type : uint8_t {
-  class_object,
-  class_bullet,
-  class_hero,
-  class_dummy
-};
+// enumeration of classes of object
+enum object_class : uint8_t { object_cls, hero_cls, bullet_cls, dummy_cls };
 
 class object {
 public:
@@ -204,7 +200,7 @@ public:
   // note. no default value since it would overwrite the 'o1store' assigned
   // value at 'allocate_instance()'
 
-  object_type type = class_object;
+  object_class cls = object_cls;
   float x = 0;
   float y = 0;
   float dx = 0;
@@ -247,7 +243,7 @@ public:
   int8_t damage = 1;
 
   bullet() {
-    type = class_bullet;
+    cls = bullet_cls;
     spr = sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[1];
@@ -281,7 +277,7 @@ class hero final : public object {
   // returns true if dead
   auto apply_damage_from_collision(sprite *spr) -> bool {
     if (object *obj = spr->get_collision_with_object()) {
-      if (obj->type == class_bullet) {
+      if (obj->cls == bullet_cls) {
         bullet *blt = static_cast<bullet *>(obj);
         health -= blt->damage;
         Serial.printf("hero health: %d\n", health);
@@ -295,7 +291,7 @@ class hero final : public object {
 
 public:
   hero() {
-    type = class_hero;
+    cls = hero_cls;
     spr = sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[0];
@@ -352,7 +348,7 @@ public:
 
 class dummy final : public object {
 public:
-  dummy() { type = class_dummy; }
+  dummy() { cls = dummy_cls; }
 
   auto update(const float dt_s) -> bool override {
     if (object::update(dt_s)) {
@@ -638,39 +634,39 @@ static void render(const unsigned x, const unsigned y) {
   }
 }
 
-void setup_scene() {
-  hero *hro = new (objects.allocate_instance()) hero{};
-  // Serial.printf("hero alloc_ix %u\n", hro.alloc_ix);
-  hro->x = 250;
-  hro->y = 100;
-
-  bullet *blt = new (objects.allocate_instance()) bullet{};
-  // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
-  blt->x = 50;
-  blt->y = 100;
-  blt->dx = 40;
-}
-
 // void setup_scene() {
-//   float x = -24, y = -24;
-//   for (object_ix i = 0; i < objects.all_list_len(); i++) {
-//     dummy *obj = new (objects.allocate_instance()) dummy{};
-//     sprite *spr = sprites.allocate_instance();
-//     spr->clear_collision_with_object();
-//     spr->img = sprite_imgs[i % 2];
-//     spr->obj = obj;
-//     obj->spr = spr;
-//     obj->x = x;
-//     obj->y = y;
-//     obj->dx = 0.5f;
-//     obj->dy = 2.0f - float(rand() % 4);
-//     x += 24;
-//     if (x > display_width) {
-//       x = -24;
-//       y += 24;
-//     }
-//   }
+//   hero *hro = new (objects.allocate_instance()) hero{};
+//   // Serial.printf("hero alloc_ix %u\n", hro.alloc_ix);
+//   hro->x = 250;
+//   hro->y = 100;
+
+//   bullet *blt = new (objects.allocate_instance()) bullet{};
+//   // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
+//   blt->x = 50;
+//   blt->y = 100;
+//   blt->dx = 40;
 // }
+
+void setup_scene() {
+  float x = -24, y = -24;
+  for (object_ix i = 0; i < objects.all_list_len(); i++) {
+    dummy *obj = new (objects.allocate_instance()) dummy{};
+    sprite *spr = sprites.allocate_instance();
+    spr->clear_collision_with_object();
+    spr->img = sprite_imgs[i % 2];
+    spr->obj = obj;
+    obj->spr = spr;
+    obj->x = x;
+    obj->y = y;
+    obj->dx = 0.5f;
+    obj->dy = 2.0f - float(rand() % 4);
+    x += 24;
+    if (x > display_width) {
+      x = -24;
+      y += 24;
+    }
+  }
+}
 
 void setup(void) {
   Serial.begin(115200);

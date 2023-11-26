@@ -36,7 +36,7 @@ public:
     alloc_ = (IxType *)calloc(Size, sizeof(IxType));
     del_ = (IxType *)calloc(Size, sizeof(IxType));
     if (!all_ or !free_ or !alloc_ or !del_) {
-      Serial.printf("!!! o1store: could not allocate arrays\n");
+      Serial.printf("!!! o1store %u: could not allocate arrays\n", StoreId);
       while (true)
         ;
     }

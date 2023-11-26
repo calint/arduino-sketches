@@ -7,7 +7,7 @@
 [ ] o1store: consider std::array instead of pointers
 [ ] o1store: consider a minimal implementation of span to return allocated list
 [ ] o1store: consider using pointers instead indexes in arrays
-[ ] #define O1STORE_DEBUG to check for double free
+[ ] #define O1STORE_DEBUG to check for double free, index out of bounds
 [ ] modifiable tiles map
 -------------------------------------------------------------------------------
 [x] sprite allocation for active objects

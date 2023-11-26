@@ -162,8 +162,12 @@ public:
   object *obj = nullptr;
 
   inline auto get_collision_with_object() -> object *;
+  // note. implementation needs access to 'sprites' declared later. circular
+  // reference
 
-  inline void clear_collision_with_object() { collision_with = sprite_ix_reserved; }
+  inline void clear_collision_with_object() {
+    collision_with = sprite_ix_reserved;
+  }
 };
 
 using sprites_store = o1store<sprite, 255, sprite_ix, 1>;
@@ -185,6 +189,7 @@ static constexpr unsigned display_width = 320;
 static constexpr unsigned display_height = 240;
 
 using object_ix = uint8_t;
+// data type used to index an object in 'o1store'
 
 class object {
 public:
@@ -203,10 +208,11 @@ public:
   object() {}
   // note. constructor must be defined because the default constructor
   // overwrites the 'o1store' assigned 'alloc_ix' at the 'new in place'
+  //
+  // note. after constructor of inheriting class 'spr' must be in valid state.
 
-  virtual ~object() {}
-
-  virtual void free() {
+  virtual ~object() {
+    // Serial.printf("object destructor. alloc_ix=%u\n", alloc_ix);
     // turn off sprite
     spr->img = nullptr;
     // free sprite instance
@@ -279,8 +285,8 @@ public:
     spr_right->clear_collision_with_object();
   }
 
-  void free() override {
-    object::free();
+  ~hero() override {
+    // Serial.printf("hero destructor. alloc_ix=%u\n", alloc_ix);
     // turn off sprites
     spr_left->img = nullptr;
     spr_right->img = nullptr;
@@ -348,7 +354,7 @@ public:
     for (object_ix i = 0; i < len; i++, it++) {
       object *obj = instance(*it);
       if (obj->update(dt_s)) {
-        obj->free();
+        obj->~object();
         free_instance(obj);
       }
     }
@@ -600,6 +606,40 @@ static void render(const unsigned x, const unsigned y) {
   }
 }
 
+// void setup_scene(){
+//   hero *hro = new (objects.allocate_instance()) hero{};
+//   // Serial.printf("hero alloc_ix %u\n", hro.alloc_ix);
+//   hro->x = 250;
+//   hro->y = 100;
+
+//   bullet *blt = new (objects.allocate_instance()) bullet{};
+//   // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
+//   blt->x = 50;
+//   blt->y = 100;
+//   blt->dx = 40;
+// }
+
+void setup_scene() {
+  float x = -24, y = -24;
+  for (object_ix i = 0; i < objects.all_list_len(); i++) {
+    dummy *obj = new (objects.allocate_instance()) dummy{};
+    sprite *spr = sprites.allocate_instance();
+    spr->clear_collision_with_object();
+    spr->img = sprite_imgs[i % 2];
+    spr->obj = obj;
+    obj->spr = spr;
+    obj->x = x;
+    obj->y = y;
+    obj->dx = 0.5f;
+    obj->dy = 2.0f - float(rand() % 4);
+    x += 24;
+    if (x > display_width) {
+      x = -24;
+      y += 24;
+    }
+  }
+}
+
 void setup(void) {
   Serial.begin(115200);
   sleep(1); // arbitrary wait 1 second for serial to connect
@@ -697,39 +737,7 @@ void setup(void) {
   // set random seed to get same random every time
   randomSeed(0);
 
-  // initiate objects
-  // hero *hro = new (objects.allocate_instance()) hero{};
-  // // Serial.printf("hero alloc_ix %u\n", hro.alloc_ix);
-  // hro->x = 250;
-  // hro->y = 100;
-
-  // bullet *blt = new (objects.allocate_instance()) bullet{};
-  // // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
-  // blt->x = 50;
-  // blt->y = 100;
-  // blt->dx = 40;
-
-  {
-    float x = -24, y = -24;
-    for (object_ix i = 0; i < objects.all_list_len(); i++) {
-
-      dummy *obj = new (objects.allocate_instance()) dummy{};
-      sprite *spr = sprites.allocate_instance();
-      spr->clear_collision_with_object();
-      spr->img = sprite_imgs[i % 2];
-      spr->obj = obj;
-      obj->spr = spr;
-      obj->x = x;
-      obj->y = y;
-      obj->dx = 0.5f;
-      obj->dy = 2.0f - float(rand() % 4);
-      x += 24;
-      if (x > display_width) {
-        x = -24;
-        y += 24;
-      }
-    }
-  }
+  setup_scene();
 
   // initiate frames-per-second and dt keeper
   fps.init(millis());

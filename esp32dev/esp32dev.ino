@@ -191,12 +191,20 @@ static constexpr unsigned display_height = 240;
 using object_ix = uint8_t;
 // data type used to index an object in 'o1store'
 
+enum object_type : uint8_t {
+  class_object,
+  class_bullet,
+  class_hero,
+  class_dummy
+};
+
 class object {
 public:
   object_ix alloc_ix;
   // note. no default value since it would overwrite the 'o1store' assigned
   // value at 'allocate_instance()'
 
+  object_type type = class_object;
   float x = 0;
   float y = 0;
   float dx = 0;
@@ -235,10 +243,11 @@ public:
 };
 
 class bullet final : public object {
-  uint16_t damage = 0;
-
 public:
+  int8_t damage = 1;
+
   bullet() {
+    type = class_bullet;
     spr = sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[1];
@@ -254,6 +263,7 @@ public:
       return true;
     }
     if (spr->get_collision_with_object()) {
+      Serial.printf("bullet collided\n");
       return true;
     }
 
@@ -264,11 +274,28 @@ public:
 };
 
 class hero final : public object {
+  int16_t health = 10;
   sprite *spr_left;
   sprite *spr_right;
 
+  // returns true if dead
+  auto apply_damage_from_collision(sprite *spr) -> bool {
+    if (object *obj = spr->get_collision_with_object()) {
+      if (obj->type == class_bullet) {
+        bullet *blt = static_cast<bullet *>(obj);
+        health -= blt->damage;
+        Serial.printf("hero health: %d\n", health);
+        if (health <= 0) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
 public:
   hero() {
+    type = class_hero;
     spr = sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[0];
@@ -300,24 +327,23 @@ public:
       return true;
     }
 
-    // if collision with any sprite die
-    if (spr->get_collision_with_object() or
-        spr_left->get_collision_with_object() or
-        spr_right->get_collision_with_object()) {
+    // apply damage from maybe collision with bullets
+    if (apply_damage_from_collision(spr) or apply_damage_from_collision(spr_left) or
+        apply_damage_from_collision(spr_right)) {
       return true;
     }
 
-    // set position of additional sprites
-    spr_left->scr_x = spr->scr_x - sprite_width;
-    spr_left->scr_y = spr->scr_y;
-
-    spr_right->scr_x = spr->scr_x + sprite_width;
-    spr_right->scr_y = spr->scr_y;
-
     // reset collision information
-    // spr->clear_collision_with();
-    // spr_left.clear_collision_with();
-    // spr_right.clear_collision_with();
+    spr->clear_collision_with_object();
+    spr_left->clear_collision_with_object();
+    spr_right->clear_collision_with_object();
+
+    // set position of additional sprites
+    spr_left->scr_x = spr->scr_x;
+    spr_left->scr_y = spr->scr_y + sprite_height;
+
+    spr_right->scr_x = spr->scr_x;
+    spr_right->scr_y = spr->scr_y - sprite_height;
 
     return false;
   }
@@ -325,6 +351,8 @@ public:
 
 class dummy final : public object {
 public:
+  dummy() { type = class_dummy; }
+
   auto update(const float dt_s) -> bool override {
     if (object::update(dt_s)) {
       return true;
@@ -538,7 +566,8 @@ static void render(const unsigned x, const unsigned y) {
   sprite_ix *collision_map_scanline_ptr = collision_map;
   if (tile_dy) {
     // render the partial top tile
-    // swap between two rendering buffers to not overwrite DMA accessed buffer
+    // swap between two rendering buffers to not overwrite DMA accessed
+    // buffer
     uint16_t *render_buf_ptr = dma_buf_use_first ? dma_buf_1 : dma_buf_2;
     dma_buf_use_first = not dma_buf_use_first;
     // pointer to the buffer that the DMA will copy to screen
@@ -563,7 +592,8 @@ static void render(const unsigned x, const unsigned y) {
   // for each row of full tiles
   for (; tile_y < tile_y_max;
        tile_y++, frame_y += tile_height, tiles_map_row_ptr += tiles_map_width) {
-    // swap between two rendering buffers to not overwrite DMA accessed buffer
+    // swap between two rendering buffers to not overwrite DMA accessed
+    // buffer
     uint16_t *render_buf_ptr = dma_buf_use_first ? dma_buf_1 : dma_buf_2;
     dma_buf_use_first = not dma_buf_use_first;
     // pointer to the buffer that the DMA will copy to screen
@@ -585,7 +615,8 @@ static void render(const unsigned x, const unsigned y) {
   }
   if (tile_dy) {
     // render last partial tile
-    // swap between two rendering buffers to not overwrite DMA accessed buffer
+    // swap between two rendering buffers to not overwrite DMA accessed
+    // buffer
     uint16_t *render_buf_ptr = dma_buf_use_first ? dma_buf_1 : dma_buf_2;
     dma_buf_use_first = not dma_buf_use_first;
     // pointer to the buffer that the DMA will copy to screen
@@ -606,39 +637,39 @@ static void render(const unsigned x, const unsigned y) {
   }
 }
 
-// void setup_scene(){
-//   hero *hro = new (objects.allocate_instance()) hero{};
-//   // Serial.printf("hero alloc_ix %u\n", hro.alloc_ix);
-//   hro->x = 250;
-//   hro->y = 100;
-
-//   bullet *blt = new (objects.allocate_instance()) bullet{};
-//   // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
-//   blt->x = 50;
-//   blt->y = 100;
-//   blt->dx = 40;
-// }
-
 void setup_scene() {
-  float x = -24, y = -24;
-  for (object_ix i = 0; i < objects.all_list_len(); i++) {
-    dummy *obj = new (objects.allocate_instance()) dummy{};
-    sprite *spr = sprites.allocate_instance();
-    spr->clear_collision_with_object();
-    spr->img = sprite_imgs[i % 2];
-    spr->obj = obj;
-    obj->spr = spr;
-    obj->x = x;
-    obj->y = y;
-    obj->dx = 0.5f;
-    obj->dy = 2.0f - float(rand() % 4);
-    x += 24;
-    if (x > display_width) {
-      x = -24;
-      y += 24;
-    }
-  }
+  hero *hro = new (objects.allocate_instance()) hero{};
+  // Serial.printf("hero alloc_ix %u\n", hro.alloc_ix);
+  hro->x = 250;
+  hro->y = 100;
+
+  bullet *blt = new (objects.allocate_instance()) bullet{};
+  // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
+  blt->x = 50;
+  blt->y = 100;
+  blt->dx = 40;
 }
+
+// void setup_scene() {
+//   float x = -24, y = -24;
+//   for (object_ix i = 0; i < objects.all_list_len(); i++) {
+//     dummy *obj = new (objects.allocate_instance()) dummy{};
+//     sprite *spr = sprites.allocate_instance();
+//     spr->clear_collision_with_object();
+//     spr->img = sprite_imgs[i % 2];
+//     spr->obj = obj;
+//     obj->spr = spr;
+//     obj->x = x;
+//     obj->y = y;
+//     obj->dx = 0.5f;
+//     obj->dy = 2.0f - float(rand() % 4);
+//     x += 24;
+//     if (x > display_width) {
+//       x = -24;
+//       y += 24;
+//     }
+//   }
+// }
 
 void setup(void) {
   Serial.begin(115200);

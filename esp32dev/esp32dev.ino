@@ -328,7 +328,8 @@ public:
     }
 
     // apply damage from maybe collision with bullets
-    if (apply_damage_from_collision(spr) or apply_damage_from_collision(spr_left) or
+    if (apply_damage_from_collision(spr) or
+        apply_damage_from_collision(spr_left) or
         apply_damage_from_collision(spr_right)) {
       return true;
     }

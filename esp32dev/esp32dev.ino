@@ -154,20 +154,11 @@ class object;
 
 class sprite {
 public:
+  sprite_ix alloc_ix = sprite_ix_reserved;
+  object *obj = nullptr;
   const uint8_t *img = nullptr;
   int16_t scr_x = 0;
   int16_t scr_y = 0;
-  sprite_ix collision_with = sprite_ix_reserved;
-  sprite_ix alloc_ix = sprite_ix_reserved;
-  object *obj = nullptr;
-
-  inline auto get_collision_with_object() -> object *;
-  // note. implementation needs access to 'sprites' declared later. circular
-  // reference
-
-  inline void clear_collision_with_object() {
-    collision_with = sprite_ix_reserved;
-  }
 };
 
 using sprites_store = o1store<sprite, 255, sprite_ix, 1>;
@@ -175,14 +166,6 @@ using sprites_store = o1store<sprite, 255, sprite_ix, 1>;
 // note. sprite 255 is reserved which gives 255 [0:254] usable sprites
 
 static sprites_store sprites{};
-
-// implementation needs access to 'sprites'. solves circular reference.
-auto sprite::get_collision_with_object() -> object * {
-  if (collision_with == sprite_ix_reserved) {
-    return nullptr;
-  }
-  return sprites.instance(collision_with)->obj;
-}
 
 // display dimensions
 static constexpr unsigned display_width = 320;
@@ -195,7 +178,6 @@ using object_ix = uint8_t;
 enum object_class : uint8_t { object_cls, hero_cls, bullet_cls, dummy_cls };
 
 using collision_bits = unsigned;
-using collision_mask = collision_bits;
 
 class object {
 public:
@@ -211,8 +193,9 @@ public:
   float ddx = 0;
   float ddy = 0;
   sprite *spr = nullptr;
-  collision_bits colbits = 0;
-  collision_mask colmask = 0;
+  collision_bits col_bits = 0;
+  collision_bits col_mask = 0;
+  object *col_with = nullptr;
 
   object() {}
   // note. constructor must be defined because the default constructor
@@ -249,10 +232,13 @@ public:
 
   bullet() {
     cls = bullet_cls;
+
+    col_bits = 2;
+    col_mask = 1;
+
     spr = sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[1];
-    spr->clear_collision_with_object();
   }
 
   auto update(const float dt_s) -> bool override {
@@ -263,54 +249,37 @@ public:
         y <= -float(sprite_height) or y > display_height) {
       return true;
     }
-    if (spr->get_collision_with_object()) {
+    if (col_with) {
       Serial.printf("bullet collided\n");
       return true;
     }
-
-    // spr->clear_collision_with();
-
     return false;
   }
 };
 
 class hero final : public object {
-  int16_t health = 10;
   sprite *spr_left;
   sprite *spr_right;
-
-  // returns true if dead
-  auto apply_damage_from_collision(sprite *spr) -> bool {
-    if (object *obj = spr->get_collision_with_object()) {
-      if (obj->cls == bullet_cls) {
-        bullet *blt = static_cast<bullet *>(obj);
-        health -= blt->damage;
-        Serial.printf("hero health: %d\n", health);
-        if (health <= 0) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
+  int16_t health = 10;
 
 public:
   hero() {
     cls = hero_cls;
+
+    col_bits = 1;
+    col_mask = 3;
+
     spr = sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[0];
-    spr->clear_collision_with_object();
 
     spr_left = sprites.allocate_instance();
     spr_left->obj = this;
     spr_left->img = sprite_imgs[0];
-    spr_left->clear_collision_with_object();
 
     spr_right = sprites.allocate_instance();
     spr_right->obj = this;
     spr_right->img = sprite_imgs[0];
-    spr_right->clear_collision_with_object();
   }
 
   ~hero() override {
@@ -328,17 +297,19 @@ public:
       return true;
     }
 
-    // apply damage from maybe collision with bullets
-    if (apply_damage_from_collision(spr) or
-        apply_damage_from_collision(spr_left) or
-        apply_damage_from_collision(spr_right)) {
-      return true;
+    if (col_with) {
+      if (col_with->cls == bullet_cls) {
+        bullet *blt = static_cast<bullet *>(col_with);
+        health -= blt->damage;
+        Serial.printf("hero health: %d\n", health);
+        if (health <= 0) {
+          return true;
+        }
+      }
     }
 
     // reset collision information
-    spr->clear_collision_with_object();
-    spr_left->clear_collision_with_object();
-    spr_right->clear_collision_with_object();
+    col_with = nullptr;
 
     // set position of additional sprites
     spr_left->scr_x = spr->scr_x;
@@ -359,15 +330,12 @@ public:
     if (object::update(dt_s)) {
       return true;
     }
-    if (spr->get_collision_with_object()) {
+    if (col_with) {
       return true;
     }
     if (x > display_width) {
       return true;
     }
-
-    // spr->clear_collision_with();I
-
     return false;
   }
 };
@@ -527,7 +495,8 @@ static void render_scanline(
       // adjustment if sprite partially outside screen (x-wise)
       render_width = display_width - spr->scr_x;
     }
-    // render line of sprite
+    // render scanline of sprite
+    object *obj = spr->obj;
     for (unsigned j = 0; j < render_width;
          j++, collision_pixel++, scanline_dst_ptr++) {
       // write pixel from sprite data or skip if 0
@@ -535,14 +504,13 @@ static void render_scanline(
       if (color_ix) {
         *scanline_dst_ptr = palette[color_ix];
         if (*collision_pixel != sprite_ix_reserved) {
-          const object *o1 = spr->obj;
           sprite *spr2 = sprites.instance(*collision_pixel);
-          const object *o2 = spr2->obj;
-          if (o1->colmask & o2->colbits) {
-            spr->collision_with = *collision_pixel;
+          object *other_obj = spr2->obj;
+          if (obj->col_mask & other_obj->col_bits) {
+            obj->col_with = other_obj;
           }
-          if (o2->colmask & o1->colbits) {
-            spr2->collision_with = i;
+          if (other_obj->col_mask & obj->col_bits) {
+            other_obj->col_with = obj;
           }
         }
         // set pixel collision value to sprite index
@@ -664,27 +632,26 @@ void setup_scene() {
   for (object_ix i = 0; i < objects.all_list_len(); i++) {
     dummy *obj = new (objects.allocate_instance()) dummy{};
     sprite *spr = sprites.allocate_instance();
-    spr->clear_collision_with_object();
     const object_ix type = i % 2;
     spr->img = sprite_imgs[type];
     spr->obj = obj;
     obj->spr = spr;
     if (type == 0) {
       // if square
-      // collision bit 1 set
-      obj->colbits = 1;
-      // interested in collision with objects with
+      // set collision bit 1
+      obj->col_bits = 1;
+      // interested in collision with
       // collision bit 1 or 2 set
-      obj->colmask = 3;
+      obj->col_mask = 3;
       // 'squares' react to collisions with 'squares' and 'bullets'
     } else {
       // if square
+      // set collision bit 2
+      obj->col_bits = 2;
+      // interested in collision with
       // collision bit 2 set
-      obj->colbits = 2;
-      // interested in collision with objects with
-      // collision bit 2 set
-      obj->colmask = 2;
-      // 'bullets' react to collisions 'bullets'
+      obj->col_mask = 2;
+      // 'bullets' react to collisions with 'bullets'
     }
     obj->x = x;
     obj->y = y;
@@ -816,11 +783,11 @@ void loop() {
     constexpr float dx_factor = 200.0f / (4096 / 2);
     dx_per_s = dx_factor * x_relative_center;
     const float click_y = pt.y * display_height / 4096;
-    Serial.printf("touch x=%d  y=%d  z=%d  click_y=%f  dx=%f\n", pt.x, pt.y,
-                  pt.z, click_y, dx_per_s);
+    // Serial.printf("touch x=%d  y=%d  z=%d  click_y=%f  dx=%f\n", pt.x, pt.y,
+    //               pt.z, click_y, dx_per_s);
 
-    // fire four times a second
-    if (fps.now_ms() - last_fire_ms > 250) {
+    // fire eight times a second
+    if (fps.now_ms() - last_fire_ms > 125) {
       last_fire_ms = fps.now_ms();
       if (objects.can_allocate()) {
         bullet *blt = new (objects.allocate_instance()) bullet{};

@@ -194,6 +194,9 @@ using object_ix = uint8_t;
 // enumeration of classes of object
 enum object_class : uint8_t { object_cls, hero_cls, bullet_cls, dummy_cls };
 
+using collision_bits = unsigned;
+using collision_mask = collision_bits;
+
 class object {
 public:
   object_ix alloc_ix;
@@ -208,6 +211,8 @@ public:
   float ddx = 0;
   float ddy = 0;
   sprite *spr = nullptr;
+  collision_bits colbits = 0;
+  collision_mask colmask = 0;
 
   object() {}
   // note. constructor must be defined because the default constructor
@@ -530,8 +535,15 @@ static void render_scanline(
       if (color_ix) {
         *scanline_dst_ptr = palette[color_ix];
         if (*collision_pixel != sprite_ix_reserved) {
-          spr->collision_with = *collision_pixel;
-          sprites.instance(*collision_pixel)->collision_with = i;
+          const object *o1 = spr->obj;
+          sprite *spr2 = sprites.instance(*collision_pixel);
+          const object *o2 = spr2->obj;
+          if (o1->colmask & o2->colbits) {
+            spr->collision_with = *collision_pixel;
+          }
+          if (o2->colmask & o1->colbits) {
+            spr2->collision_with = i;
+          }
         }
         // set pixel collision value to sprite index
         *collision_pixel = i;
@@ -653,9 +665,27 @@ void setup_scene() {
     dummy *obj = new (objects.allocate_instance()) dummy{};
     sprite *spr = sprites.allocate_instance();
     spr->clear_collision_with_object();
-    spr->img = sprite_imgs[i % 2];
+    const object_ix type = i % 2;
+    spr->img = sprite_imgs[type];
     spr->obj = obj;
     obj->spr = spr;
+    if (type == 0) {
+      // if square
+      // collision bit 1 set
+      obj->colbits = 1;
+      // interested in collision with objects with
+      // collision bit 1 or 2 set
+      obj->colmask = 3;
+      // 'squares' react to collisions with 'squares' and 'bullets'
+    } else {
+      // if square
+      // collision bit 2 set
+      obj->colbits = 2;
+      // interested in collision with objects with
+      // collision bit 2 set
+      obj->colmask = 2;
+      // 'bullets' react to collisions 'bullets'
+    }
     obj->x = x;
     obj->y = y;
     obj->dx = 0.5f;

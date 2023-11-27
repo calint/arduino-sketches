@@ -12,3 +12,14 @@ git reset --hard HEAD
 git add . && git commit -m "." && git push
 
 TAG=$(date "+%Y-%m-%d--%H-%M") && git tag $TAG && git push origin $TAG
+
+
+t=6444  fps=31  ldr=0  objs=247  sprs=247
+t=11455  fps=31  ldr=0  objs=232  sprs=232
+t=16462  fps=30  ldr=0  objs=209  sprs=209
+t=21463  fps=30  ldr=0  objs=191  sprs=191
+t=26484  fps=31  ldr=0  objs=167  sprs=167
+t=31511  fps=31  ldr=0  objs=165  sprs=165
+t=36523  fps=31  ldr=0  objs=165  sprs=165
+t=41525  fps=31  ldr=0  objs=156  sprs=156
+t=46555  fps=31  ldr=0  objs=146  sprs=146

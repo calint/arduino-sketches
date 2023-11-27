@@ -154,11 +154,11 @@ class object;
 
 class sprite {
 public:
-  sprite_ix alloc_ix = sprite_ix_reserved;
   object *obj = nullptr;
   const uint8_t *img = nullptr;
   int16_t scr_x = 0;
   int16_t scr_y = 0;
+  sprite_ix alloc_ix = sprite_ix_reserved;
 };
 
 using sprites_store = o1store<sprite, 255, sprite_ix, 1>;
@@ -181,21 +181,23 @@ using collision_bits = unsigned;
 
 class object {
 public:
-  object_ix alloc_ix;
-  // note. no default value since it would overwrite the 'o1store' assigned
-  // value at 'allocate_instance()'
+  sprite *spr = nullptr;
+  object *col_with = nullptr;
+  collision_bits col_bits = 0;
+  collision_bits col_mask = 0;
 
-  object_class cls = object_cls;
   float x = 0;
   float y = 0;
   float dx = 0;
   float dy = 0;
   float ddx = 0;
   float ddy = 0;
-  sprite *spr = nullptr;
-  collision_bits col_bits = 0;
-  collision_bits col_mask = 0;
-  object *col_with = nullptr;
+
+  object_class cls = object_cls;
+
+  object_ix alloc_ix;
+  // note. no default value since it would overwrite the 'o1store' assigned
+  // value at 'allocate_instance()'
 
   object() {}
   // note. constructor must be defined because the default constructor

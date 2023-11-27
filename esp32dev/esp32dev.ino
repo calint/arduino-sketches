@@ -217,6 +217,8 @@ public:
   }
 
   // returns true if object has died
+  // note. regarding classes overriding 'update(...)'
+  // after 'update(...)' 'col_with' should be 'nullptr'
   virtual auto update(const float dt_s) -> bool {
     dx += ddx * dt_s;
     dy += ddy * dt_s;
@@ -311,10 +313,9 @@ public:
           return true;
         }
       }
+      // reset collision information
+      col_with = nullptr;
     }
-
-    // reset collision information
-    col_with = nullptr;
 
     // set position of additional sprites
     spr_left->scr_x = spr->scr_x;

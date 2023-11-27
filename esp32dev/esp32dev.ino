@@ -196,11 +196,11 @@ public:
   float ddx = 0;
   float ddy = 0;
 
-  object_class cls = object_cls;
-
   object_ix alloc_ix;
   // note. no default value since it would overwrite the 'o1store' assigned
   // value at 'allocate_instance()'
+
+  object_class cls = object_cls;
 
   object() {}
   // note. constructor must be defined because the default constructor

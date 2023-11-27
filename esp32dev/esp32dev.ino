@@ -178,6 +178,7 @@ using object_ix = uint8_t;
 enum object_class : uint8_t { object_cls, hero_cls, bullet_cls, dummy_cls };
 
 using collision_bits = unsigned;
+// used for collision detection interest flags
 
 class object {
 public:
@@ -185,6 +186,8 @@ public:
   object *col_with = nullptr;
   collision_bits col_bits = 0;
   collision_bits col_mask = 0;
+  // note: used to declare interest in collisions with objects whose
+  // 'col_bits' bitwise AND with this 'col_mask' is not 0
 
   float x = 0;
   float y = 0;

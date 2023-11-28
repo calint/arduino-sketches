@@ -63,6 +63,7 @@ class controller {
   unsigned long last_fire_ms = 0;
 
 public:
+  // callback when screen is touched
   void on_touch(int16_t x, int16_t y, int16_t z) {
     const int x_relative_center = x - 4096 / 2;
     constexpr float dx_factor = 200.0f / (4096 / 2);

@@ -12,8 +12,8 @@ class hero final : public object {
 
 public:
   hero() : object{hero_cls} {
-    col_bits = colbits_hero;
-    col_mask = colbits_enemy | colbits_enemy_bullet;
+    col_bits = cb_hero;
+    col_mask = cb_enemy | cb_enemy_bullet;
 
     spr = sprites.allocate_instance();
     spr->obj = this;

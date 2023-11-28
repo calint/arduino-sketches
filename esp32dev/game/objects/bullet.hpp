@@ -7,8 +7,8 @@ public:
   int8_t damage = 1;
 
   bullet() : object{bullet_cls} {
-    col_bits = colbits_enemy_bullet;
-    col_mask = colbits_hero;
+    col_bits = cb_enemy_bullet;
+    col_mask = cb_hero;
 
     spr = sprites.allocate_instance();
     spr->obj = this;

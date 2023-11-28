@@ -8,8 +8,8 @@ public:
   unsigned long die_at_ms;
 
   fragment() : object{fragment_cls} {
-    col_bits = colbits_fragment;
-    col_mask = colbits_none;
+    col_bits = cb_fragment;
+    col_mask = cb_none;
 
     spr = sprites.allocate_instance();
     spr->obj = this;

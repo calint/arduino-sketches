@@ -379,7 +379,7 @@ void loop() {
 
   objects.update();
 
-  // apply free on sprites freed during objects.update()
+  // apply freed sprites during 'objects.update()'
   sprites.apply_free();
 
   // clear collisions map

@@ -77,7 +77,6 @@ public:
       last_fire_ms = clk.now_ms();
       if (objects.can_allocate()) {
         bullet *blt = new (objects.allocate_instance()) bullet{};
-        // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
         blt->x = 50;
         blt->y = click_y;
         blt->dx = 40;
@@ -99,9 +98,7 @@ static void on_after_frame() {
   }
   // update y position in pixels in the tile map
   tile_map_y += clk.dt(tile_map_dy);
-  // Serial.printf("x=%f  y=%f  dy=%f\n", x, y, dy_per_s);
   if (tile_map_y < 0) {
-    Serial.printf("y < 0\n");
     tile_map_y = 0;
     tile_map_dy = -tile_map_dy;
   } else if (tile_map_y > (tile_map_height * tile_height - display_height)) {

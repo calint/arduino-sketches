@@ -29,7 +29,6 @@ public:
   }
 
   ~hero() override {
-    // Serial.printf("hero destructor. alloc_ix=%u\n", alloc_ix);
     // turn off sprites
     spr_left->img = nullptr;
     spr_right->img = nullptr;

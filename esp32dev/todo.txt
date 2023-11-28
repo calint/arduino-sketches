@@ -1,3 +1,4 @@
+[x] extract files into headers/source
 [ ] horizontal, vertical flip of sprite
 [ ] render_scanline(...) consider looping through allocated sprites instead of all
 [ ] o1store: can_allocate() is not thread safe. remove

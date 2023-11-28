@@ -34,6 +34,7 @@ static TFT_eSPI display{};
 
 #include "game/resources/palette.hpp"
 
+// tile dimensions
 static constexpr unsigned tile_width = 16;
 static constexpr unsigned tile_height = 16;
 
@@ -51,6 +52,7 @@ static constexpr unsigned tile_height_shift = 4;
 // 'tile_height'
 static constexpr unsigned tile_height_and = 15;
 
+// number of different tiles
 static constexpr unsigned tile_count = 256;
 using tile_ix = uint8_t;
 
@@ -61,6 +63,7 @@ public:
 #include "game/resources/tile_imgs.hpp"
 };
 
+// tile map dimension
 static constexpr unsigned tile_map_width = 320;
 static constexpr unsigned tile_map_height = 17;
 
@@ -77,11 +80,12 @@ static float tile_map_dx = 0;
 static float tile_map_y = 0;
 static float tile_map_dy = 0;
 
+// sprite dimensions
 static constexpr unsigned sprite_width = 16;
 static constexpr unsigned sprite_height = 16;
 
-// used when rendering
 static constexpr int16_t sprite_width_neg = -int16_t(sprite_width);
+// used when rendering
 
 // images used by sprites
 static constexpr uint8_t sprite_imgs[256][sprite_width * sprite_height]{
@@ -117,6 +121,8 @@ static sprites_store sprites{};
 // display dimensions
 static constexpr unsigned display_width = 320;
 static constexpr unsigned display_height = 240;
+
+// helper class managing current frame time, dt, frames per second calculation
 class clk {
   unsigned interval_ms_ = 5000;
   unsigned frames_rendered_in_interval_ = 0;

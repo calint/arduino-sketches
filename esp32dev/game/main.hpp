@@ -1,7 +1,6 @@
 #pragma once
 #include "obj/bullet.hpp"
 #include "obj/dummy.hpp"
-#include "obj/fragment.hpp"
 #include "obj/hero.hpp"
 
 // tile map controls

@@ -32,15 +32,7 @@ static SPIClass spi{HSPI};
 static XPT2046_Touchscreen touch_screen{xpt2046_cs, xpt2046_irq};
 static TFT_eSPI display{};
 
-// palette used to convert uint8_t to uint16_t rgb 565
-// lower and higher byte swapped (red being the highest bits)
-static constexpr uint16_t palette[256]{
-    0b0000000000000000, // black
-    0b0000000011111000, // red
-    0b1110000000000111, // green
-    0b0001111100000000, // blue
-    0b1111111111111111, // white
-};
+#include "game/res/palette.hpp"
 
 static constexpr unsigned tile_width = 16;
 static constexpr unsigned tile_height = 16;
@@ -66,7 +58,7 @@ class tile {
 public:
   const uint8_t data[tile_width * tile_height];
 } static constexpr tiles[tile_count]{
-#include "game/res/tiles.hpp"
+#include "game/res/tile_imgs.hpp"
 };
 
 static constexpr unsigned tiles_map_width = 320;

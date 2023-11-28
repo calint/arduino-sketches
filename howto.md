@@ -20,3 +20,12 @@ subsequent uploads select port e.g. "/dev/ttyACM0"
 connect with serial terminal to e.g. /dev/ttyACM0 at 115200 baud
 
 type "help" to get started
+
+## howto: esp32-2432s028r in visual code 1.84.2
+* install plug-in Arduino v0.6.0
+* task ">Arduino: Initialize"
+* task ">Arduino: Board Manager"
+  - install "esp32 by Espressif Systems Version 2.0.14"
+* task ">Arduino: Board Config"
+  - select "ESP32 Dev Module (esp32)"
+* install libraries (plug-in installs libraries in ~/Arduino/libraries)

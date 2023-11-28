@@ -4,5 +4,5 @@ experiments with arduino sketches for raspberry pico w, arduino nano esp32 and E
 contains:
 * esp32dev: device ESP32-2432S028R - game framework with scrolling tiles and sprites
 * roome: device raspberry pico w and arduino nano esp32 - toy text adventure game
-* snippets: device arduino nano esp32 - collection of various board functionality
+* snippets: device arduino nano esp32 - collection of sample code for various device functionality
 

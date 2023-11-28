@@ -1,8 +1,8 @@
 #pragma once
 #include "../preamble.hpp"
-#include "obj/bullet.hpp"
-#include "obj/dummy.hpp"
-#include "obj/hero.hpp"
+#include "objects/bullet.hpp"
+#include "objects/dummy.hpp"
+#include "objects/hero.hpp"
 
 static void setup_scene() {
   // scrolling from right to left / down up

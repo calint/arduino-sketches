@@ -32,7 +32,7 @@ static SPIClass spi{HSPI};
 static XPT2046_Touchscreen touch_screen{xpt2046_cs, xpt2046_irq};
 static TFT_eSPI display{};
 
-#include "game/res/palette.hpp"
+#include "game/resources/palette.hpp"
 
 static constexpr unsigned tile_width = 16;
 static constexpr unsigned tile_height = 16;
@@ -58,7 +58,7 @@ class tile {
 public:
   const uint8_t data[tile_width * tile_height];
 } static constexpr tiles[tile_count]{
-#include "game/res/tile_imgs.hpp"
+#include "game/resources/tile_imgs.hpp"
 };
 
 static constexpr unsigned tile_map_width = 320;
@@ -68,7 +68,7 @@ class tile_map {
 public:
   tile_ix cell[tile_map_height][tile_map_width];
 } static constexpr tile_map{{
-#include "game/res/tile_map.hpp"
+#include "game/resources/tile_map.hpp"
 }};
 
 // tile map controls
@@ -85,7 +85,7 @@ static constexpr int16_t sprite_width_neg = -int16_t(sprite_width);
 
 // images used by sprites
 static constexpr uint8_t sprite_imgs[256][sprite_width * sprite_height]{
-#include "game/res/sprite_imgs.hpp"
+#include "game/resources/sprite_imgs.hpp"
 };
 
 using sprite_ix = uint8_t;

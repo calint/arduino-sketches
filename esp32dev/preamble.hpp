@@ -218,8 +218,7 @@ public:
   }
 };
 
-static constexpr unsigned object_instance_max_size_B = 256;
-// enough to fit any instance of 'object' class and descendants
+#include "game/defs.hpp"
 
 using object_store =
     o1store<object, 255, object_ix, 2, object_instance_max_size_B>;

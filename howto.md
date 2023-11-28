@@ -1,4 +1,4 @@
-### howto: raspberry pico w in arduino ide (2.1.1)
+### howto: raspberry pico w in arduino ide 2.1.1
 File -> Preferences
 
 Additional boards manager URLs:

@@ -1,16 +1,16 @@
 #pragma once
+#include "../preamble.hpp"
 #include "obj/bullet.hpp"
 #include "obj/dummy.hpp"
 #include "obj/hero.hpp"
 
-// tile map controls
-// scrolling from right to left / down up
-static float tile_map_x = tiles_map_width * tile_width - display_width;
-static float tile_map_dx = -16;
-static float tile_map_y = 1;
-static float tile_map_dy = 1;
-
 static void setup_scene() {
+  // scrolling from right to left / down up
+  tile_map_x = tile_map_width * tile_width - display_width;
+  tile_map_dx = -16;
+  tile_map_y = 1;
+  tile_map_dy = 1;
+
   hero *hro = new (objects.allocate_instance()) hero{};
   hro->x = 250;
   hro->y = 100;
@@ -92,8 +92,8 @@ static void on_after_frame() {
   if (tile_map_x < 0) {
     tile_map_x = 0;
     tile_map_dx = -tile_map_dx;
-  } else if (tile_map_x > (tiles_map_width * tile_width - display_width)) {
-    tile_map_x = tiles_map_width * tile_width - display_width;
+  } else if (tile_map_x > (tile_map_width * tile_width - display_width)) {
+    tile_map_x = tile_map_width * tile_width - display_width;
     tile_map_dx = -tile_map_dx;
   }
   // update y position in pixels in the tile map
@@ -103,8 +103,8 @@ static void on_after_frame() {
     Serial.printf("y < 0\n");
     tile_map_y = 0;
     tile_map_dy = -tile_map_dy;
-  } else if (tile_map_y > (tiles_map_height * tile_height - display_height)) {
-    tile_map_y = tiles_map_height * tile_height - display_height;
+  } else if (tile_map_y > (tile_map_height * tile_height - display_height)) {
+    tile_map_y = tile_map_height * tile_height - display_height;
     tile_map_dy = -tile_map_dy;
   }
 }

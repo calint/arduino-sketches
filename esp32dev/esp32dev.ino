@@ -184,7 +184,7 @@ static void render(const unsigned x, const unsigned y) {
   // current line y on screen
   int16_t scanline_y = 0;
   // pointer to start of current row of tiles
-  const tile_ix *tiles_map_row_ptr = tiles_map.cell[tile_y];
+  const tile_ix *tiles_map_row_ptr = tile_map.cell[tile_y];
   // pointer to collision map starting at top left of screen
   sprite_ix *collision_map_scanline_ptr = collision_map;
   if (tile_dy) {
@@ -214,7 +214,7 @@ static void render(const unsigned x, const unsigned y) {
   }
   // for each row of full tiles
   for (; tile_y < tile_y_max;
-       tile_y++, frame_y += tile_height, tiles_map_row_ptr += tiles_map_width) {
+       tile_y++, frame_y += tile_height, tiles_map_row_ptr += tile_map_width) {
     // swap between two rendering buffers to not overwrite DMA accessed
     // buffer
     uint16_t *render_buf_ptr = dma_buf_use_first ? dma_buf_1 : dma_buf_2;
@@ -303,7 +303,7 @@ void setup(void) {
   Serial.printf("------------------- in program memory --------------------\n");
   Serial.printf("     sprite images: %zu B\n", sizeof(sprite_imgs));
   Serial.printf("             tiles: %zu B\n", sizeof(tiles));
-  Serial.printf("         tiles map: %zu B\n", sizeof(tiles_map));
+  Serial.printf("          tile map: %zu B\n", sizeof(tile_map));
   Serial.printf("------------------- globals ------------------------------\n");
   Serial.printf("           sprites: %zu B\n", sizeof(sprites));
   Serial.printf("           objects: %zu B\n", sizeof(objects));

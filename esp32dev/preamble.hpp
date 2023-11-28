@@ -61,15 +61,21 @@ public:
 #include "game/res/tile_imgs.hpp"
 };
 
-static constexpr unsigned tiles_map_width = 320;
-static constexpr unsigned tiles_map_height = 17;
+static constexpr unsigned tile_map_width = 320;
+static constexpr unsigned tile_map_height = 17;
 
-class tiles_map {
+class tile_map {
 public:
-  tile_ix cell[tiles_map_height][tiles_map_width];
-} static constexpr tiles_map{{
-#include "game/res/tiles_map.hpp"
+  tile_ix cell[tile_map_height][tile_map_width];
+} static constexpr tile_map{{
+#include "game/res/tile_map.hpp"
 }};
+
+// tile map controls
+static float tile_map_x = 0;
+static float tile_map_dx = 0;
+static float tile_map_y = 0;
+static float tile_map_dy = 0;
 
 static constexpr unsigned sprite_width = 16;
 static constexpr unsigned sprite_height = 16;

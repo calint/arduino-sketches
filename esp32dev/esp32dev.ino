@@ -170,15 +170,53 @@ static sprites_store sprites{};
 // display dimensions
 static constexpr unsigned display_width = 320;
 static constexpr unsigned display_height = 240;
+class clk {
+  unsigned interval_ms_ = 5000;
+  unsigned frames_rendered_in_interval_ = 0;
+  unsigned long last_update_ms_ = 0;
+  unsigned long now_ms_ = 0;
+  unsigned long prv_now_ms_ = 0;
+  unsigned current_fps_ = 0;
+  float dt_s_ = 0;
+
+public:
+  void init(const unsigned long now_ms) {
+    last_update_ms_ = prv_now_ms_ = now_ms;
+  }
+
+  auto on_frame(const unsigned long now_ms) -> bool {
+    now_ms_ = now_ms;
+    dt_s_ = (now_ms - prv_now_ms_) / 1000.0f;
+    prv_now_ms_ = now_ms;
+    frames_rendered_in_interval_++;
+    const unsigned long dt_ms = now_ms - last_update_ms_;
+    if (dt_ms >= interval_ms_) {
+      current_fps_ = frames_rendered_in_interval_ * 1000 / dt_ms;
+      frames_rendered_in_interval_ = 0;
+      last_update_ms_ = now_ms;
+      return true;
+    }
+    return false;
+  }
+
+  inline auto fps() const -> unsigned { return current_fps_; }
+
+  inline auto now_ms() const -> unsigned long { return now_ms_; }
+
+  inline auto dt_s() const -> float { return dt_s_; }
+
+  inline auto dt(float f) const -> float { return f * dt_s_; }
+
+} static clk{};
 
 using object_ix = uint8_t;
-// data type used to index an object in 'o1store'
-
-// enumeration of classes of object
-enum object_class : uint8_t { object_cls, hero_cls, bullet_cls, dummy_cls };
+// data type used to index an 'object' in 'o1store'
 
 using collision_bits = unsigned;
-// used for collision detection interest flags
+// used by 'object' for collision detection interest flags
+
+enum object_class : uint8_t;
+// enumeration of classes of 'object'
 
 class object {
 public:
@@ -200,7 +238,9 @@ public:
   // note. no default value since it would overwrite the 'o1store' assigned
   // value at 'allocate_instance()'
 
-  object_class cls = object_cls;
+  object_class cls;
+  // note. not initialized because of the forward declaration. the actual
+  // definition belongs with game objects. should be valid after constructor
 
   object() {}
   // note. constructor must be defined because the default constructor
@@ -219,11 +259,11 @@ public:
   // returns true if object has died
   // note. regarding classes overriding 'update(...)'
   // after 'update(...)' 'col_with' should be 'nullptr'
-  virtual auto update(const float dt_s) -> bool {
-    dx += ddx * dt_s;
-    dy += ddy * dt_s;
-    x += dx * dt_s;
-    y += dy * dt_s;
+  virtual auto update() -> bool {
+    dx += clk.dt(ddx);
+    dy += clk.dt(ddy);
+    x += clk.dt(dx);
+    y += clk.dt(dy);
 
     // update rendering info
     spr->scr_x = int16_t(x);
@@ -232,6 +272,42 @@ public:
     return false;
   }
 };
+
+static constexpr unsigned object_instance_max_size_B = 256;
+// enough to fit any instance of 'object' class and descendants
+
+using object_store =
+    o1store<object, 255, object_ix, 2, object_instance_max_size_B>;
+// note. 255 because object_ix a.k.a. uint8_t max size is 255
+//       instance size 256 to fit largest sub-class of 'object'
+
+class objects : public object_store {
+public:
+  void update() {
+    object_ix *it = allocated_list();
+    const object_ix len = allocated_list_len();
+    for (object_ix i = 0; i < len; i++, it++) {
+      object *obj = instance(*it);
+      if (obj->update()) {
+        obj->~object();
+        free_instance(obj);
+      }
+    }
+
+    // apply free of objects that have died during update
+    apply_free();
+  }
+} static objects{};
+
+//
+// -------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------
+// ----  game logic  -------------------------------------------------------------------
+// -------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------
+//
+
+enum object_class : uint8_t { hero_cls, bullet_cls, dummy_cls, fragment_cls };
 
 class bullet final : public object {
 public:
@@ -248,8 +324,9 @@ public:
     spr->img = sprite_imgs[1];
   }
 
-  auto update(const float dt_s) -> bool override {
-    if (object::update(dt_s)) {
+  // returns true if object died
+  auto update() -> bool override {
+    if (object::update()) {
       return true;
     }
     if (x <= -float(sprite_width) or x > display_width or
@@ -258,6 +335,34 @@ public:
     }
     if (col_with) {
       Serial.printf("bullet collided\n");
+      return true;
+    }
+    return false;
+  }
+};
+
+class fragment final : public object {
+public:
+  int8_t damage = 1;
+  unsigned long die_at_ms;
+
+  fragment() {
+    cls = fragment_cls;
+
+    col_bits = 4;
+    col_mask = 0;
+
+    spr = sprites.allocate_instance();
+    spr->obj = this;
+    spr->img = sprite_imgs[2];
+  }
+
+  // returns true if object died
+  auto update() -> bool override {
+    if (object::update()) {
+      return true;
+    }
+    if (clk.now_ms() > die_at_ms) {
       return true;
     }
     return false;
@@ -299,8 +404,9 @@ public:
     sprites.free_instance(spr_right);
   }
 
-  auto update(const float dt_s) -> bool override {
-    if (object::update(dt_s)) {
+  // returns true if object died
+  auto update() -> bool override {
+    if (object::update()) {
       return true;
     }
 
@@ -310,6 +416,7 @@ public:
         health -= blt->damage;
         Serial.printf("hero health: %d\n", health);
         if (health <= 0) {
+          create_fragments();
           return true;
         }
       }
@@ -326,14 +433,34 @@ public:
 
     return false;
   }
+
+private:
+  static constexpr float frag_speed = 200;
+  static constexpr unsigned frag_count = 16;
+
+  void create_fragments() {
+    for (unsigned i = 0; i < frag_count; i++) {
+      if (not objects.can_allocate()) {
+        break;
+      }
+      fragment *frg = new (objects.allocate_instance()) fragment{};
+      frg->die_at_ms = clk.now_ms() + 500;
+      frg->x = x;
+      frg->y = y;
+      frg->dx = frag_speed * rand() / RAND_MAX - frag_speed / 2;
+      frg->dy = frag_speed * rand() / RAND_MAX - frag_speed / 2;
+      frg->ddx = frag_speed * rand() / RAND_MAX - frag_speed / 2;
+      frg->ddy = frag_speed * rand() / RAND_MAX - frag_speed / 2;
+    }
+  }
 };
 
 class dummy final : public object {
 public:
   dummy() { cls = dummy_cls; }
 
-  auto update(const float dt_s) -> bool override {
-    if (object::update(dt_s)) {
+  auto update() -> bool override {
+    if (object::update()) {
       return true;
     }
     if (col_with) {
@@ -346,27 +473,118 @@ public:
   }
 };
 
-using object_store = o1store<object, 255, object_ix, 2, 256>;
-// note. 255 because object_ix a.k.a. uint8_t max size is 255
-//       instance size 256 to fit largest sub-class of 'object'
+// tile map controls
+// scrolling from right to left / down up
+static float tile_map_x = tiles_map_width * tile_width - display_width;
+static float tile_map_dx = -16;
+static float tile_map_y = 1;
+static float tile_map_dy = 1;
 
-class objects : public object_store {
+// callback after frame has been rendered
+static void on_after_frame() {
+  // update x position in pixels in the tile map
+  tile_map_x += clk.dt(tile_map_dx);
+  if (tile_map_x < 0) {
+    tile_map_x = 0;
+    tile_map_dx = -tile_map_dx;
+  } else if (tile_map_x > (tiles_map_width * tile_width - display_width)) {
+    tile_map_x = tiles_map_width * tile_width - display_width;
+    tile_map_dx = -tile_map_dx;
+  }
+  // update y position in pixels in the tile map
+  tile_map_y += clk.dt(tile_map_dy);
+  // Serial.printf("x=%f  y=%f  dy=%f\n", x, y, dy_per_s);
+  if (tile_map_y < 0) {
+    Serial.printf("y < 0\n");
+    tile_map_y = 0;
+    tile_map_dy = -tile_map_dy;
+  } else if (tile_map_y > (tiles_map_height * tile_height - display_height)) {
+    tile_map_y = tiles_map_height * tile_height - display_height;
+    tile_map_dy = -tile_map_dy;
+  }
+}
+
+void setup_scene() {
+  hero *hro = new (objects.allocate_instance()) hero{};
+  hro->x = 250;
+  hro->y = 100;
+
+  bullet *blt = new (objects.allocate_instance()) bullet{};
+  blt->x = 50;
+  blt->y = 100;
+  blt->dx = 40;
+}
+
+// void setup_scene() {
+//   float x = -24, y = -24;
+//   for (object_ix i = 0; i < objects.all_list_len(); i++) {
+//     dummy *obj = new (objects.allocate_instance()) dummy{};
+//     sprite *spr = sprites.allocate_instance();
+//     const object_ix type = i % 2;
+//     spr->img = sprite_imgs[type];
+//     spr->obj = obj;
+//     obj->spr = spr;
+//     if (type == 0) {
+//       // if square
+//       // set collision bit 1
+//       obj->col_bits = 1;
+//       // interested in collision with
+//       // collision bit 1 or 2 set
+//       obj->col_mask = 3;
+//       // 'squares' react to collisions with 'squares' and 'bullets'
+//     } else {
+//       // if square
+//       // set collision bit 2
+//       obj->col_bits = 2;
+//       // interested in collision with
+//       // collision bit 2 set
+//       obj->col_mask = 2;
+//       // 'bullets' react to collisions with 'bullets'
+//     }
+//     obj->x = x;
+//     obj->y = y;
+//     obj->dx = 0.5f;
+//     obj->dy = 2.0f - float(rand() % 4);
+//     x += 24;
+//     if (x > display_width) {
+//       x = -24;
+//       y += 24;
+//     }
+//   }
+// }
+
+class controller {
+  unsigned long last_fire_ms = 0;
+
 public:
-  void update(const float dt_s) {
-    object_ix *it = allocated_list();
-    const object_ix len = allocated_list_len();
-    for (object_ix i = 0; i < len; i++, it++) {
-      object *obj = instance(*it);
-      if (obj->update(dt_s)) {
-        obj->~object();
-        free_instance(obj);
+  void on_touch(int16_t x, int16_t y, int16_t z) {
+    const int x_relative_center = x - 4096 / 2;
+    constexpr float dx_factor = 200.0f / (4096 / 2);
+    tile_map_dx = dx_factor * x_relative_center;
+    const float click_y = y * display_height / 4096;
+    // Serial.printf("touch x=%d  y=%d  z=%d  click_y=%f  dx=%f\n", pt.x, pt.y,
+    //               pt.z, click_y, dx_per_s);
+
+    // fire eight times a second
+    if (clk.now_ms() - last_fire_ms > 125) {
+      last_fire_ms = clk.now_ms();
+      if (objects.can_allocate()) {
+        bullet *blt = new (objects.allocate_instance()) bullet{};
+        // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
+        blt->x = 50;
+        blt->y = click_y;
+        blt->dx = 40;
       }
     }
-
-    // apply free of objects that have died during update
-    apply_free();
   }
-} static objects{};
+} static controller{};
+
+//
+// -------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------
+//
 
 // pixel precision collision detection between on screen sprites
 // allocated in setup
@@ -380,50 +598,6 @@ static uint16_t *dma_buf_1;
 static uint16_t *dma_buf_2;
 static constexpr unsigned dma_buf_size =
     sizeof(uint16_t) * display_width * tile_height;
-
-// scrolling from right to left / down up
-static float x = tiles_map_width * tile_width - display_width;
-static float dx_per_s = -16;
-static float y = 1;
-static float dy_per_s = 1;
-static unsigned long last_fire_ms = 0;
-
-class fps {
-  unsigned interval_ms_ = 5000;
-  unsigned frames_rendered_in_interval_ = 0;
-  unsigned long last_update_ms_ = 0;
-  unsigned long now_ms_ = 0;
-  unsigned long prv_now_ms_ = 0;
-  unsigned current_fps_ = 0;
-  float dt_s_ = 0;
-
-public:
-  void init(const unsigned long now_ms) {
-    last_update_ms_ = prv_now_ms_ = now_ms;
-  }
-
-  auto on_frame(const unsigned long now_ms) -> bool {
-    now_ms_ = now_ms;
-    dt_s_ = (now_ms - prv_now_ms_) / 1000.0f;
-    prv_now_ms_ = now_ms;
-    frames_rendered_in_interval_++;
-    const unsigned long dt_ms = now_ms - last_update_ms_;
-    if (dt_ms >= interval_ms_) {
-      current_fps_ = frames_rendered_in_interval_ * 1000 / dt_ms;
-      frames_rendered_in_interval_ = 0;
-      last_update_ms_ = now_ms;
-      return true;
-    }
-    return false;
-  }
-
-  inline auto get() const -> unsigned { return current_fps_; }
-
-  inline auto now_ms() const -> unsigned long { return now_ms_; }
-
-  inline auto dt_s() const -> float { return dt_s_; }
-
-} static fps{};
 
 // clang-format off
 // note. not formatted because compiler gets confused and issues invalid error
@@ -620,57 +794,6 @@ static void render(const unsigned x, const unsigned y) {
   }
 }
 
-// void setup_scene() {
-//   hero *hro = new (objects.allocate_instance()) hero{};
-//   // Serial.printf("hero alloc_ix %u\n", hro.alloc_ix);
-//   hro->x = 250;
-//   hro->y = 100;
-
-//   bullet *blt = new (objects.allocate_instance()) bullet{};
-//   // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
-//   blt->x = 50;
-//   blt->y = 100;
-//   blt->dx = 40;
-// }
-
-void setup_scene() {
-  float x = -24, y = -24;
-  for (object_ix i = 0; i < objects.all_list_len(); i++) {
-    dummy *obj = new (objects.allocate_instance()) dummy{};
-    sprite *spr = sprites.allocate_instance();
-    const object_ix type = i % 2;
-    spr->img = sprite_imgs[type];
-    spr->obj = obj;
-    obj->spr = spr;
-    if (type == 0) {
-      // if square
-      // set collision bit 1
-      obj->col_bits = 1;
-      // interested in collision with
-      // collision bit 1 or 2 set
-      obj->col_mask = 3;
-      // 'squares' react to collisions with 'squares' and 'bullets'
-    } else {
-      // if square
-      // set collision bit 2
-      obj->col_bits = 2;
-      // interested in collision with
-      // collision bit 2 set
-      obj->col_mask = 2;
-      // 'bullets' react to collisions with 'bullets'
-    }
-    obj->x = x;
-    obj->y = y;
-    obj->dx = 0.5f;
-    obj->dy = 2.0f - float(rand() % 4);
-    x += 24;
-    if (x > display_width) {
-      x = -24;
-      y += 24;
-    }
-  }
-}
-
 void setup(void) {
   Serial.begin(115200);
   sleep(1); // arbitrary wait 1 second for serial to connect
@@ -771,44 +894,26 @@ void setup(void) {
   setup_scene();
 
   // initiate frames-per-second and dt keeper
-  fps.init(millis());
+  clk.init(millis());
 }
 
 void loop() {
   // frames per second update
-  if (fps.on_frame(millis())) {
-    Serial.printf("t=%lu  fps=%u  ldr=%u  objs=%u  sprs=%u\n", fps.now_ms(),
-                  fps.get(), analogRead(ldr_pin), objects.allocated_list_len(),
+  if (clk.on_frame(millis())) {
+    Serial.printf("t=%lu  fps=%u  ldr=%u  objs=%u  sprs=%u\n", clk.now_ms(),
+                  clk.fps(), analogRead(ldr_pin), objects.allocated_list_len(),
                   sprites.allocated_list_len());
   }
 
   // check touch screen
   if (touch_screen.tirqTouched() and touch_screen.touched()) {
     const TS_Point pt = touch_screen.getPoint();
-    const int x_relative_center = pt.x - 4096 / 2;
-    constexpr float dx_factor = 200.0f / (4096 / 2);
-    dx_per_s = dx_factor * x_relative_center;
-    const float click_y = pt.y * display_height / 4096;
-    // Serial.printf("touch x=%d  y=%d  z=%d  click_y=%f  dx=%f\n", pt.x, pt.y,
-    //               pt.z, click_y, dx_per_s);
-
-    // fire eight times a second
-    if (fps.now_ms() - last_fire_ms > 125) {
-      last_fire_ms = fps.now_ms();
-      if (objects.can_allocate()) {
-        bullet *blt = new (objects.allocate_instance()) bullet{};
-        // Serial.printf("bullet alloc_ix %u\n", blt.alloc_ix);
-        blt->x = 50;
-        blt->y = click_y;
-        blt->dx = 40;
-      }
-    }
+    controller.on_touch(pt.x, pt.y, pt.z);
   }
 
-  // Serial.printf("t=%lu\n", millis());
+  objects.update();
 
-  objects.update(fps.dt_s());
-
+  // apply free on sprites freed during objects.update()
   sprites.apply_free();
 
   // clear collisions map
@@ -816,27 +921,9 @@ void loop() {
 
   // render tiles, sprites and collision map
   display.startWrite();
-  render(unsigned(x), unsigned(y));
+  render(unsigned(tile_map_x), unsigned(tile_map_y));
   display.endWrite();
 
-  // update x position in pixels in the tile map
-  x += dx_per_s * fps.dt_s();
-  if (x < 0) {
-    x = 0;
-    dx_per_s = -dx_per_s;
-  } else if (x > (tiles_map_width * tile_width - display_width)) {
-    x = tiles_map_width * tile_width - display_width;
-    dx_per_s = -dx_per_s;
-  }
-  // update y position in pixels in the tile map
-  y += dy_per_s * fps.dt_s();
-  // Serial.printf("x=%f  y=%f  dy=%f\n", x, y, dy_per_s);
-  if (y < 0) {
-    Serial.printf("y < 0\n");
-    y = 0;
-    dy_per_s = -dy_per_s;
-  } else if (y > (tiles_map_height * tile_height - display_height)) {
-    y = tiles_map_height * tile_height - display_height;
-    dy_per_s = -dy_per_s;
-  }
+  // game logic hook
+  on_after_frame();
 }

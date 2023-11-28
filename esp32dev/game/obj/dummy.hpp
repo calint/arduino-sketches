@@ -4,7 +4,7 @@
 
 class dummy final : public object {
 public:
-  dummy() { cls = dummy_cls; }
+  dummy() : object{dummy_cls} {}
 
   auto update() -> bool override {
     if (object::update()) {

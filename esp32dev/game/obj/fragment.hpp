@@ -7,9 +7,7 @@ public:
   int8_t damage = 1;
   unsigned long die_at_ms;
 
-  fragment() {
-    cls = fragment_cls;
-
+  fragment() : object{fragment_cls} {
     col_bits = 4;
     col_mask = 0;
 

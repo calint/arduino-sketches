@@ -6,9 +6,7 @@ class bullet final : public object {
 public:
   int8_t damage = 1;
 
-  bullet() {
-    cls = bullet_cls;
-
+  bullet() : object{bullet_cls} {
     col_bits = 2;
     col_mask = 1;
 

@@ -163,7 +163,7 @@ using collision_bits = unsigned;
 // used by 'object' for collision detection interest flags
 
 enum object_class : uint8_t;
-// enumeration of classes of 'object'
+// enum declared in "game/defs.hpp" defining the game objects
 
 class object {
 public:
@@ -185,11 +185,9 @@ public:
   // note. no default value since it would overwrite the 'o1store' assigned
   // value at 'allocate_instance()'
 
-  object_class cls;
-  // note. not initialized because of the forward declaration. the actual
-  // definition belongs with game objects. should be valid after constructor
+  const object_class cls;
 
-  object() {}
+  object(object_class c) : cls{c} {}
   // note. constructor must be defined because the default constructor
   // overwrites the 'o1store' assigned 'alloc_ix' at the 'new in place'
   //

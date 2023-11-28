@@ -11,9 +11,7 @@ class hero final : public object {
   int16_t health = 10;
 
 public:
-  hero() {
-    cls = hero_cls;
-
+  hero() : object{hero_cls} {
     col_bits = 1;
     col_mask = 3;
 

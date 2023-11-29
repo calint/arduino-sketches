@@ -1,5 +1,7 @@
 #pragma once
 #include "../preamble.hpp"
+#include "game.hpp"
+
 #include "objects/bullet.hpp"
 #include "objects/dummy.hpp"
 #include "objects/hero.hpp"
@@ -12,7 +14,7 @@ static void setup_scene() {
   tile_map_dy = 1;
 
   hero *hro = new (objects.allocate_instance()) hero{};
-  hro->x = 250;
+  hro->x = 300;
   hro->y = 100;
 
   bullet *blt = new (objects.allocate_instance()) bullet{};
@@ -104,5 +106,11 @@ static void on_after_frame() {
   } else if (tile_map_y > (tile_map_height * tile_height - display_height)) {
     tile_map_y = tile_map_height * tile_height - display_height;
     tile_map_dy = -tile_map_dy;
+  }
+
+  if (not game.hero_is_alive) {
+    hero *hro = new (objects.allocate_instance()) hero{};
+    hro->x = 300;
+    hro->y = float(rand()) * display_height / RAND_MAX;
   }
 }

@@ -1,5 +1,7 @@
 #pragma once
+// include first section of the program
 #include "../../preamble.hpp"
+// include definitions shared by all objects and game engine
 #include "../defs.hpp"
 
 class fragment final : public object {

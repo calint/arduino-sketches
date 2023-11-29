@@ -1,7 +1,11 @@
 #pragma once
+// include first section of the program
 #include "../../preamble.hpp"
+// include definitions shared by all objects and game engine
 #include "../defs.hpp"
-
+// include game logic
+#include "../game.hpp"
+// include dependent objects
 #include "bullet.hpp"
 #include "fragment.hpp"
 
@@ -26,6 +30,8 @@ public:
     spr_right = sprites.allocate_instance();
     spr_right->obj = this;
     spr_right->img = sprite_imgs[0];
+
+    game.hero_is_alive = true;
   }
 
   ~hero() override {
@@ -35,6 +41,8 @@ public:
     // free sprite instances
     sprites.free_instance(spr_left);
     sprites.free_instance(spr_right);
+
+    game.hero_is_alive = false;
   }
 
   // returns true if object died

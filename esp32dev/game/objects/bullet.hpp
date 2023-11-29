@@ -22,8 +22,8 @@ public:
     if (object::update()) {
       return true;
     }
-    if (x <= -float(sprite_width) or x > display_width or
-        y <= -float(sprite_height) or y > display_height) {
+    if (x <= -float(sprite_width) or x >= display_width or
+        y <= -float(sprite_height) or y >= display_height) {
       return true;
     }
     if (col_with) {

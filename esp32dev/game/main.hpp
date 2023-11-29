@@ -67,7 +67,7 @@ static void setup_scene() {
 //   }
 // }
 
-class controller {
+class controller final {
   unsigned long last_fire_ms = 0;
 
 public:

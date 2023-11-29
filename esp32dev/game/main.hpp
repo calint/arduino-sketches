@@ -1,7 +1,7 @@
 #pragma once
 // contains setup code, controller abstraction and hook for logic after a
 // frame has been rendered solving circular references between 'game' and
-// 'objects'
+// game objects
 
 // include first section of the program
 #include "../preamble.hpp"

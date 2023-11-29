@@ -1,7 +1,13 @@
 #pragma once
-#include "../preamble.hpp"
-#include "game.hpp"
+// contains setup code, controller abstraction and hook for logic after a
+// frame has been rendered solving circular references between 'game' and
+// 'objects'
 
+// include first section of the program
+#include "../preamble.hpp"
+// include game logic
+#include "game.hpp"
+// include objects
 #include "objects/bullet.hpp"
 #include "objects/dummy.hpp"
 #include "objects/hero.hpp"

@@ -5,7 +5,7 @@
 #include "../defs.hpp"
 // include game logic
 #include "../game.hpp"
-// include dependent objects
+// include dependencies
 #include "bullet.hpp"
 #include "fragment.hpp"
 

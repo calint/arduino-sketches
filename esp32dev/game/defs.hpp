@@ -2,20 +2,24 @@
 // constants and definitions used by the engine and game objects
 
 // number of different sprite images
+// defined in 'resources/sprite_imgs.hpp'
 static constexpr unsigned sprite_imgs_count = 256;
 
-// number of different tiles images (maximum 256)
+// number of different tile images (maximum 256)
+// defined in 'resources/tile_imgs.hpp'
 static constexpr unsigned tile_count = 256;
 
 // tile map dimension
+// defined in 'resources/tile_map.hpp'
 static constexpr unsigned tile_map_width = 320;
 static constexpr unsigned tile_map_height = 17;
 
+// size that fits any instance of game object
 static constexpr unsigned object_instance_max_size_B = 256;
-// enough to fit any instance of game object
 
-enum object_class : uint8_t { hero_cls, bullet_cls, dummy_cls, fragment_cls };
 // enumeration of game object classes
+// defined in 'objects/*'
+enum object_class : uint8_t { hero_cls, bullet_cls, dummy_cls, fragment_cls };
 
 // collision bits
 static constexpr collision_bits cb_none = 0;

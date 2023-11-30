@@ -1,7 +1,17 @@
 #pragma once
 #include "o1store.hpp"
 
+using collision_bits = unsigned;
+// used by 'object' for collision detection interest flags
+
+// including defs for engine and game
+#include "game/defs.hpp"
+
+// palette used to convert uint8_t to uint16_t rgb 565
+// lower and higher byte swapped (red being the highest bits)
+static constexpr uint16_t palette[256]{
 #include "game/resources/palette.hpp"
+};
 
 // tile dimensions
 static constexpr unsigned tile_width = 16;
@@ -21,8 +31,6 @@ static constexpr unsigned tile_height_shift = 4;
 // 'tile_height'
 static constexpr unsigned tile_height_and = 15;
 
-// number of different tiles
-static constexpr unsigned tile_count = 256;
 using tile_ix = uint8_t;
 
 class tile {
@@ -31,10 +39,6 @@ public:
 } static constexpr tiles[tile_count]{
 #include "game/resources/tile_imgs.hpp"
 };
-
-// tile map dimension
-static constexpr unsigned tile_map_width = 320;
-static constexpr unsigned tile_map_height = 17;
 
 class tile_map {
 public:
@@ -56,10 +60,13 @@ static constexpr unsigned sprite_height = 16;
 static constexpr int16_t sprite_width_neg = -int16_t(sprite_width);
 // used when rendering
 
+static constexpr unsigned sprite_imgs_count = 256;
+
 // images used by sprites
-static constexpr uint8_t sprite_imgs[256][sprite_width * sprite_height]{
+static constexpr uint8_t sprite_imgs[sprite_imgs_count]
+                                    [sprite_width * sprite_height]{
 #include "game/resources/sprite_imgs.hpp"
-};
+                                    };
 
 using sprite_ix = uint8_t;
 // data type used to index a sprite
@@ -140,9 +147,6 @@ public:
 using object_ix = uint8_t;
 // data type used to index an 'object' in 'o1store'
 
-using collision_bits = unsigned;
-// used by 'object' for collision detection interest flags
-
 enum object_class : uint8_t;
 // enum declared in "game/defs.hpp" defining the game objects
 
@@ -198,8 +202,6 @@ public:
     return false;
   }
 };
-
-#include "game/defs.hpp"
 
 using object_store =
     o1store<object, 255, object_ix, 2, object_instance_max_size_B>;

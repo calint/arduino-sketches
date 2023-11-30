@@ -14,3 +14,10 @@ static constexpr collision_bits cb_enemy_bullet = 1 << 4;
 
 static constexpr unsigned object_instance_max_size_B = 256;
 // enough to fit any instance of game object
+
+// number of different tiles (maximum 256)
+static constexpr unsigned tile_count = 256;
+
+// tile map dimension
+static constexpr unsigned tile_map_width = 320;
+static constexpr unsigned tile_map_height = 17;

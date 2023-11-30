@@ -15,7 +15,7 @@
 static void setup_scene() {
   // scrolling from right to left / down up
   tile_map_x = tile_map_width * tile_width - display_width;
-  tile_map_dx = -16;
+  // tile_map_dx = -16;
   tile_map_y = 1;
   tile_map_dy = 1;
 
@@ -29,45 +29,8 @@ static void setup_scene() {
   blt->dx = 40;
 }
 
-// void setup_scene() {
-//   float x = -24, y = -24;
-//   for (object_ix i = 0; i < objects.all_list_len(); i++) {
-//     dummy *obj = new (objects.allocate_instance()) dummy{};
-//     sprite *spr = sprites.allocate_instance();
-//     const object_ix type = i % 2;
-//     spr->img = sprite_imgs[type];
-//     spr->obj = obj;
-//     obj->spr = spr;
-//     if (type == 0) {
-//       // if square
-//       // set collision bit 1
-//       obj->col_bits = 1;
-//       // interested in collision with
-//       // collision bit 1 or 2 set
-//       obj->col_mask = 3;
-//       // 'squares' react to collisions with 'squares' and 'bullets'
-//     } else {
-//       // if square
-//       // set collision bit 2
-//       obj->col_bits = 2;
-//       // interested in collision with
-//       // collision bit 2 set
-//       obj->col_mask = 2;
-//       // 'bullets' react to collisions with 'bullets'
-//     }
-//     obj->x = x;
-//     obj->y = y;
-//     obj->dx = 0.5f;
-//     obj->dy = 2.0f - float(rand() % 4);
-//     x += 24;
-//     if (x > display_width) {
-//       x = -24;
-//       y += 24;
-//     }
-//   }
-// }
-
 unsigned long last_fire_ms = 0;
+// keeps track of when the previous bullet was fired
 
 // callback when screen is touched, happens before 'update'
 static void main_on_touch_screen(int16_t x, int16_t y, int16_t z) {
@@ -75,8 +38,6 @@ static void main_on_touch_screen(int16_t x, int16_t y, int16_t z) {
   constexpr float dx_factor = 200.0f / (4096 / 2);
   tile_map_dx = dx_factor * x_relative_center;
   const float click_y = y * display_height / 4096;
-  // Serial.printf("touch x=%d  y=%d  z=%d  click_y=%f  dx=%f\n", pt.x, pt.y,
-  //               pt.z, click_y, dx_per_s);
 
   // fire eight times a second
   if (clk.now_ms() - last_fire_ms > 125) {

@@ -415,6 +415,8 @@ void loop() {
     controller.on_touch(pt.x, pt.y, pt.z);
   }
 
+  //? most of the code below belongs to 'engine.hpp'
+  
   objects.update();
 
   // apply freed sprites during 'objects.update()'

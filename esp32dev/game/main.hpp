@@ -1,5 +1,5 @@
 #pragma once
-// contains setup code, controller abstraction and hook for logic after a
+// contains setup code, controller abstraction and callback for logic after a
 // frame has been rendered solving circular references between 'game' and
 // game objects
 

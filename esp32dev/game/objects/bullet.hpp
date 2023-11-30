@@ -1,8 +1,5 @@
 #pragma once
-// include first section of the program
 #include "../../engine.hpp"
-// include definitions shared by all objects and game engine
-#include "../defs.hpp"
 
 class bullet final : public object {
 public:

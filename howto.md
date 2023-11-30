@@ -29,3 +29,6 @@ type "help" to get started
 * task ">Arduino: Board Config"
   - select "ESP32 Dev Module (esp32)"
 * install libraries (plug-in installs libraries in ~/Arduino/libraries)
+  - TFT_eSPI by Bodmer 2.5.31
+  - XPT2046_Touchscreen by Paul Stoffregen 1.4.0
+* replace User_Setup.h in ~/Arduino/libraries/TFT_eSPI/ with provided file

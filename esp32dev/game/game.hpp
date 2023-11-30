@@ -1,5 +1,4 @@
 #pragma once
-// contains game logic
 // imported by objects that access the game state
 
 class game final {

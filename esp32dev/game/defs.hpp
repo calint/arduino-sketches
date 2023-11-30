@@ -1,5 +1,5 @@
 #pragma once
-// contains constants and definitions used by the engine and game objects
+// constants and definitions used by the engine and game objects
 
 enum object_class : uint8_t { hero_cls, bullet_cls, dummy_cls, fragment_cls };
 // enumeration of game object classes

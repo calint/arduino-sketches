@@ -1,13 +1,11 @@
 #pragma once
-// contains setup code, controller abstraction and callback for logic after a
-// frame has been rendered solving circular references between 'game' and
-// game objects
+// setup code, touch screen callback, frame completed callback
+// solves circular references between 'game' and game objects
 
-// include first section of the program
 #include "../engine.hpp"
-// include game logic
+
 #include "game.hpp"
-// include objects
+
 #include "objects/bullet.hpp"
 #include "objects/dummy.hpp"
 #include "objects/hero.hpp"

@@ -1,11 +1,14 @@
 #pragma once
 // constants and definitions used by the engine and game objects
 
-// number of different sprite images
+static constexpr uint8_t display_orientation = 0;
+// 0: vertical, 1: horizontal
+
+// number of sprite images
 // defined in 'resources/sprite_imgs.hpp'
 static constexpr unsigned sprite_imgs_count = 256;
 
-// number of different tile images (maximum 256)
+// number of tile images (maximum 256)
 // defined in 'resources/tile_imgs.hpp'
 static constexpr unsigned tile_count = 256;
 

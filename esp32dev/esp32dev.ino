@@ -377,10 +377,10 @@ void setup(void) {
   // start the SPI for the touch screen and init the TS library
   spi.begin(xpt2046_clk, xpt2046_miso, xpt2046_mosi, xpt2046_cs);
   touch_screen.begin(spi);
-  touch_screen.setRotation(0);
+  touch_screen.setRotation(display_orientation);
 
   display.init();
-  display.setRotation(0);
+  display.setRotation(display_orientation);
   display.initDMA(true);
 
 #ifdef USE_WIFI

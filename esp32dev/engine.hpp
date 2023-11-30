@@ -60,8 +60,6 @@ static constexpr unsigned sprite_height = 16;
 static constexpr int16_t sprite_width_neg = -int16_t(sprite_width);
 // used when rendering
 
-static constexpr unsigned sprite_imgs_count = 256;
-
 // images used by sprites
 static constexpr uint8_t sprite_imgs[sprite_imgs_count]
                                     [sprite_width * sprite_height]{

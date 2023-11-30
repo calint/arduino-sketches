@@ -53,6 +53,9 @@
 // note. design decision of 'hpp' source files
 // the program is one file split into logical sections using includes
 // directory 'game' contains the user code that interfaces with the engine code
+// order of include and content of 'defs.hpp', 'game.hpp', 'main.hpp' solves
+// circular references and gives user the necessary callbacks to interface with
+// engine
 
 // engine code excluding the rendering
 #include "engine.hpp"

@@ -11,7 +11,7 @@
 #include "objects/hero.hpp"
 
 static void setup_scene() {
-  // scrolling from right to left / down up
+  // scrolling vertically from bottom up
   tile_map_x = 0;
   tile_map_y = tile_map_height * tile_height - display_height;
   tile_map_dy = -16;

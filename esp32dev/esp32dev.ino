@@ -50,13 +50,48 @@
 // allocated at runtime as heap.
 // -- https://stackoverflow.com/questions/71085927/how-to-extend-esp32-heap-size
 
+// note. design decision of 'hpp' source files
+// the program is one file split into logical sections using includes
+// directory 'game' contains the user code that interfaces with the engine code
+
+// engine code excluding the rendering
+#include "engine.hpp"
+
+// main entry file to user code
 #include "game/main.hpp"
 
-// pixel precision collision detection between on screen sprites
-// allocated in setup
-static sprite_ix *collision_map;
-static constexpr unsigned collision_map_size =
-    sizeof(sprite_ix) * display_width * display_height;
+// platform specific definitions and objects
+#include <SPI.h>
+#include <TFT_eSPI.h>
+#include <XPT2046_Touchscreen.h>
+#include <limits>
+
+// #define USE_WIFI
+#ifdef USE_WIFI
+#include "WiFi.h"
+#include "secrets.h"
+#endif
+
+// ldr (light dependant resistor)
+// analog read of pin gives: 0 for full brightness, higher values is darker
+static constexpr uint8_t ldr_pin = 34;
+
+// rgb led
+static constexpr uint8_t cyd_led_blue = 17;
+static constexpr uint8_t cyd_led_red = 4;
+static constexpr uint8_t cyd_led_green = 16;
+
+// setting up screen and touch from:
+// https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/Examples/Basics/2-TouchTest/2-TouchTest.ino
+static constexpr uint8_t xpt2046_irq = 36;
+static constexpr uint8_t xpt2046_mosi = 32; // Master Out Slave In
+static constexpr uint8_t xpt2046_miso = 39; // Master In Slave Out
+static constexpr uint8_t xpt2046_clk = 25;  // Clock
+static constexpr uint8_t xpt2046_cs = 33;   // Chip Select
+
+static SPIClass spi{HSPI};
+static XPT2046_Touchscreen touch_screen{xpt2046_cs, xpt2046_irq};
+static TFT_eSPI display{};
 
 // buffers for rendering a chunk while the other is transferred to the screen
 // using DMA. allocated in setup

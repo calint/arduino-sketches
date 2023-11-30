@@ -11,8 +11,8 @@ static constexpr unsigned tile_count = 256;
 
 // tile map dimension
 // defined in 'resources/tile_map.hpp'
-static constexpr unsigned tile_map_width = 320;
-static constexpr unsigned tile_map_height = 17;
+static constexpr unsigned tile_map_width = 15;
+static constexpr unsigned tile_map_height = 320;
 
 // size that fits any instance of game object
 static constexpr unsigned object_instance_max_size_B = 256;

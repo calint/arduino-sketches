@@ -66,11 +66,11 @@ public:
     }
 
     // set position of additional sprites
-    spr_left->scr_x = spr->scr_x;
-    spr_left->scr_y = spr->scr_y + sprite_height;
+    spr_left->scr_x = spr->scr_x - sprite_width;
+    spr_left->scr_y = spr->scr_y;
 
-    spr_right->scr_x = spr->scr_x;
-    spr_right->scr_y = spr->scr_y - sprite_height;
+    spr_right->scr_x = spr->scr_x + sprite_width;
+    spr_right->scr_y = spr->scr_y;
 
     return false;
   }

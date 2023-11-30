@@ -250,6 +250,7 @@ static void render(const unsigned x, const unsigned y) {
     display.setAddrWindow(0, frame_y, display_width, tile_height_minus_dy);
     display.pushPixelsDMA(dma_buf, display_width * tile_height_minus_dy);
     tile_y++;
+    tiles_map_row_ptr += tile_map_width;
     frame_y += tile_height_minus_dy;
   }
   // for each row of full tiles
@@ -376,10 +377,10 @@ void setup(void) {
   // start the SPI for the touch screen and init the TS library
   spi.begin(xpt2046_clk, xpt2046_miso, xpt2046_mosi, xpt2046_cs);
   touch_screen.begin(spi);
-  touch_screen.setRotation(1);
+  touch_screen.setRotation(0);
 
   display.init();
-  display.setRotation(1);
+  display.setRotation(0);
   display.initDMA(true);
 
 #ifdef USE_WIFI

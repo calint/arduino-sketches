@@ -12,39 +12,48 @@
 
 static void setup_scene() {
   // scrolling from right to left / down up
-  tile_map_x = tile_map_width * tile_width - display_width;
-  // tile_map_dx = -16;
-  tile_map_y = 1;
-  tile_map_dy = 1;
+  tile_map_x = 0;
+  tile_map_y = tile_map_height * tile_height - display_height;
+  tile_map_dy = -16;
+  // tile_map_y = 0;
+  // tile_map_dy = 1;
 
   hero *hro = new (objects.allocate_instance()) hero{};
-  hro->x = 300;
-  hro->y = 100;
+  hro->x = 100;
+  hro->y = 300;
 
   bullet *blt = new (objects.allocate_instance()) bullet{};
-  blt->x = 50;
-  blt->y = 100;
-  blt->dx = 40;
+  blt->x = 100;
+  blt->y = 50;
+  blt->dy = 40;
 }
+
+// calibration of touch screen
+constexpr int16_t touch_screen_value_min = 300;
+constexpr int16_t touch_screen_value_max = 3600;
+constexpr int16_t touch_screen_value_range =
+    touch_screen_value_max - touch_screen_value_min;
 
 unsigned long last_fire_ms = 0;
 // keeps track of when the previous bullet was fired
 
 // callback when screen is touched, happens before 'update'
 static void main_on_touch_screen(int16_t x, int16_t y, int16_t z) {
-  const int x_relative_center = x - 4096 / 2;
-  constexpr float dx_factor = 200.0f / (4096 / 2);
-  tile_map_dx = dx_factor * x_relative_center;
-  const float click_y = y * display_height / 4096;
+  const int y_relative_center =
+      y - touch_screen_value_min - touch_screen_value_range / 2;
+  constexpr float dy_factor = 200.0f / (touch_screen_value_range / 2);
+  tile_map_dy = dy_factor * y_relative_center;
 
   // fire eight times a second
   if (clk.now_ms() - last_fire_ms > 125) {
+    Serial.printf("touch  x=%u  y=%u\n", x, y);
     last_fire_ms = clk.now_ms();
     if (objects.can_allocate()) {
       bullet *blt = new (objects.allocate_instance()) bullet{};
-      blt->x = 50;
-      blt->y = click_y;
-      blt->dx = 100;
+      blt->x = (x - touch_screen_value_min) * display_width /
+               touch_screen_value_range;
+      blt->y = 50;
+      blt->dy = 100;
     }
   }
 }
@@ -72,7 +81,7 @@ static void main_on_after_frame() {
 
   if (not game.hero_is_alive) {
     hero *hro = new (objects.allocate_instance()) hero{};
-    hro->x = 300;
-    hro->y = float(rand()) * display_height / RAND_MAX;
+    hro->x = float(rand()) * display_width / RAND_MAX;
+    hro->y = 300;
   }
 }

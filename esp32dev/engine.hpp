@@ -93,8 +93,8 @@ using sprites_store = o1store<sprite, 255, sprite_ix, 1>;
 static sprites_store sprites{};
 
 // display dimensions
-static constexpr unsigned display_width = 320;
-static constexpr unsigned display_height = 240;
+static constexpr unsigned display_width = 240;
+static constexpr unsigned display_height = 320;
 
 // pixel precision collision detection between on screen sprites
 // allocated in setup

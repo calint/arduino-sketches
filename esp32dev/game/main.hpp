@@ -67,34 +67,31 @@ static void setup_scene() {
 //   }
 // }
 
-class controller final {
-  unsigned long last_fire_ms = 0;
+unsigned long last_fire_ms = 0;
 
-public:
-  // callback when screen is touched
-  void on_touch(int16_t x, int16_t y, int16_t z) {
-    const int x_relative_center = x - 4096 / 2;
-    constexpr float dx_factor = 200.0f / (4096 / 2);
-    tile_map_dx = dx_factor * x_relative_center;
-    const float click_y = y * display_height / 4096;
-    // Serial.printf("touch x=%d  y=%d  z=%d  click_y=%f  dx=%f\n", pt.x, pt.y,
-    //               pt.z, click_y, dx_per_s);
+// callback when screen is touched, happens before 'update'
+static void main_on_touch_screen(int16_t x, int16_t y, int16_t z) {
+  const int x_relative_center = x - 4096 / 2;
+  constexpr float dx_factor = 200.0f / (4096 / 2);
+  tile_map_dx = dx_factor * x_relative_center;
+  const float click_y = y * display_height / 4096;
+  // Serial.printf("touch x=%d  y=%d  z=%d  click_y=%f  dx=%f\n", pt.x, pt.y,
+  //               pt.z, click_y, dx_per_s);
 
-    // fire eight times a second
-    if (clk.now_ms() - last_fire_ms > 125) {
-      last_fire_ms = clk.now_ms();
-      if (objects.can_allocate()) {
-        bullet *blt = new (objects.allocate_instance()) bullet{};
-        blt->x = 50;
-        blt->y = click_y;
-        blt->dx = 40;
-      }
+  // fire eight times a second
+  if (clk.now_ms() - last_fire_ms > 125) {
+    last_fire_ms = clk.now_ms();
+    if (objects.can_allocate()) {
+      bullet *blt = new (objects.allocate_instance()) bullet{};
+      blt->x = 50;
+      blt->y = click_y;
+      blt->dx = 100;
     }
   }
-} static controller{};
+}
 
-// callback after frame has been rendered
-static void on_after_frame() {
+// callback after frame has been rendered, happens after 'update'
+static void main_on_after_frame() {
   // update x position in pixels in the tile map
   tile_map_x += clk.dt(tile_map_dx);
   if (tile_map_x < 0) {

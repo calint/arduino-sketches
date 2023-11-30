@@ -223,3 +223,26 @@ public:
     apply_free();
   }
 } static objects{};
+
+// forward declaration of platform specific function
+static void render(const unsigned x, const unsigned y);
+
+// forward declaration of user provided callback
+static void main_on_after_frame();
+
+// update and render the state of the engine
+static void engine_update() {
+  objects.update();
+
+  // apply freed sprites during 'objects.update()'
+  sprites.apply_free();
+
+  // clear collisions map
+  memset(collision_map, sprite_ix_reserved, collision_map_size);
+
+  // render tiles, sprites and collision map
+  render(unsigned(tile_map_x), unsigned(tile_map_y));
+
+  // game logic hook
+  main_on_after_frame();
+}

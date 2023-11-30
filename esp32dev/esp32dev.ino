@@ -207,6 +207,8 @@ static void render_scanline(
 // one tile height buffer, palette, 8-bit tiles from tiles map, 8-bit sprites
 // 31 fps
 static void render(const unsigned x, const unsigned y) {
+  display.startWrite();
+
   const unsigned tile_x = x >> tile_width_shift;
   const unsigned tile_dx = x & tile_width_and;
   const unsigned tile_width_minus_dx = tile_width - tile_dx;
@@ -296,6 +298,8 @@ static void render(const unsigned x, const unsigned y) {
     display.setAddrWindow(0, frame_y, display_width, tile_dy);
     display.pushPixelsDMA(dma_buf, display_width * tile_dy);
   }
+
+  display.endWrite();
 }
 
 void setup(void) {
@@ -412,24 +416,9 @@ void loop() {
   // check touch screen
   if (touch_screen.tirqTouched() and touch_screen.touched()) {
     const TS_Point pt = touch_screen.getPoint();
-    controller.on_touch(pt.x, pt.y, pt.z);
+    // callback
+    main_on_touch_screen(pt.x, pt.y, pt.z);
   }
 
-  //? most of the code below belongs to 'engine.hpp'
-  
-  objects.update();
-
-  // apply freed sprites during 'objects.update()'
-  sprites.apply_free();
-
-  // clear collisions map
-  memset(collision_map, sprite_ix_reserved, collision_map_size);
-
-  // render tiles, sprites and collision map
-  display.startWrite();
-  render(unsigned(tile_map_x), unsigned(tile_map_y));
-  display.endWrite();
-
-  // game logic hook
-  on_after_frame();
+  engine_update();
 }

@@ -1,4 +1,5 @@
 [ ] horizontal, vertical flip of sprite
+[ ] several sets of tiles cycled for animation
 [ ] render_scanline(...) consider looping through allocated sprites instead of all
 [ ] o1store: can_allocate() is not thread safe. remove
 [ ] o1store: hang if overrun?

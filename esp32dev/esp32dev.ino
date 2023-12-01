@@ -400,10 +400,12 @@ void setup(void) {
   // set random seed to get same random every time
   randomSeed(0);
 
-  // initiate frames-per-second and dt keeper
-  clk.init(millis());
+  // initiate clock to current time and frames-per-second calculation to every 2
+  // seconds
+  clk.init(millis(), 2000);
 
-  setup_scene();
+  // callback to user code
+  main_setup();
 }
 
 void loop() {
@@ -421,5 +423,5 @@ void loop() {
     main_on_touch_screen(pt.x, pt.y, pt.z);
   }
 
-  engine_update();
+  engine_loop();
 }

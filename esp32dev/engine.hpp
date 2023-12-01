@@ -113,10 +113,16 @@ class clk {
   float dt_s_ = 0;
 
 public:
-  void init(const unsigned long now_ms) {
+  // called at setup with current time and frames per seconds calculation
+  // interval
+  void init(const unsigned long now_ms,
+            const unsigned interval_of_fps_calculations_ms) {
     last_update_ms_ = prv_now_ms_ = now_ms;
+    interval_ms_ = interval_of_fps_calculations_ms;
   }
 
+  // called before every frame to update state
+  // returns true if new frames per second calculation was done
   auto on_frame(const unsigned long now_ms) -> bool {
     now_ms_ = now_ms;
     dt_s_ = (now_ms - prv_now_ms_) / 1000.0f;
@@ -132,12 +138,17 @@ public:
     return false;
   }
 
+  // returns current frames per second calculated at interval specified at
+  // 'init'
   inline auto fps() const -> unsigned { return current_fps_; }
 
+  // returns current time since boot in milliseconds
   inline auto now_ms() const -> unsigned long { return now_ms_; }
 
+  // returns frame delta time in seconds
   inline auto dt_s() const -> float { return dt_s_; }
 
+  // returns argument multiplied by delta time in seconds for frame
   inline auto dt(float f) const -> float { return f * dt_s_; }
 
 } static clk{};
@@ -228,10 +239,10 @@ public:
 static void render(const unsigned x, const unsigned y);
 
 // forward declaration of user provided callback
-static void main_on_after_frame();
+static void main_on_frame_completed();
 
 // update and render the state of the engine
-static void engine_update() {
+static void engine_loop() {
   objects.update();
 
   // apply freed sprites during 'objects.update()'
@@ -244,5 +255,5 @@ static void engine_update() {
   render(unsigned(tile_map_x), unsigned(tile_map_y));
 
   // game logic hook
-  main_on_after_frame();
+  main_on_frame_completed();
 }

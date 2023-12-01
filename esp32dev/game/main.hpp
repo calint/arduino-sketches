@@ -10,7 +10,7 @@
 #include "objects/dummy.hpp"
 #include "objects/hero.hpp"
 
-static void setup_scene() {
+static void main_setup() {
   // scrolling vertically from bottom up
   tile_map_x = 0;
   tile_map_y = tile_map_height * tile_height - display_height;
@@ -59,7 +59,7 @@ static void main_on_touch_screen(int16_t x, int16_t y, int16_t z) {
 }
 
 // callback after frame has been rendered, happens after 'update'
-static void main_on_after_frame() {
+static void main_on_frame_completed() {
   // update x position in pixels in the tile map
   tile_map_x += clk.dt(tile_map_dx);
   if (tile_map_x < 0) {

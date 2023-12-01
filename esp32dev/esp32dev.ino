@@ -335,18 +335,16 @@ void setup(void) {
   dma_buf_2 = (uint16_t *)malloc(dma_buf_size);
   if (!dma_buf_1 or !dma_buf_2) {
     Serial.printf("!!! could not allocate DMA buffers");
-    while (true) {
-      sleep(60);
-    }
+    while (true)
+      ;
   }
 
   // allocate collision map
   collision_map = (sprite_ix *)malloc(collision_map_size);
   if (!collision_map) {
     Serial.printf("!!! could not allocate collision map");
-    while (true) {
-      sleep(60);
-    }
+    while (true)
+      ;
   }
 
   Serial.printf("------------------- after init ---------------------------\n");

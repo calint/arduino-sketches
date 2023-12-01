@@ -48,11 +48,19 @@ public:
       return true;
     }
 
+    if (x > display_width) {
+      dx = -dx;
+      x = display_width;
+    } else if (x < sprite_width_neg) {
+      dx = -dx;
+      x = sprite_width_neg;
+    }
+
     if (col_with) {
       if (col_with->cls == bullet_cls) {
         bullet *blt = static_cast<bullet *>(col_with);
         health -= blt->damage;
-        Serial.printf("hero health: %d\n", health);
+        // Serial.printf("hero health: %d\n", health);
         if (health <= 0) {
           create_fragments();
           return true;

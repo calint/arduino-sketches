@@ -26,7 +26,7 @@ public:
       return true;
     }
     if (col_with) {
-      Serial.printf("bullet collided\n");
+      // Serial.printf("bullet collided\n");
       if (not objects.can_allocate()) {
         return true;
       }

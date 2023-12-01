@@ -46,7 +46,7 @@ static void main_on_touch_screen(int16_t x, int16_t y, int16_t z) {
 
   // fire eight times a second
   if (clk.now_ms() - last_fire_ms > 125) {
-    Serial.printf("touch  x=%u  y=%u\n", x, y);
+    // Serial.printf("touch  x=%u  y=%u\n", x, y);
     last_fire_ms = clk.now_ms();
     if (objects.can_allocate()) {
       bullet *blt = new (objects.allocate_instance()) bullet{};
@@ -83,5 +83,6 @@ static void main_on_frame_completed() {
     hero *hro = new (objects.allocate_instance()) hero{};
     hro->x = float(rand()) * display_width / RAND_MAX;
     hro->y = 30;
+    hro->dx = float(rand()) * 64 / RAND_MAX;
   }
 }

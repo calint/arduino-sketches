@@ -126,7 +126,7 @@ static void render_scanline(
     const uint8_t *tile_data_ptr =
         tiles[tile_index].data + tile_sub_y_times_tile_width + tile_dx;
     for (unsigned i = tile_dx; i < tile_width; i++) {
-      *render_buf_ptr++ = palette[*tile_data_ptr++];
+      *render_buf_ptr++ = palette_tiles[*tile_data_ptr++];
     }
   }
   // render full tiles
@@ -136,7 +136,7 @@ static void render_scanline(
     const uint8_t *tile_data_ptr =
         tiles[tile_index].data + tile_sub_y_times_tile_width;
     for (unsigned i = 0; i < tile_width; i++) {
-      *render_buf_ptr++ = palette[*tile_data_ptr++];
+      *render_buf_ptr++ = palette_tiles[*tile_data_ptr++];
     }
   }
   if (tile_dx) {
@@ -145,7 +145,7 @@ static void render_scanline(
     const uint8_t *tile_data_ptr =
         tiles[tile_index].data + tile_sub_y_times_tile_width;
     for (unsigned i = 0; i < tile_dx; i++) {
-      *render_buf_ptr++ = palette[*tile_data_ptr++];
+      *render_buf_ptr++ = palette_tiles[*tile_data_ptr++];
     }
   }
 
@@ -186,7 +186,7 @@ static void render_scanline(
       // write pixel from sprite data or skip if 0
       const uint8_t color_ix = *spr_data_ptr++;
       if (color_ix) {
-        *scanline_dst_ptr = palette[color_ix];
+        *scanline_dst_ptr = palette_sprites[color_ix];
         if (*collision_pixel != sprite_ix_reserved) {
           sprite *spr2 = sprites.instance(*collision_pixel);
           object *other_obj = spr2->obj;

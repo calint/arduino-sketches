@@ -9,8 +9,12 @@ using collision_bits = unsigned;
 
 // palette used to convert uint8_t to uint16_t rgb 565
 // lower and higher byte swapped (red being the highest bits)
-static constexpr uint16_t palette[256]{
-#include "game/resources/palette.hpp"
+static constexpr uint16_t palette_tiles[256]{
+#include "game/resources/palette_tiles.hpp"
+};
+
+static constexpr uint16_t palette_sprites[256]{
+#include "game/resources/palette_sprites.hpp"
 };
 
 // tile dimensions

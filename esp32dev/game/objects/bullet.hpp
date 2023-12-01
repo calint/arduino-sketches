@@ -1,6 +1,8 @@
 #pragma once
 #include "../../engine.hpp"
 
+#include "fragment.hpp"
+
 class bullet final : public object {
 public:
   int8_t damage = 1;
@@ -25,6 +27,13 @@ public:
     }
     if (col_with) {
       Serial.printf("bullet collided\n");
+      if (not objects.can_allocate()) {
+        return true;
+      }
+      fragment *frg = new (objects.allocate_instance()) fragment{};
+      frg->die_at_ms = clk.now_ms() + 250;
+      frg->x = x;
+      frg->y = y;
       return true;
     }
     return false;

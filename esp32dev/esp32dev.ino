@@ -311,15 +311,23 @@ void setup(void) {
 
   // heap_caps_dump_all();
   Serial.printf("\n\n");
-  Serial.printf("------------------- info ---------------------------------\n");
+  Serial.printf("------------------- platform -----------------------------\n");
   Serial.printf("        chip model: %s\n", ESP.getChipModel());
-  Serial.printf("            screen: %d x %d px\n", display_width,
+  Serial.printf("            screen: %u x %u px\n", display_width,
                 display_height);
-  Serial.printf("     free heap mem: %d B\n", ESP.getFreeHeap());
-  Serial.printf("largest free block: %d B\n", ESP.getMaxAllocHeap());
+  Serial.printf("     free heap mem: %u B\n", ESP.getFreeHeap());
+  Serial.printf("largest free block: %u B\n", ESP.getMaxAllocHeap());
 #ifdef USE_WIFI
   Serial.printf("              WiFi: on\n");
 #endif
+  Serial.printf("------------------- size of-------------------------------\n");
+  Serial.printf("              bool: %zu B\n", sizeof(bool));
+  Serial.printf("              char: %zu B\n", sizeof(char));
+  Serial.printf("               int: %zu B\n", sizeof(int));
+  Serial.printf("              long: %zu B\n", sizeof(long));
+  Serial.printf("         long long: %zu B\n", sizeof(long long));
+  Serial.printf("             float: %zu B\n", sizeof(float));
+  Serial.printf("            double: %zu B\n", sizeof(double));
 
   // allocate dma buffers
   dma_buf_1 = (uint16_t *)malloc(dma_buf_size);

@@ -188,7 +188,6 @@ public:
   // note. after constructor of inheriting class 'spr' must be in valid state.
 
   virtual ~object() {
-    // Serial.printf("object destructor. alloc_ix=%u\n", alloc_ix);
     // turn off sprite
     spr->img = nullptr;
     // free sprite instance

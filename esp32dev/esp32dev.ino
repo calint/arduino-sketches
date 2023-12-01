@@ -320,7 +320,7 @@ void setup(void) {
 #ifdef USE_WIFI
   Serial.printf("              WiFi: on\n");
 #endif
-  Serial.printf("------------------- size of-------------------------------\n");
+  Serial.printf("------------------- type sizes ---------------------------\n");
   Serial.printf("              bool: %zu B\n", sizeof(bool));
   Serial.printf("              char: %zu B\n", sizeof(char));
   Serial.printf("               int: %zu B\n", sizeof(int));
@@ -328,6 +328,7 @@ void setup(void) {
   Serial.printf("         long long: %zu B\n", sizeof(long long));
   Serial.printf("             float: %zu B\n", sizeof(float));
   Serial.printf("            double: %zu B\n", sizeof(double));
+  Serial.printf("             void*: %zu B\n", sizeof(void *));
 
   // allocate dma buffers
   dma_buf_1 = (uint16_t *)malloc(dma_buf_size);
@@ -349,7 +350,7 @@ void setup(void) {
   }
 
   Serial.printf("------------------- after init ---------------------------\n");
-  Serial.printf("          free mem: %zu B\n", ESP.getFreeHeap());
+  Serial.printf("     free heap mem: %zu B\n", ESP.getFreeHeap());
   Serial.printf("largest free block: %zu B\n", ESP.getMaxAllocHeap());
   Serial.printf("------------------- in program memory --------------------\n");
   Serial.printf("     sprite images: %zu B\n", sizeof(sprite_imgs));

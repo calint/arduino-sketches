@@ -20,12 +20,12 @@ static void main_setup() {
 
   hero *hro = new (objects.allocate_instance()) hero{};
   hro->x = 100;
-  hro->y = 300;
+  hro->y = 30;
 
   bullet *blt = new (objects.allocate_instance()) bullet{};
   blt->x = 100;
-  blt->y = 50;
-  blt->dy = 40;
+  blt->y = 300;
+  blt->dy = -100;
 }
 
 // calibration of touch screen
@@ -39,10 +39,10 @@ unsigned long last_fire_ms = 0;
 
 // callback when screen is touched, happens before 'update'
 static void main_on_touch_screen(int16_t x, int16_t y, int16_t z) {
-  const int y_relative_center =
-      y - touch_screen_value_min - touch_screen_value_range / 2;
-  constexpr float dy_factor = 200.0f / (touch_screen_value_range / 2);
-  tile_map_dy = dy_factor * y_relative_center;
+  // const int y_relative_center =
+  //     y - touch_screen_value_min - touch_screen_value_range / 2;
+  // constexpr float dy_factor = 200.0f / (touch_screen_value_range / 2);
+  // tile_map_dy = dy_factor * y_relative_center;
 
   // fire eight times a second
   if (clk.now_ms() - last_fire_ms > 125) {
@@ -52,8 +52,8 @@ static void main_on_touch_screen(int16_t x, int16_t y, int16_t z) {
       bullet *blt = new (objects.allocate_instance()) bullet{};
       blt->x = (x - touch_screen_value_min) * display_width /
                touch_screen_value_range;
-      blt->y = 50;
-      blt->dy = 100;
+      blt->y = 300;
+      blt->dy = -100;
     }
   }
 }
@@ -82,6 +82,6 @@ static void main_on_frame_completed() {
   if (not game.hero_is_alive) {
     hero *hro = new (objects.allocate_instance()) hero{};
     hro->x = float(rand()) * display_width / RAND_MAX;
-    hro->y = 300;
+    hro->y = 30;
   }
 }

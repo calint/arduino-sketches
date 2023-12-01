@@ -62,18 +62,22 @@ public:
       col_with = nullptr;
     }
 
+    return false;
+  }
+
+  void update_sprite() override {
+    object::update_sprite();
+
     // set position of additional sprites
     spr_left->scr_x = spr->scr_x - sprite_width;
     spr_left->scr_y = spr->scr_y;
 
     spr_right->scr_x = spr->scr_x + sprite_width;
     spr_right->scr_y = spr->scr_y;
-
-    return false;
   }
 
 private:
-  static constexpr float frag_speed = 200;
+  static constexpr float frag_speed = 300;
   static constexpr unsigned frag_count = 16;
 
   void create_fragments() {

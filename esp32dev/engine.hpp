@@ -206,12 +206,14 @@ public:
     dy += clk.dt(ddy);
     x += clk.dt(dx);
     y += clk.dt(dy);
+    return false;
+  }
 
+  // sets sprite screen position prior to render
+  virtual void update_sprite() {
     // update rendering info
     spr->scr_x = int16_t(x);
     spr->scr_y = int16_t(y);
-
-    return false;
   }
 };
 
@@ -232,9 +234,15 @@ public:
         free_instance(obj);
       }
     }
+  }
 
-    // apply free of objects that have died during update
-    apply_free();
+  void update_sprite() {
+    object_ix *it = allocated_list();
+    const object_ix len = allocated_list_len();
+    for (object_ix i = 0; i < len; i++, it++) {
+      object *obj = instance(*it);
+      obj->update_sprite();
+    }
   }
 } static objects{};
 
@@ -246,10 +254,17 @@ static void main_on_frame_completed();
 
 // update and render the state of the engine
 static void engine_loop() {
+  // call 'update()' on allocated objects
   objects.update();
 
-  // apply freed sprites during 'objects.update()'
+  // de-allocate the objects freed during 'objects.update()'
+  objects.apply_free();
+
+  // de-allocate the sprites freed during 'objects.update()'
   sprites.apply_free();
+
+  // updates the screen coordinates of the sprites
+  objects.update_sprite();
 
   // clear collisions map
   memset(collision_map, sprite_ix_reserved, collision_map_size);

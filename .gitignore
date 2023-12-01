@@ -5,5 +5,5 @@ debug.cfg
 debug.svd
 debug_custom.json
 
-read-sprite
+read-sprites
 read-palette

@@ -50,16 +50,21 @@ void readPalettedPNG(const char *filename) {
   }
   png_read_image(png, row_pointers);
 
-  // Extract a 16x16 region and convert to hex
-  for (int y = 0; y < 16; y++) {
-    for (int x = 0; x < 16; x++) {
-      // Access the pixel data at (x, y) and convert to hex
-      png_byte pixel = row_pointers[y][x];
-      std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0')
-                << static_cast<int>(pixel) << ",";
+  for (int dx = 0; dx < 16; dx++) {
+    // Extract a 16x16 region and convert to hex
+    std::cout << std::dec << "{ // " << dx << std::endl;
+    for (int y = 0; y < 16; y++) {
+      for (int x = 0; x < 16; x++) {
+        // Access the pixel data at (x, y) and convert to hex
+        png_byte pixel = row_pointers[y][dx * 16 + x];
+        std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0')
+                  << static_cast<int>(pixel) << ",";
+      }
+      std::cout << std::endl;
     }
-    std::cout << std::endl;
+    std::cout << "},";
   }
+  std::cout << std::endl;
 
   // Clean up
   for (int y = 0; y < height; y++) {

@@ -58,6 +58,38 @@ static void main_on_touch_screen(int16_t x, int16_t y, int16_t z) {
   }
 }
 
+// forward declaration of functions that start waves of objects
+static void main_wave_1();
+static void main_wave_2();
+static void main_wave_3();
+
+// util to more easily position where waves are triggered
+constexpr unsigned tiles_per_screen = display_height / tile_height;
+
+// pointer to function that creates wave
+using wave_func_ptr = void (*)();
+
+struct wave_trigger {
+  float y = 0;
+  wave_func_ptr func = nullptr;
+
+  constexpr wave_trigger(float y_, wave_func_ptr func_) : y{y_}, func{func_} {}
+  // note. constructor needed for C++11 to compile
+
+} static constexpr wave_triggers[] = {
+    {float((tile_map_height - tiles_per_screen * 1.5f) * tile_height),
+     main_wave_1},
+    {float((tile_map_height - tiles_per_screen * 2.0f) * tile_height),
+     main_wave_2},
+    {float((tile_map_height - tiles_per_screen * 2.5f) * tile_height),
+     main_wave_3},
+};
+
+static constexpr unsigned wave_triggers_len =
+    sizeof(wave_triggers) / sizeof(wave_trigger);
+
+static unsigned wave_triggers_ix = 0;
+
 // callback after frame has been rendered, happens after 'update'
 static void main_on_frame_completed() {
   // update x position in pixels in the tile map
@@ -74,6 +106,7 @@ static void main_on_frame_completed() {
   if (tile_map_y < 0) {
     tile_map_y = 0;
     tile_map_dy = -tile_map_dy;
+    wave_triggers_ix = 0;
   } else if (tile_map_y > (tile_map_height * tile_height - display_height)) {
     tile_map_y = tile_map_height * tile_height - display_height;
     tile_map_dy = -tile_map_dy;
@@ -86,27 +119,53 @@ static void main_on_frame_completed() {
     hro->dx = float(rand()) * 64 / RAND_MAX;
   }
 
-  if (game.wave_objects_alive == 0) {
-    if (not game.wave_done_waiting) {
-      game.wave_done_ms = clk.now_ms();
-      game.wave_done_waiting = true;
-    } else if (clk.now_ms() - game.wave_done_ms > 3000) {
-      // last wave was terminated more than 3 seconds ago
-      game.wave_done_waiting = false;
-      float x = 24;
-      float y = -float(sprite_height);
-      for (unsigned i = 0; i < 7; i++) {
-        if (!objects.can_allocate()) {
-          break;
-        }
-        ship1 *enm = new (objects.allocate_instance()) ship1{};
-        enm->x = x;
-        enm->y = y;
-        enm->dy = 30;
-        x += 32;
-        y -= 8;
-        Serial.printf("enemy wave. %u  x=%f  y=%f\n", i, x, y);
-      }
+  // trigger waves
+  if (wave_triggers_ix < wave_triggers_len and
+      wave_triggers[wave_triggers_ix].y > tile_map_y) {
+    // Serial.printf("wave trigger  y=%f  trigger y = %f\n", tile_map_y,
+    //               wave_triggers[wave_triggers_ix].y);
+    wave_triggers[wave_triggers_ix].func();
+    wave_triggers_ix++;
+  }
+}
+
+void main_wave_1() {
+  float x = 8;
+  float y = -float(sprite_height);
+  for (unsigned i = 0; i < 8; i++) {
+    ship1 *enm = new (objects.allocate_instance()) ship1{};
+    enm->x = x;
+    enm->y = y;
+    enm->dy = 50;
+    x += 32;
+    y -= 8;
+    // Serial.printf("wave 1. %u  x=%f  y=%f\n", i, x, y);
+  }
+}
+
+void main_wave_2() {
+  float x = 8;
+  float y = -float(sprite_height);
+  for (unsigned i = 0; i < 8; i++) {
+    ship1 *enm = new (objects.allocate_instance()) ship1{};
+    enm->x = x;
+    enm->y = y;
+    enm->dy = 50;
+    x += 32;
+    // Serial.printf("wave 2. %u  x=%f  y=%f\n", i, x, y);
+  }
+}
+
+void main_wave_3() {
+  float y = -float(sprite_height);
+  for (unsigned j = 0; j < 8; j++, y -= 24) {
+    float x = 8;
+    for (unsigned i = 0; i < 8; i++, x += 32) {
+      ship1 *enm = new (objects.allocate_instance()) ship1{};
+      enm->x = x;
+      enm->y = y;
+      enm->dy = 50;
+      // Serial.printf("wave 3. %u  x=%f  y=%f\n", i, x, y);
     }
   }
 }

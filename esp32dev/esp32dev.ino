@@ -57,11 +57,8 @@
 // circular references and gives user the necessary callbacks to interface with
 // engine
 
-// note. https://github.com/calint/arduino-sketches/tree/main/utils/png-to-resources
-// contains tools to extract sprites, tiles and palettes from png
-
-// engine code excluding the rendering
-#include "engine.hpp"
+// note. tools to extract sprites, tiles and palettes from png
+// https://github.com/calint/arduino-sketches/tree/main/utils/png-to-resources
 
 // main entry file to user code
 #include "game/main.hpp"

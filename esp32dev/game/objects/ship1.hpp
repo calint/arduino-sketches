@@ -1,7 +1,5 @@
 #pragma once
 #include "../../engine.hpp"
-// include game logic
-#include "../game.hpp"
 
 class ship1 final : public object {
 public:
@@ -12,10 +10,7 @@ public:
     spr = sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[5];
-    game.wave_objects_alive++;
   }
-
-  ~ship1() override { game.wave_objects_alive--; }
 
   // returns true if object died
   auto update() -> bool override {

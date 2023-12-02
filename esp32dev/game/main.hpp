@@ -112,10 +112,10 @@ static void main_on_frame_completed() {
   if (tile_map_y < 0) {
     tile_map_y = 0;
     tile_map_dy = -tile_map_dy;
-    wave_triggers_ix = 0;
   } else if (tile_map_y > (tile_map_height * tile_height - display_height)) {
     tile_map_y = tile_map_height * tile_height - display_height;
     tile_map_dy = -tile_map_dy;
+    wave_triggers_ix = 0;
   }
 
   if (not game.hero_is_alive) {

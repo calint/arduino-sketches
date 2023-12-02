@@ -7,8 +7,8 @@
 #include "game.hpp"
 
 #include "objects/bullet.hpp"
-#include "objects/dummy.hpp"
 #include "objects/hero.hpp"
+#include "objects/ship1.hpp"
 
 static void main_setup() {
   // scrolling vertically from bottom up
@@ -84,5 +84,29 @@ static void main_on_frame_completed() {
     hro->x = float(rand()) * display_width / RAND_MAX;
     hro->y = 30;
     hro->dx = float(rand()) * 64 / RAND_MAX;
+  }
+
+  if (game.wave_objects_alive == 0) {
+    if (not game.wave_done_waiting) {
+      game.wave_done_ms = clk.now_ms();
+      game.wave_done_waiting = true;
+    } else if (clk.now_ms() - game.wave_done_ms > 3000) {
+      // last wave was terminated more than 3 seconds ago
+      game.wave_done_waiting = false;
+      float x = 24;
+      float y = -float(sprite_height);
+      for (unsigned i = 0; i < 7; i++) {
+        if (!objects.can_allocate()) {
+          break;
+        }
+        ship1 *enm = new (objects.allocate_instance()) ship1{};
+        enm->x = x;
+        enm->y = y;
+        enm->dy = 30;
+        x += 32;
+        y -= 8;
+        Serial.printf("enemy wave. %u  x=%f  y=%f\n", i, x, y);
+      }
+    }
   }
 }

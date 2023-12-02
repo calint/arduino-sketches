@@ -22,7 +22,13 @@ static constexpr unsigned object_instance_max_size_B = 256;
 
 // enumeration of game object classes
 // defined in 'objects/*'
-enum object_class : uint8_t { hero_cls, bullet_cls, dummy_cls, fragment_cls };
+enum object_class : uint8_t {
+  hero_cls,
+  bullet_cls,
+  dummy_cls,
+  fragment_cls,
+  ship1_cls
+};
 
 // collision bits
 static constexpr collision_bits cb_none = 0;

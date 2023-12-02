@@ -83,6 +83,12 @@ struct wave_trigger {
      main_wave_2},
     {float((tile_map_height - tiles_per_screen * 2.5f) * tile_height),
      main_wave_3},
+    {float((tile_map_height - tiles_per_screen * 3.5f) * tile_height),
+     main_wave_1},
+    {float((tile_map_height - tiles_per_screen * 4.0f) * tile_height),
+     main_wave_2},
+    {float((tile_map_height - tiles_per_screen * 4.5f) * tile_height),
+     main_wave_3},
 };
 
 static constexpr unsigned wave_triggers_len =

@@ -1,3 +1,5 @@
+[ ] animated sprite class {sprite_img,ms}
+[ ] consider locking dt to 30 fps for deterministic behavior
 [x] separate palette for sprites and tiles
 [ ] horizontal, vertical flip of sprite
 [ ] several sets of tiles cycled for animation

@@ -1,6 +1,6 @@
 # anatomy of a game object
 
-base class `object` in engine has attributes common to most objects and provides overridable functions for custom logic
+base class `object` defined in engine has attributes common to most objects and provides overridable functions for custom logic
 
 ## attributes
 

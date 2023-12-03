@@ -10,7 +10,7 @@ table of contents (in include order by program file):
 * `/objects/*` game objects
 * `/main.hpp` setup initial game state, callbacks from engine, game logic
 
-# anatomy of a game
+# overview
 
 ## main.hpp
 ### function `main_setup`

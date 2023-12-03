@@ -8,8 +8,8 @@ class ship2 final : public object {
       sizeof(animation_frames) / sizeof(sprite_ix);
   static constexpr unsigned animation_rate_ms = 500;
   // animation state
-  uint8_t animation_frames_ix = 0;
   clk_time_ms animation_frame_ms = 0;
+  uint8_t animation_frames_ix = 0;
 
 public:
   ship2() : object{ship2_cls}, animation_frame_ms{clk.ms} {

@@ -5,7 +5,7 @@ intention:
 * exploring the device by developing a toy game
 * developing a toy game engine
   - smooth scrolling tile map
-  - sprites with on screen collision detection
+  - sprites with pixel precision on screen collision detection
   - intuitive definition of game objects and logic
   - decent performance, ~30 frames per second on the device
 

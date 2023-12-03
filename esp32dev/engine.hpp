@@ -1,5 +1,6 @@
 #pragma once
 #include "o1store.hpp"
+#include <limits>
 
 using collision_bits = unsigned;
 // used by 'object' for collision detection interest flags

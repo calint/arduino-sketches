@@ -2,7 +2,8 @@
 
 intention:
 * exploring the device by developing a toy game
-* decent performance, ~30 frames per second
+* developing a toy game engine using tiles and sprites with on screen collision detection between sprites
+* decent performance, ~30 frames per second on the device
 
 layout:
 * `/esp32dev.ino` platform dependent code for booting and rendering

@@ -60,12 +60,8 @@
 // note. tools to extract sprites, tiles and palettes from png
 // https://github.com/calint/arduino-sketches/tree/main/esp32dev/utils/png-to-resources
 
-static constexpr uint8_t display_orientation = 0;
-// 0: vertical, 1: horizontal
-
-// display dimensions of screen ILI9341 depending on orientation
-static constexpr unsigned display_width = display_orientation == 0 ? 240 : 320;
-static constexpr unsigned display_height = display_orientation == 0 ? 320 : 240;
+// platform specific constants
+#include "platform.hpp"
 
 // main entry file to user code
 #include "game/main.hpp"
@@ -418,7 +414,7 @@ void setup(void) {
 void loop() {
   // frames per second update
   if (clk.on_frame(millis())) {
-    Serial.printf("t=%lu  fps=%u  ldr=%u  objs=%u  sprs=%u\n", clk.now_ms(),
+    Serial.printf("t=%lu  fps=%u  ldr=%u  objs=%u  sprs=%u\n", clk.ms,
                   clk.fps(), analogRead(ldr_pin), objects.allocated_list_len(),
                   sprites.allocated_list_len());
   }

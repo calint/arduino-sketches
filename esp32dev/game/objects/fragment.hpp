@@ -4,7 +4,7 @@
 class fragment final : public object {
 public:
   int8_t damage = 1;
-  unsigned long die_at_ms;
+  clk_time_ms die_at_ms;
 
   fragment() : object{fragment_cls} {
     col_bits = cb_fragment;
@@ -20,7 +20,7 @@ public:
     if (object::update()) {
       return true;
     }
-    if (clk.now_ms() > die_at_ms) {
+    if (clk.ms > die_at_ms) {
       return true;
     }
     return false;

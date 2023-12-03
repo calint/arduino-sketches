@@ -24,7 +24,8 @@ enum object_class : uint8_t {
   bullet_cls,
   dummy_cls,
   fragment_cls,
-  ship1_cls
+  ship1_cls,
+  ship2_cls
 };
 
 // collision bits

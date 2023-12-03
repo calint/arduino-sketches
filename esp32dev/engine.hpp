@@ -1,6 +1,10 @@
 #pragma once
 #include "o1store.hpp"
+#include "platform.hpp"
 #include <limits>
+
+// include platform constants
+#include "platform.hpp"
 
 using collision_bits = unsigned;
 // used by 'object' for collision detection interest flags
@@ -106,37 +110,44 @@ static sprite_ix *collision_map;
 static constexpr unsigned collision_map_size =
     sizeof(sprite_ix) * display_width * display_height;
 
+using clk_time_ms = unsigned long;
+
 // helper class managing current frame time, dt, frames per second calculation
 class clk {
   unsigned interval_ms_ = 5000;
   unsigned frames_rendered_in_interval_ = 0;
-  unsigned long last_update_ms_ = 0;
-  unsigned long now_ms_ = 0;
-  unsigned long prv_now_ms_ = 0;
+  clk_time_ms last_update_ms_ = 0;
+  clk_time_ms prv_now_ms_ = 0;
   unsigned current_fps_ = 0;
-  float dt_s_ = 0;
 
 public:
+  // current time since boot in milliseconds
+  clk_time_ms ms = 0;
+
+  // frame delta time in seconds
+  float dt_s = 0;
+
   // called at setup with current time and frames per seconds calculation
   // interval
-  void init(const unsigned long now_ms,
+  void init(const unsigned long time_ms,
             const unsigned interval_of_fps_calculations_ms) {
-    last_update_ms_ = prv_now_ms_ = now_ms;
+    last_update_ms_ = prv_now_ms_ = ms;
     interval_ms_ = interval_of_fps_calculations_ms;
+    ms = time_ms;
   }
 
   // called before every frame to update state
   // returns true if new frames per second calculation was done
-  auto on_frame(const unsigned long now_ms) -> bool {
-    now_ms_ = now_ms;
-    dt_s_ = (now_ms - prv_now_ms_) / 1000.0f;
-    prv_now_ms_ = now_ms;
+  auto on_frame(const unsigned long time_ms) -> bool {
+    ms = time_ms;
+    dt_s = (ms - prv_now_ms_) / 1000.0f;
+    prv_now_ms_ = ms;
     frames_rendered_in_interval_++;
-    const unsigned long dt_ms = now_ms - last_update_ms_;
+    const unsigned long dt_ms = ms - last_update_ms_;
     if (dt_ms >= interval_ms_) {
       current_fps_ = frames_rendered_in_interval_ * 1000 / dt_ms;
       frames_rendered_in_interval_ = 0;
-      last_update_ms_ = now_ms;
+      last_update_ms_ = ms;
       return true;
     }
     return false;
@@ -146,14 +157,8 @@ public:
   // 'init'
   inline auto fps() const -> unsigned { return current_fps_; }
 
-  // returns current time since boot in milliseconds
-  inline auto now_ms() const -> unsigned long { return now_ms_; }
-
-  // returns frame delta time in seconds
-  inline auto dt_s() const -> float { return dt_s_; }
-
   // returns argument multiplied by delta time in seconds for frame
-  inline auto dt(float f) const -> float { return f * dt_s_; }
+  inline auto dt(float f) const -> float { return f * dt_s; }
 
 } static clk{};
 

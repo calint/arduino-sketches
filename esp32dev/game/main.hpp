@@ -7,6 +7,7 @@
 #include "objects/bullet.hpp"
 #include "objects/hero.hpp"
 #include "objects/ship1.hpp"
+#include "objects/ship2.hpp"
 
 static void main_setup() {
   // scrolling vertically from bottom up
@@ -17,24 +18,14 @@ static void main_setup() {
   // tile_map_dy = 1;
 
   hero *hro = new (objects.allocate_instance()) hero{};
-  hro->x = 100;
+  hro->x = display_width / 2 - sprite_width / 2;
   hro->y = 30;
 
-  bullet *blt = new (objects.allocate_instance()) bullet{};
-  blt->x = 100;
-  blt->y = 300;
-  blt->dy = -100;
+  // bullet *blt = new (objects.allocate_instance()) bullet{};
+  // blt->x = display_width / 2 - sprite_width / 2;
+  // blt->y = 300;
+  // blt->dy = -100;
 }
-
-// calibration of touch screen
-constexpr int16_t touch_screen_min_x = 400;
-constexpr int16_t touch_screen_max_x = 3700;
-constexpr int16_t touch_screen_range_x =
-    touch_screen_max_x - touch_screen_min_x;
-constexpr int16_t touch_screen_min_y = 300;
-constexpr int16_t touch_screen_max_y = 3750;
-constexpr int16_t touch_screen_range_y =
-    touch_screen_max_y - touch_screen_min_y;
 
 unsigned long last_fire_ms = 0;
 // keeps track of when the previous bullet was fired
@@ -47,9 +38,9 @@ static void main_on_touch_screen(int16_t x, int16_t y, int16_t z) {
   // tile_map_dy = dy_factor * y_relative_center;
 
   // fire eight times a second
-  if (clk.now_ms() - last_fire_ms > 125) {
+  if (clk.ms - last_fire_ms > 125) {
     // Serial.printf("touch  x=%u  y=%u\n", x, y);
-    last_fire_ms = clk.now_ms();
+    last_fire_ms = clk.ms;
     if (objects.can_allocate()) {
       bullet *blt = new (objects.allocate_instance()) bullet{};
       blt->x = (x - touch_screen_min_x) * display_width / touch_screen_range_x;
@@ -63,6 +54,7 @@ static void main_on_touch_screen(int16_t x, int16_t y, int16_t z) {
 static void main_wave_1();
 static void main_wave_2();
 static void main_wave_3();
+static void main_wave_4();
 
 // util to more easily position where waves are triggered
 constexpr unsigned tiles_per_screen = display_height / tile_height;
@@ -78,6 +70,8 @@ struct wave_trigger {
   // note. constructor needed for C++11 to compile
 
 } static constexpr wave_triggers[] = {
+    {float((tile_map_height - tiles_per_screen * 1.0f) * tile_height),
+     main_wave_4},
     {float((tile_map_height - tiles_per_screen * 1.5f) * tile_height),
      main_wave_1},
     {float((tile_map_height - tiles_per_screen * 2.0f) * tile_height),
@@ -90,6 +84,8 @@ struct wave_trigger {
      main_wave_2},
     {float((tile_map_height - tiles_per_screen * 4.5f) * tile_height),
      main_wave_3},
+    {float((tile_map_height - tiles_per_screen * 5.0f) * tile_height),
+     main_wave_4},
 };
 
 static constexpr unsigned wave_triggers_len =
@@ -140,10 +136,10 @@ void main_wave_1() {
   float x = 8;
   float y = -float(sprite_height);
   for (unsigned i = 0; i < 8; i++) {
-    ship1 *enm = new (objects.allocate_instance()) ship1{};
-    enm->x = x;
-    enm->y = y;
-    enm->dy = 50;
+    ship1 *shp = new (objects.allocate_instance()) ship1{};
+    shp->x = x;
+    shp->y = y;
+    shp->dy = 50;
     x += 32;
     y -= 8;
   }
@@ -153,10 +149,10 @@ void main_wave_2() {
   float x = 8;
   float y = -float(sprite_height);
   for (unsigned i = 0; i < 8; i++) {
-    ship1 *enm = new (objects.allocate_instance()) ship1{};
-    enm->x = x;
-    enm->y = y;
-    enm->dy = 50;
+    ship1 *shp = new (objects.allocate_instance()) ship1{};
+    shp->x = x;
+    shp->y = y;
+    shp->dy = 50;
     x += 32;
   }
 }
@@ -166,10 +162,19 @@ void main_wave_3() {
   for (unsigned j = 0; j < 8; j++, y -= 24) {
     float x = 8;
     for (unsigned i = 0; i < 8; i++, x += 32) {
-      ship1 *enm = new (objects.allocate_instance()) ship1{};
-      enm->x = x;
-      enm->y = y;
-      enm->dy = 50;
+      ship1 *shp = new (objects.allocate_instance()) ship1{};
+      shp->x = x;
+      shp->y = y;
+      shp->dy = 50;
     }
   }
+}
+
+void main_wave_4() {
+  float y = -float(sprite_height);
+  float x = display_width / 2 - sprite_width / 2;
+  ship2 *shp = new (objects.allocate_instance()) ship2{};
+  shp->x = x;
+  shp->y = y;
+  shp->dy = 25;
 }

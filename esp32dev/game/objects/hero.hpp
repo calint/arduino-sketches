@@ -94,7 +94,7 @@ private:
         break;
       }
       fragment *frg = new (objects.allocate_instance()) fragment{};
-      frg->die_at_ms = clk.now_ms() + 500;
+      frg->die_at_ms = clk.ms + 500;
       frg->x = x;
       frg->y = y;
       frg->dx = frag_speed * rand() / RAND_MAX - frag_speed / 2;

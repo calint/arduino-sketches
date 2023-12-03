@@ -31,7 +31,7 @@ public:
         return true;
       }
       fragment *frg = new (objects.allocate_instance()) fragment{};
-      frg->die_at_ms = clk.now_ms() + 250;
+      frg->die_at_ms = clk.ms + 250;
       frg->x = x;
       frg->y = y;
       return true;

@@ -1,5 +1,5 @@
 #pragma once
-// constants and definitions used by the engine and game objects
+// constants used by engine and game objects
 
 // number of sprite images
 // defined in 'resources/sprite_imgs.hpp'

@@ -1,5 +1,5 @@
 #pragma once
-// setup code, touch screen callback, frame completed callback
+// setup initial game state, callbacks from engine, game logic
 // solves circular references between 'game' and game objects
 
 #include "game.hpp"
@@ -9,6 +9,7 @@
 #include "objects/ship1.hpp"
 #include "objects/ship2.hpp"
 
+// callback at boot
 static void main_setup() {
   // scrolling vertically from bottom up
   tile_map_x = 0;

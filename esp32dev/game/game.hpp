@@ -1,5 +1,5 @@
 #pragma once
-// imported by objects that access the game state
+// game state used by objects
 
 #include "../engine.hpp"
 

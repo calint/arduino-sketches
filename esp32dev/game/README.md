@@ -36,7 +36,7 @@ table of contents (in include order by program file):
 
 ## defs.hpp
 ### `enum object_class`
-* each game object class has an entry named with `_cls` suffix
+* each game object class has an entry named with suffix `_cls`
 ### `collision_bits`
 * naming bits with constants
 * constants used to define sprite collision bits and mask

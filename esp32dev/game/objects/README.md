@@ -17,8 +17,9 @@ base class `object` in engine has attributes common to most objects and provides
 
 ### related to collision detection
 * engine performs collision detection between sprites on screen if a bitwise AND operation involving `col_bits` from an object and `col_mask` from another object is non-zero
-* example: if `col_bits` of object A bitwise AND with `col_mask` of object B is non-zero then object B `col_with` pointer is set to object A
-* same procedure is done with A and B swapped
+* example:
+  - if `col_bits` of object A bitwise AND with `col_mask` of object B is non-zero then object B `col_with` pointer is set to object A
+  - same procedure is done with A and B swapped
 * the definition of the 32 available bits and their meaning is custom depending on the game
 * example:
   - bit 1 - 'enemy fire' - meaning that all enemy fire classes enable bit 1 in `col_bits`

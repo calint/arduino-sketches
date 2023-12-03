@@ -125,7 +125,7 @@ static void main_on_frame_completed() {
 
   // trigger waves
   if (wave_triggers_ix < wave_triggers_len and
-      wave_triggers[wave_triggers_ix].y > tile_map_y) {
+      wave_triggers[wave_triggers_ix].y >= tile_map_y) {
     // Serial.printf("wave trigger  y=%f  trigger y = %f\n", tile_map_y,
     //               wave_triggers[wave_triggers_ix].y);
     wave_triggers[wave_triggers_ix].func();

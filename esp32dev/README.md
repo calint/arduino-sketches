@@ -14,3 +14,8 @@ table of contents:
 * `/engine.hpp` platform independent code of game engine
 * `/game/*` game code using `engine.hpp`
 * `/utils/png-to-resources` util for extracting game engine resources from files exported by gimp
+
+resources about the device:
+* [manufacturer](http://www.jczn1688.com/)
+* [purchased at](https://www.aliexpress.com/item/1005004502250619.html)
+* [community](https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display)

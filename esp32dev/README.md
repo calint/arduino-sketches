@@ -1,8 +1,9 @@
 ### toy game for esp32-2432s028r a.k.a. cheap-yellow-display (cyd)
 
 intention:
+* developing arduino sketch using visual code
 * exploring the device by developing a toy game
-* developing a toy game engine using tiles and sprites with on screen collision detection between sprites
+* developing a toy game engine using tiles and sprites with on screen collision detection
 * decent performance, ~30 frames per second on the device
 
 layout:

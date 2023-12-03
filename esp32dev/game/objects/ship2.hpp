@@ -2,9 +2,15 @@
 #include "../../engine.hpp"
 
 class ship2 final : public object {
-  static constexpr unsigned animation_rate_ms = 250;
+  // animation definition
+  inline static constexpr sprite_ix animation_frames[]{6, 7};
+  static constexpr sprite_ix animation_frames_len =
+      sizeof(animation_frames) / sizeof(sprite_ix);
+  static constexpr unsigned animation_rate_ms = 500;
+
+  // animation state
+  uint8_t animation_frames_ix = 0;
   clk_time_ms animation_frame_ms = 0;
-  uint8_t animation_frame_ix = 0;
 
 public:
   ship2() : object{ship2_cls}, animation_frame_ms{clk.ms} {
@@ -30,23 +36,15 @@ public:
       return true;
     }
 
-    // animate sprite
+    // animation logic
     const unsigned ms_since_last_update = clk.ms - animation_frame_ms;
     if (ms_since_last_update > animation_rate_ms) {
       animation_frame_ms = clk.ms;
-      switch (animation_frame_ix) {
-      case 0:
-        animation_frame_ix = 1;
-        spr->img = sprite_imgs[7];
-        break;
-      case 1:
-        animation_frame_ix = 0;
-        spr->img = sprite_imgs[6];
-        break;
-      default:
-        animation_frame_ix = 0;
-        spr->img = sprite_imgs[6];
+      animation_frames_ix++;
+      if (animation_frames_ix >= animation_frames_len) {
+        animation_frames_ix = 0;
       }
+      spr->img = sprite_imgs[animation_frames[animation_frames_ix]];
     }
 
     return false;

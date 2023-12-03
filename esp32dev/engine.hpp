@@ -7,12 +7,14 @@ using collision_bits = unsigned;
 // including defs for engine and game
 #include "game/defs.hpp"
 
-// palette used to convert uint8_t to uint16_t rgb 565
-// lower and higher byte swapped (red being the highest bits)
+// palette used when rendering tiles
+// converts uint8_t to uint16_t rgb 565 (red being the highest bits)
+// note. lower and higher byte swapped
 static constexpr uint16_t palette_tiles[256]{
 #include "game/resources/palette_tiles.hpp"
 };
 
+// palette used when rendering sprites
 static constexpr uint16_t palette_sprites[256]{
 #include "game/resources/palette_sprites.hpp"
 };
@@ -35,14 +37,15 @@ static constexpr unsigned tile_height_shift = 4;
 // 'tile_height'
 static constexpr unsigned tile_height_and = 15;
 
-using tile_ix = uint8_t;
-
 class tile {
 public:
   const uint8_t data[tile_width * tile_height];
 } static constexpr tiles[tile_count]{
 #include "game/resources/tile_imgs.hpp"
 };
+
+// type used to index in the tiles images
+using tile_ix = uint8_t;
 
 class tile_map {
 public:
@@ -101,7 +104,7 @@ static constexpr unsigned display_width = display_orientation == 0 ? 240 : 320;
 static constexpr unsigned display_height = display_orientation == 0 ? 320 : 240;
 
 // pixel precision collision detection between on screen sprites
-// allocated in setup
+// allocated at 'engine_setup()'
 static sprite_ix *collision_map;
 static constexpr unsigned collision_map_size =
     sizeof(sprite_ix) * display_width * display_height;
@@ -245,6 +248,16 @@ public:
     }
   }
 } static objects{};
+
+static void engine_setup() {
+  // allocate collision map
+  collision_map = (sprite_ix *)malloc(collision_map_size);
+  if (!collision_map) {
+    Serial.printf("!!! could not allocate collision map");
+    while (true)
+      ;
+  }
+}
 
 // forward declaration of platform specific function
 static void render(const unsigned x, const unsigned y);

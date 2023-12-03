@@ -2,8 +2,6 @@
 // setup code, touch screen callback, frame completed callback
 // solves circular references between 'game' and game objects
 
-#include "../engine.hpp"
-
 #include "game.hpp"
 
 #include "objects/bullet.hpp"
@@ -145,7 +143,6 @@ void main_wave_1() {
     enm->dy = 50;
     x += 32;
     y -= 8;
-    // Serial.printf("wave 1. %u  x=%f  y=%f\n", i, x, y);
   }
 }
 
@@ -158,7 +155,6 @@ void main_wave_2() {
     enm->y = y;
     enm->dy = 50;
     x += 32;
-    // Serial.printf("wave 2. %u  x=%f  y=%f\n", i, x, y);
   }
 }
 
@@ -171,7 +167,6 @@ void main_wave_3() {
       enm->x = x;
       enm->y = y;
       enm->dy = 50;
-      // Serial.printf("wave 3. %u  x=%f  y=%f\n", i, x, y);
     }
   }
 }

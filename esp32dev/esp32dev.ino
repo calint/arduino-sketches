@@ -339,13 +339,7 @@ void setup(void) {
       ;
   }
 
-  // allocate collision map
-  collision_map = (sprite_ix *)malloc(collision_map_size);
-  if (!collision_map) {
-    Serial.printf("!!! could not allocate collision map");
-    while (true)
-      ;
-  }
+  engine_setup();
 
   Serial.printf("------------------- after init ---------------------------\n");
   Serial.printf("     free heap mem: %zu B\n", ESP.getFreeHeap());

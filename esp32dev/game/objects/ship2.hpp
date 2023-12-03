@@ -4,10 +4,9 @@
 class ship2 final : public object {
   // animation definition
   inline static constexpr sprite_ix animation_frames[]{6, 7};
-  static constexpr sprite_ix animation_frames_len =
+  static constexpr unsigned animation_frames_len =
       sizeof(animation_frames) / sizeof(sprite_ix);
   static constexpr unsigned animation_rate_ms = 500;
-
   // animation state
   uint8_t animation_frames_ix = 0;
   clk_time_ms animation_frame_ms = 0;

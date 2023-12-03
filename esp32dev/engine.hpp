@@ -1,4 +1,6 @@
 #pragma once
+// platform independent game engine code
+
 #include "o1store.hpp"
 #include "platform.hpp"
 #include <limits>

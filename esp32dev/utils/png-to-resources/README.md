@@ -1,10 +1,14 @@
 ### tools for extracting resources from png files
+
+util for extracting game engine resources from files exported by gimp
+
+#### editing game resources
 * edit gimp files "sprites.xcf" and "tiles.xcf"
 * suggestion is to create a layer for each sprite / tile
 * "sprites.xcf" and "tiles.xcf" can use different palettes
 * "sprites.xcf" background color is index 0 and represents transparent pixel
 
-#### exporting to png for processing
+#### exporting to png for extraction
 * enable all layers
 
 ![layers](readme-1.png)

@@ -21,7 +21,7 @@ table of contents (in include order by program file):
 * implements game logic
 
 ## objects/*
-* implements game objects
+* see README.md in `objects/`
 
 ## game.hpp
 * contains game state

@@ -1,5 +1,11 @@
 # arduino-sketches
-experiments with arduino sketches for raspberry pico w, arduino nano esp32 and esp32-2432s028r a.k.a. cheap-yellow-display (cyd)
+
+experiments with arduino sketches
+
+devices:
+* raspberry pico w
+* arduino nano esp32
+* esp32-2432s028r a.k.a. cheap-yellow-display (cyd)
 
 contains:
 * esp32dev -- device esp32-2432s028r -- game framework featuring scrolling tiles, sprites and on screen pixel precision collision detection

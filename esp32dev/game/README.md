@@ -11,6 +11,7 @@ table of contents (in include order by program file):
 * `/main.hpp` setup initial game state, callbacks from engine, game logic
 
 # anatomy of a game
+
 ## main.hpp
 ### function `main_setup`
 * initiates the game by creating initial objects and sets tile map position and velocity
@@ -18,18 +19,23 @@ table of contents (in include order by program file):
 * handles user interaction with touch screen
 ### function `main_on_frame_completed`
 * implements game logic
+
 ## objects/*
 * implements game objects
+
 ## game.hpp
-* included by objects to modify game state
+* included by objects that modify game state
 * game state used in `main_on_frame_completed` solving circular reference problemss
+
 ## resources/*
 * separate palettes for tiles and sprites
 * sprites
 * tiles
 * tile map
+
 ## defs.hpp
 ### `enum object_class`
 * each game object class has an entry named with `_cls` suffix
 ### `collision_bits`
-* definitions that are ORed to implement a sprite collision interest mask
+* naming bits with constants
+* constants used to define sprite collision bits and mask

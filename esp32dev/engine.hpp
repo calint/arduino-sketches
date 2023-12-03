@@ -100,6 +100,7 @@ using sprites_store = o1store<sprite, 255, sprite_ix, 1>;
 static sprites_store sprites{};
 
 // display dimensions
+//? this is device dependent
 static constexpr unsigned display_width = display_orientation == 0 ? 240 : 320;
 static constexpr unsigned display_height = display_orientation == 0 ? 320 : 240;
 

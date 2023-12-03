@@ -1,6 +1,7 @@
 ### tools for extracting resources from png files
 * edit gimp files "sprites.xcf" and "tiles.xcf"
-* create a layer for each sprite / tile
+* suggestion is to create a layer for each sprite / tile
+* "sprites.xcf" and "tiles.xcf" can use different palettes
 
 #### exporting to png for processing
 * enable all layers
@@ -16,7 +17,7 @@ script `./extract-to-resources.sh` will overwrite `game/resources/*` files
 
 note. make sure transparency pixel is palette index 0
 
-#### current resources
+### current resources
 tiles:
 
 ![tiles](tiles.png)

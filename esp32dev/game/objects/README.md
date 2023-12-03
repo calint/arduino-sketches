@@ -55,7 +55,7 @@ base class `object` in engine has attributes common to most objects and provides
 * default implementation sets sprite screen position using object position
 * objects composed of several sprites override this function to set screen position on the additional sprites
 
-# examples
+## examples
 * `ship1.hpp` basic object with typical implementation
 * `ship2.hpp` ad-hoc implementation of animated sprite
 * `hero.hpp` composed of several sprites

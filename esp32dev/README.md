@@ -1,7 +1,7 @@
 ### toy game for ESP32-2432S028R a.k.a. cheap-yellow-display (cyd)
 
 intention:
-* developing arduino sketch using visual code targeting esp32 boardss
+* developing arduino sketch using visual code targeting esp32 boards
 * exploring the device by developing a toy game
 * developing a toy game engine
   - smooth scrolling tile map

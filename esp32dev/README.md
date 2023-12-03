@@ -14,7 +14,7 @@ table of contents:
 * `/platform.hpp` platform constants used by engine and game
 * `/engine.hpp` platform independent game engine code
 * `/game/*` game code using `engine.hpp`
-* `/utils/png-to-resources` util for extracting game engine resources from files exported by gimp
+* `/utils/png-to-resources` tools for extracting resources from png files
 
 ### about the device
 * [community](https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display)

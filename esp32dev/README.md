@@ -10,9 +10,9 @@ intention:
   - decent performance, ~30 frames per second on the device
 
 table of contents:
-* `/esp32dev.ino` code for booting and rendering
+* `/esp32dev.ino` booting and rendering
 * `/platform.hpp` platform constants used by engine and game
-* `/engine.hpp` platform independent code of game engine
+* `/engine.hpp` platform independent game engine code
 * `/game/*` game code using `engine.hpp`
 * `/utils/png-to-resources` util for extracting game engine resources from files exported by gimp
 

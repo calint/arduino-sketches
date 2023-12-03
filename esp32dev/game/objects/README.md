@@ -5,7 +5,7 @@ base class `object` in engine has attributes common to most objects and provides
 ## attributes
 
 ### related to run time information
-* object class: `cls` is mandatory to initiate an object and is defined in `defs.hpp` by game code where each object class has an entry
+* object class: `cls` is mandatory to initiate an object and is defined in `defs.hpp` by game code, where each object class has an entry
 
 ### related to position and motion
 * position: `x`, `y`
@@ -24,7 +24,7 @@ base class `object` in engine has attributes common to most objects and provides
 * example:
   - bit 1 - 'enemy fire' - meaning that all enemy fire classes enable bit 1 in `col_bits`
   - hero `col_mask` would enable bit 1 to get informed when collision with any 'enemy fire' object occurs
-* this scheme enables objects to collide with each other without triggering collision detection handling such as enemy ships rendered on each other
+* this scheme enables objects to collide with each other without triggering collision detection handling, such as enemy ships rendered overlapping each other
 
 ## overridable functions
 
@@ -47,7 +47,7 @@ base class `object` in engine has attributes common to most objects and provides
 * default implementation is to update position and motion attributes
 * user object should call base class `update()` before implementing custom logic
 * common custom logic is collision handling
-  - check `col_with`, if not `nullptr` handle collision then reset to `nullptr`
+  - check `col_with`, if not `nullptr`, handle collision, then reset to `nullptr`
 * return `true` if object has 'died' and should be de-allocated by the engine
 
 ### update_sprite

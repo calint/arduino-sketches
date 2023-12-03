@@ -97,7 +97,7 @@ static unsigned wave_triggers_ix = 0;
 // callback after frame has been rendered, happens after 'update'
 static void main_on_frame_completed() {
   // update x position in pixels in the tile map
-  tile_map_x += clk.dt(tile_map_dx);
+  tile_map_x += tile_map_dx * clk.dt;
   if (tile_map_x < 0) {
     tile_map_x = 0;
     tile_map_dx = -tile_map_dx;
@@ -106,7 +106,7 @@ static void main_on_frame_completed() {
     tile_map_dx = -tile_map_dx;
   }
   // update y position in pixels in the tile map
-  tile_map_y += clk.dt(tile_map_dy);
+  tile_map_y += tile_map_dy * clk.dt;
   if (tile_map_y < 0) {
     tile_map_y = 0;
     tile_map_dy = -tile_map_dy;

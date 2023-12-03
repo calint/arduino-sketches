@@ -414,8 +414,8 @@ void setup(void) {
 void loop() {
   // frames per second update
   if (clk.on_frame(millis())) {
-    Serial.printf("t=%lu  fps=%u  ldr=%u  objs=%u  sprs=%u\n", clk.ms,
-                  clk.fps(), analogRead(ldr_pin), objects.allocated_list_len(),
+    Serial.printf("t=%lu  fps=%u  ldr=%u  objs=%u  sprs=%u\n", clk.ms, clk.fps,
+                  analogRead(ldr_pin), objects.allocated_list_len(),
                   sprites.allocated_list_len());
   }
 

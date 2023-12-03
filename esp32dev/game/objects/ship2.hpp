@@ -8,7 +8,7 @@ class ship2 final : public object {
       sizeof(animation_frames) / sizeof(sprite_ix);
   static constexpr unsigned animation_rate_ms = 500;
   // animation state
-  clk_time_ms animation_frame_ms = 0;
+  clk::time animation_frame_ms = 0;
   uint8_t animation_frames_ix = 0;
 
 public:

@@ -1,8 +1,4 @@
-[x] display_width and height is defined in engine.hpp but is device dependent
-    => extracted to 'esp32dev.ino' as platform dependent constant
-[ ] animated sprite class {sprite_img,ms}
 [ ] consider locking dt to 30 fps for deterministic behavior
-[x] separate palette for sprites and tiles
 [ ] horizontal, vertical flip of sprite
 [ ] several sets of tiles cycled for animation
 [ ] render_scanline(...) consider looping through allocated sprites instead of all
@@ -21,6 +17,11 @@
     float result[4];
     vaddf(result, a, b, 4);
 -------------------------------------------------------------------------------
+[x] display_width and height is defined in engine.hpp but is device dependent
+    => extracted to 'platform.hpp' as platform dependent constant
+[x] animated sprite class {sprite_img,ms}
+    => animation implemented ad-hoc in 'game/objects/ship2.hpp'
+[x] separate palette for sprites and tiles
 [x] extract files into headers/source
 [x] collision detection: bit field for type and collision interest
 [-] o1store: consider std::array instead of pointers

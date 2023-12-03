@@ -112,29 +112,33 @@ static sprite_ix *collision_map;
 static constexpr unsigned collision_map_size =
     sizeof(sprite_ix) * display_width * display_height;
 
-using clk_time_ms = unsigned long;
-
 // helper class managing current frame time, dt, frames per second calculation
 class clk {
+public:
+  using time = unsigned long;
+
+private:
   unsigned interval_ms_ = 5000;
-  unsigned frames_rendered_in_interval_ = 0;
-  clk_time_ms last_update_ms_ = 0;
-  clk_time_ms prv_now_ms_ = 0;
-  unsigned current_fps_ = 0;
+  unsigned frames_rendered_since_last_update_ = 0;
+  time last_fps_update_ms_ = 0;
+  time prv_ms_ = 0;
 
 public:
   // current time since boot in milliseconds
-  clk_time_ms ms = 0;
+  time ms = 0;
 
   // frame delta time in seconds
-  float dt_s = 0;
+  float dt = 0;
+
+  // current frames per second calculated at interval specified at 'init'
+  unsigned fps = 0;
 
   // called at setup with current time and frames per seconds calculation
   // interval
   void init(const unsigned long time_ms,
-            const unsigned interval_of_fps_calculations_ms) {
-    last_update_ms_ = prv_now_ms_ = ms;
-    interval_ms_ = interval_of_fps_calculations_ms;
+            const unsigned interval_of_fps_calculation_ms) {
+    last_fps_update_ms_ = prv_ms_ = ms;
+    interval_ms_ = interval_of_fps_calculation_ms;
     ms = time_ms;
   }
 
@@ -142,26 +146,18 @@ public:
   // returns true if new frames per second calculation was done
   auto on_frame(const unsigned long time_ms) -> bool {
     ms = time_ms;
-    dt_s = (ms - prv_now_ms_) / 1000.0f;
-    prv_now_ms_ = ms;
-    frames_rendered_in_interval_++;
-    const unsigned long dt_ms = ms - last_update_ms_;
+    dt = 0.001f * (ms - prv_ms_);
+    prv_ms_ = ms;
+    frames_rendered_since_last_update_++;
+    const unsigned long dt_ms = ms - last_fps_update_ms_;
     if (dt_ms >= interval_ms_) {
-      current_fps_ = frames_rendered_in_interval_ * 1000 / dt_ms;
-      frames_rendered_in_interval_ = 0;
-      last_update_ms_ = ms;
+      fps = frames_rendered_since_last_update_ * 1000 / dt_ms;
+      frames_rendered_since_last_update_ = 0;
+      last_fps_update_ms_ = ms;
       return true;
     }
     return false;
   }
-
-  // returns current frames per second calculated at interval specified at
-  // 'init'
-  inline auto fps() const -> unsigned { return current_fps_; }
-
-  // returns argument multiplied by delta time in seconds for frame
-  inline auto dt(float f) const -> float { return f * dt_s; }
-
 } static clk{};
 
 using object_ix = uint8_t;
@@ -209,10 +205,10 @@ public:
   // note. regarding classes overriding 'update(...)'
   // after 'update(...)' 'col_with' should be 'nullptr'
   virtual auto update() -> bool {
-    dx += clk.dt(ddx);
-    dy += clk.dt(ddy);
-    x += clk.dt(dx);
-    y += clk.dt(dy);
+    dx += ddx * clk.dt;
+    dy += ddy * clk.dt;
+    x += dx * clk.dt;
+    y += dy * clk.dt;
     return false;
   }
 

@@ -4,7 +4,7 @@
 class fragment final : public object {
 public:
   int8_t damage = 1;
-  clk_time_ms die_at_ms;
+  clk::time die_at_ms;
 
   fragment() : object{fragment_cls} {
     col_bits = cb_fragment;

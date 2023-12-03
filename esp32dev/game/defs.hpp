@@ -1,9 +1,6 @@
 #pragma once
 // constants and definitions used by the engine and game objects
 
-static constexpr uint8_t display_orientation = 0;
-// 0: vertical, 1: horizontal
-
 // number of sprite images
 // defined in 'resources/sprite_imgs.hpp'
 static constexpr unsigned sprite_imgs_count = 256;

@@ -1,4 +1,5 @@
-[ ] display_width and height is defined in engine.hpp but is device dependent
+[x] display_width and height is defined in engine.hpp but is device dependent
+    => extracted to 'esp32dev.ino' as platform dependent constant
 [ ] animated sprite class {sprite_img,ms}
 [ ] consider locking dt to 30 fps for deterministic behavior
 [x] separate palette for sprites and tiles

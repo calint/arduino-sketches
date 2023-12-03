@@ -60,12 +60,22 @@
 // note. tools to extract sprites, tiles and palettes from png
 // https://github.com/calint/arduino-sketches/tree/main/esp32dev/utils/png-to-resources
 
+#include <TFT_eSPI.h>
+
+static constexpr uint8_t display_orientation = 0;
+// 0: vertical, 1: horizontal
+
+// display dimensions of screen ILI9341 depending on orientation
+static constexpr unsigned display_width =
+    display_orientation == 0 ? TFT_WIDTH : TFT_HEIGHT;
+static constexpr unsigned display_height =
+    display_orientation == 0 ? TFT_HEIGHT : TFT_WIDTH;
+
 // main entry file to user code
 #include "game/main.hpp"
 
 // platform specific definitions and objects
 #include <SPI.h>
-#include <TFT_eSPI.h>
 #include <XPT2046_Touchscreen.h>
 #include <limits>
 

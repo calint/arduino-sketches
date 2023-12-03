@@ -27,10 +27,14 @@ static void main_setup() {
 }
 
 // calibration of touch screen
-constexpr int16_t touch_screen_value_min = 300;
-constexpr int16_t touch_screen_value_max = 3600;
-constexpr int16_t touch_screen_value_range =
-    touch_screen_value_max - touch_screen_value_min;
+constexpr int16_t touch_screen_min_x = 400;
+constexpr int16_t touch_screen_max_x = 3700;
+constexpr int16_t touch_screen_range_x =
+    touch_screen_max_x - touch_screen_min_x;
+constexpr int16_t touch_screen_min_y = 300;
+constexpr int16_t touch_screen_max_y = 3750;
+constexpr int16_t touch_screen_range_y =
+    touch_screen_max_y - touch_screen_min_y;
 
 unsigned long last_fire_ms = 0;
 // keeps track of when the previous bullet was fired
@@ -48,8 +52,7 @@ static void main_on_touch_screen(int16_t x, int16_t y, int16_t z) {
     last_fire_ms = clk.now_ms();
     if (objects.can_allocate()) {
       bullet *blt = new (objects.allocate_instance()) bullet{};
-      blt->x = (x - touch_screen_value_min) * display_width /
-               touch_screen_value_range;
+      blt->x = (x - touch_screen_min_x) * display_width / touch_screen_range_x;
       blt->y = 300;
       blt->dy = -100;
     }

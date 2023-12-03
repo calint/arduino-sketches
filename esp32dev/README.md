@@ -1,4 +1,4 @@
-### toy game for esp32-2432s028r a.k.a. cheap-yellow-display (cyd)
+### toy game for ESP32-2432S028R a.k.a. cheap-yellow-display (cyd)
 
 intention:
 * developing arduino sketch using visual code

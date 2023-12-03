@@ -3,9 +3,9 @@
 intention:
 * developing a toy game using platform independent engine
 
-layout (in order of inclusion in the program file):
+table of contentst (in include order by program file):
 * `/def.hpp` constants used by the engine and game objects
 * `/resources/*` partial files defining tiles, sprites, palettes and tile map
-* `/game.hpp` imported by objects using the game state
+* `/game.hpp` game state used by objects
 * `/objects/*` game objects
-* `/main.hpp` setup, callbacks from the engine, game logic
+* `/main.hpp` setup initial game state, callbacks from the engine, game logic

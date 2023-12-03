@@ -76,7 +76,7 @@ void readPalettedPNG(const char *filename) {
 
 int main(int argc, char *argv[]) {
   if (argc < 2) {
-    std::cout << "usage: read-palette <filename>" << std::endl;
+    std::cout << "usage: read-sprites <filename>" << std::endl;
     return 1;
   }
   readPalettedPNG(argv[1]);

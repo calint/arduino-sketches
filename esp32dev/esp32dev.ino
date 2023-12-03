@@ -58,7 +58,7 @@
 // engine
 
 // note. tools to extract sprites, tiles and palettes from png
-// https://github.com/calint/arduino-sketches/tree/main/utils/png-to-resources
+// https://github.com/calint/arduino-sketches/tree/main/esp32dev/utils/png-to-resources
 
 // main entry file to user code
 #include "game/main.hpp"

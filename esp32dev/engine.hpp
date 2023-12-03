@@ -164,7 +164,7 @@ using object_ix = uint8_t;
 // data type used to index an 'object' in 'o1store'
 
 enum object_class : uint8_t;
-// enum declared in "game/defs.hpp" defining the game objects
+// defined in "game/defs.hpp" enumerating the game object classes
 
 class object {
 public:

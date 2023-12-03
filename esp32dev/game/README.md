@@ -24,8 +24,7 @@ table of contents (in include order by program file):
 * implements game objects
 
 ## game.hpp
-* included by objects that modify game state
-* game state used in `main_on_frame_completed` solving circular reference problemss
+* included by objects that modify game state used in `main_on_frame_completed` solving circular reference problems
 
 ## resources/*
 * separate palettes for tiles and sprites

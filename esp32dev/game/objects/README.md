@@ -47,11 +47,11 @@ base class `object` defined in engine has attributes common to most objects and 
 * additional clean-up implemented by inheriting class
 
 ### update
-* game loop calls `update()` on allocated objects
+* game loop calls `update` on allocated objects
 * default implementation is:
   - update position and motion attributes
-  - handle collisions by calling `on_collision`
-* common custom logic is collision handling
+  - handle collision by calling `on_collision`
+* common custom logic game objects might implement is collision handling
   - check `col_with`, if not `nullptr`, handle collision, then set to `nullptr`
 * return `true` if object has 'died' and should be de-allocated by the engine
 
@@ -65,7 +65,7 @@ base class `object` defined in engine has attributes common to most objects and 
 * called during `on_collision` if object has died due to collision damage
 
 ### update_sprite
-* game loop calls `update_sprite()` before rendering
+* game loop calls `update_sprite` before rendering
 * default implementation sets sprite screen position using object position
 * objects composed of several sprites override this function to set screen position on the additional sprites
 

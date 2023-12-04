@@ -18,8 +18,8 @@
 * sprite: `spr`
 
 ### related to collisions
-* health: `hlth`
-* damage: `dmg`
+* health: `health`
+* damage inflicted on collision: `damage`
 
 ### related to collision detection
 * engine performs collision detection between sprites on screen if a bitwise AND operation involving `col_bits` from an object and `col_mask` from another object is non-zero

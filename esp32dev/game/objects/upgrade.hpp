@@ -32,5 +32,7 @@ public:
     upgrade_picked *up = new (objects.allocate_instance()) upgrade_picked{};
     up->x = x;
     up->y = y;
+    up->dx = 50;
+    up->ddx = -30;
   }
 };

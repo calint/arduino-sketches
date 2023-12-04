@@ -67,7 +67,8 @@ public:
       upgrade *upg = new (objects.allocate_instance()) upgrade{};
       upg->x = x;
       upg->y = y;
-      upg->ddy = 10;
+      upg->dy = 30;
+      upg->ddy = 20;
       last_upgrade_deployed_ms = clk.ms;
     }
 

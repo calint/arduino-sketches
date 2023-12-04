@@ -1,6 +1,6 @@
 # anatomy of a game object
 
-base class `object` defined in engine has attributes common to most objects and provides overridable functions for custom logic
+base class `object` defined in `engine.hpp` has attributes and behavior common to most objects and provides overridable functions for custom logic of every step in the game loop
 
 ## attributes
 

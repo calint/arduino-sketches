@@ -40,16 +40,16 @@ base class `object` defined in `engine.hpp` has attributes and behavior common t
   - set `spr->img` to image data, usually defined in `sprite_imgs[...]`
 * object may be composed of several sprites
   - declare additional sprite pointers as class attributes
-  - initiate in the constructor in same manner as `spr`
+  - initiate in the same manner as `spr`
 
 ### destructor
 * object de-allocates sprite
-* additional clean-up implemented by inheriting class
+* additional clean-up implemented by inheriting class such as de-allocating additional sprites
 
 ### update
 * game loop calls `update` on allocated objects
 * default implementation is:
-  - handle collision by calling `on_collision`
+  - handle collision by calling `on_collision` if such occurred during previous frame
   - update position and motion attributes
 * common custom logic game objects might implement is collision handling
   - check `col_with`, if not `nullptr`, handle collision, then set to `nullptr`

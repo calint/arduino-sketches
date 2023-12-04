@@ -2,7 +2,7 @@
 
 * `game_object` extends class `object` defined in `engine.hpp`
 * contains attributes and behavior common to most objects
-* provides overridable functions for custom logic of every step in the game loop
+* provides overridable functions for custom logic at every step in the game loop
 
 ## attributes
 
@@ -49,7 +49,7 @@
 * user code might do additional clean up such as deallocating sprites
 
 ### update
-* game loop calls `update` on allocated objects
+* game loop calls `update` on allocated objects at the beginning of the frame
 * default implementation is:
   - handle collision by calling `on_collision` if such occurred during previous frame
   - update position and motion attributes
@@ -58,7 +58,7 @@
 * return `true` if object has 'died' and should be de-allocated by the engine
 
 ### pre_render
-* game loop calls `pre_render` before rendering pass
+* game loop calls `pre_render` on allocated objects before rendering the sprites
 * default implementation sets sprite screen position using object position
 * objects composed of several sprites override this function to set screen position on the additional sprites
 

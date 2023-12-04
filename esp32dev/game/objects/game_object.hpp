@@ -1,6 +1,7 @@
 #pragma once
 #include "../../engine.hpp"
 
+// implements common behavior of all game objects
 class game_object : public object {
 public:
   sprite *spr = nullptr;

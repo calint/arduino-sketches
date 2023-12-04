@@ -33,7 +33,7 @@ table of contents (in include order by program file):
 * separate palettes for tiles and sprites
 * 256 sprite and tile images is default although more can be used by changing settings in `defs.hpp`
   - example of 512 sprite and tile images configuration is commented in `defs.hpp`
-  - `utils/png-to-resources/read-sprites.py` needs adjustment to extract more than 256 sprites or tiles
+* sprite and tile images data is constant stored in program memory
 * tile map size is user defined in `defs.hpp`
 
 ## defs.hpp

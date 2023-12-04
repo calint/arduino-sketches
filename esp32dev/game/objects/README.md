@@ -55,13 +55,13 @@ base class `object` defined in engine has attributes common to most objects and 
   - check `col_with`, if not `nullptr`, handle collision, then set to `nullptr`
 * return `true` if object has 'died' and should be de-allocated by the engine
 
-## on_collision
+### on_collision
 * called from default object `update` if object is in collision
 * default implementation is to reduce health with the damage caused by the colliding object
 * if damage is greater or equal to health then `on_death_by_collision` is called
 * returns `true` if object has died
 
-## on_death_by_collision
+### on_death_by_collision
 * called during `on_collision` if object has died due to collision damage
 
 ### update_sprite

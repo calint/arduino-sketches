@@ -30,7 +30,7 @@ public:
   // returns true if object has died
   // note. regarding classes overriding 'update(...)'
   // after 'update(...)' 'col_with' should be 'nullptr'
-  virtual auto update() -> bool override {
+  auto update() -> bool override {
     if (col_with) {
       if (on_collision(static_cast<game_object *>(col_with))) {
         return true;
@@ -47,7 +47,7 @@ public:
   }
 
   // called before rendering the sprites
-  virtual void pre_render() override {
+  void pre_render() override {
     spr->scr_x = int16_t(x);
     spr->scr_y = int16_t(y);
   }

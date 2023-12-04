@@ -28,8 +28,8 @@
   - same procedure is done with A and B swapped
 * the definition of the 32 available bits and their meaning is custom depending on the game
 * example:
-  - bit 1 - 'enemy fire' - meaning that all enemy fire classes enable bit 1 in `col_bits`
-  - hero `col_mask` would enable bit 1 to get informed when collision with any 'enemy fire' object occurs
+  - bit 1 - _enemy fire_ - meaning that all classes representing _enemy fire_ enable bit 1 in `col_bits`
+  - hero `col_mask` would enable bit 1 to get notified when collision with any _enemy fire_ object occurs
 * this scheme enables objects to collide with each other without triggering collision detection handling, such as enemy ships rendered overlapping each other
 
 ## overridable functions

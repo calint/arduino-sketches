@@ -1,6 +1,6 @@
 # anatomy of a game object
 
-* `game_object` extends class `object` defined in `engine.hpp`
+* `game_object` extends `object` defined in `engine.hpp`
 * contains attributes and behavior common to most objects
 * provides overridable functions for custom logic at every step in the game loop
 

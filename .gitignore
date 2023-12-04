@@ -4,6 +4,4 @@ secrets.h
 debug.cfg
 debug.svd
 debug_custom.json
-
-read-sprites
-read-palette
+.mypy_cache

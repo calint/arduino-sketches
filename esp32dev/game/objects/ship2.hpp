@@ -48,4 +48,12 @@ public:
 
     return false;
   }
+
+  void on_death_by_collision() override {
+    upgrade *upg = new (objects.allocate_instance()) upgrade{};
+    upg->x = x;
+    upg->y = y;
+    upg->dy = 30;
+    upg->ddy = 20;
+  }
 };

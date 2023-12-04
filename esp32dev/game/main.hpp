@@ -172,10 +172,10 @@ void main_wave_3() {
 }
 
 void main_wave_4() {
-  float y = -float(sprite_height);
-  float x = display_width / 2 - sprite_width / 2;
   ship2 *shp = new (objects.allocate_instance()) ship2{};
-  shp->x = x;
-  shp->y = y;
+  shp->x = -float(sprite_width);
+  shp->y = -float(sprite_height);
   shp->dy = 25;
+  shp->dx = 32;
+  shp->ddx = 20;
 }

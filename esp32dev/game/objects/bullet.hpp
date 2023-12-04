@@ -29,10 +29,6 @@ public:
   }
 
   void on_death_by_collision() override {
-    // Serial.printf("bullet collided\n");
-    if (not objects.can_allocate()) {
-      return;
-    }
     fragment *frg = new (objects.allocate_instance()) fragment{};
     frg->die_at_ms = clk.ms + 250;
     frg->x = x;

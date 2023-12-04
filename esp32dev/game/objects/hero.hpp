@@ -94,9 +94,6 @@ private:
 
   void create_fragments() {
     for (unsigned i = 0; i < frag_count; i++) {
-      if (not objects.can_allocate()) {
-        break;
-      }
       fragment *frg = new (objects.allocate_instance()) fragment{};
       frg->die_at_ms = clk.ms + 500;
       frg->x = x;

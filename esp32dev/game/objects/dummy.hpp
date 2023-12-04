@@ -1,12 +1,14 @@
 #pragma once
 #include "../../engine.hpp"
 
-class dummy final : public object {
+#include "game_object.hpp"
+
+class dummy final : public game_object {
 public:
-  dummy() : object{dummy_cls} {}
+  dummy() : game_object{dummy_cls} {}
 
   auto update() -> bool override {
-    if (object::update()) {
+    if (game_object::update()) {
       return true;
     }
     if (x > display_width) {

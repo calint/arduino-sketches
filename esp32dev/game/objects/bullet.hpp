@@ -2,10 +2,11 @@
 #include "../../engine.hpp"
 
 #include "fragment.hpp"
+#include "game_object.hpp"
 
-class bullet final : public object {
+class bullet final : public game_object {
 public:
-  bullet() : object{bullet_cls} {
+  bullet() : game_object{bullet_cls} {
     col_bits = cb_enemy_bullet;
     col_mask = cb_hero;
     dmg = 1;
@@ -17,7 +18,7 @@ public:
 
   // returns true if object died
   auto update() -> bool override {
-    if (object::update()) {
+    if (game_object::update()) {
       return true;
     }
     if (x <= -float(sprite_width) or x >= display_width or

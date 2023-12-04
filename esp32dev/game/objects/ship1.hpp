@@ -1,9 +1,11 @@
 #pragma once
 #include "../../engine.hpp"
 
-class ship1 final : public object {
+#include "game_object.hpp"
+
+class ship1 final : public game_object {
 public:
-  ship1() : object{ship1_cls} {
+  ship1() : game_object{ship1_cls} {
     col_bits = cb_hero;
     col_mask = cb_enemy_bullet;
 
@@ -14,7 +16,7 @@ public:
 
   // returns true if object died
   auto update() -> bool override {
-    if (object::update()) {
+    if (game_object::update()) {
       return true;
     }
 

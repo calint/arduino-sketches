@@ -1,11 +1,13 @@
 #pragma once
 #include "../../engine.hpp"
 
-class fragment final : public object {
+#include "game_object.hpp"
+
+class fragment final : public game_object {
 public:
   clk::time die_at_ms;
 
-  fragment() : object{fragment_cls} {
+  fragment() : game_object{fragment_cls} {
     col_bits = cb_fragment;
     col_mask = cb_none;
 
@@ -16,7 +18,7 @@ public:
 
   // returns true if object died
   auto update() -> bool override {
-    if (object::update()) {
+    if (game_object::update()) {
       return true;
     }
     if (clk.ms > die_at_ms) {

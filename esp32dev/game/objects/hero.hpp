@@ -5,13 +5,14 @@
 // include dependencies
 #include "bullet.hpp"
 #include "fragment.hpp"
+#include "game_object.hpp"
 
-class hero final : public object {
+class hero final : public game_object {
   sprite *spr_left;
   sprite *spr_right;
 
 public:
-  hero() : object{hero_cls} {
+  hero() : game_object{hero_cls} {
     col_bits = cb_hero;
     col_mask = cb_enemy | cb_enemy_bullet;
 
@@ -45,7 +46,7 @@ public:
 
   // returns true if object died
   auto update() -> bool override {
-    if (object::update()) {
+    if (game_object::update()) {
       return true;
     }
 
@@ -62,8 +63,8 @@ public:
 
   void on_death_by_collision() override { create_fragments(); }
 
-  void update_sprite() override {
-    object::update_sprite();
+  void pre_render() override {
+    game_object::pre_render();
 
     // set position of additional sprites
     spr_left->scr_x = spr->scr_x - sprite_width;

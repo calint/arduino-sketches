@@ -163,90 +163,31 @@ public:
 using object_ix = uint8_t;
 // data type used to index an 'object' in 'o1store'
 
-enum object_class : uint8_t;
-// defined in "game/defs.hpp" enumerating the game object classes
-
-// types representing health and damage inflicted at collision
-using health = uint16_t;
-using damage = uint16_t;
-
 class object {
 public:
-  sprite *spr = nullptr;
   object *col_with = nullptr;
   collision_bits col_bits = 0;
   collision_bits col_mask = 0;
   // note: used to declare interest in collisions with objects whose
   // 'col_bits' bitwise AND with this 'col_mask' is not 0
 
-  float x = 0;
-  float y = 0;
-  float dx = 0;
-  float dy = 0;
-  float ddx = 0;
-  float ddy = 0;
-
   object_ix alloc_ix;
   // note. no default value since it would overwrite the 'o1store' assigned
   // value at 'allocate_instance()'
 
-  health hlth = 0;
-  damage dmg = 0;
-
-  const object_class cls;
-
-  object(object_class c) : cls{c} {}
+  object() {}
   // note. constructor must be defined because the default constructor
   // overwrites the 'o1store' assigned 'alloc_ix' at the 'new in place'
-  //
-  // note. after constructor of inheriting class 'spr' must be in valid state.
 
-  virtual ~object() {
-    // turn off sprite
-    spr->img = nullptr;
-    // free sprite instance
-    sprites.free_instance(spr);
-  }
+  virtual ~object() {}
 
   // returns true if object has died
   // note. regarding classes overriding 'update(...)'
   // after 'update(...)' 'col_with' should be 'nullptr'
-  virtual auto update() -> bool {
-    if (col_with) {
-      if (on_collision(col_with)) {
-        return true;
-      }
-      col_with = nullptr;
-    }
-
-    dx += ddx * clk.dt;
-    dy += ddy * clk.dt;
-    x += dx * clk.dt;
-    y += dy * clk.dt;
-
-    return false;
-  }
-
-  // called from 'update' if object in collision
-  // returns true if object has died
-  virtual auto on_collision(object *obj) -> bool {
-    if (obj->dmg >= hlth) {
-      on_death_by_collision();
-      return true;
-    }
-    hlth -= obj->dmg;
-    return false;
-  }
-
-  // called from 'on_collision' if object has died due to collision
-  virtual void on_death_by_collision() {}
+  virtual auto update() -> bool { return false; }
 
   // sets sprite screen position prior to render
-  virtual void update_sprite() {
-    // update rendering info
-    spr->scr_x = int16_t(x);
-    spr->scr_y = int16_t(y);
-  }
+  virtual void pre_render() {}
 };
 
 using object_store =
@@ -268,12 +209,12 @@ public:
     }
   }
 
-  void update_sprite() {
+  void pre_render() {
     object_ix *it = allocated_list();
     const object_ix len = allocated_list_len();
     for (object_ix i = 0; i < len; i++, it++) {
       object *obj = instance(*it);
-      obj->update_sprite();
+      obj->pre_render();
     }
   }
 } static objects{};
@@ -305,11 +246,11 @@ static void engine_loop() {
   // de-allocate the sprites freed during 'objects.update()'
   sprites.apply_free();
 
-  // updates the screen coordinates of the sprites
-  objects.update_sprite();
-
   // clear collisions map
   memset(collision_map, sprite_ix_reserved, collision_map_size);
+
+  // updates the screen coordinates of the sprites
+  objects.pre_render();
 
   // render tiles, sprites and collision map
   render(unsigned(tile_map_x), unsigned(tile_map_y));

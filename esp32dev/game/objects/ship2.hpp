@@ -1,7 +1,9 @@
 #pragma once
 #include "../../engine.hpp"
 
-class ship2 final : public object {
+#include "game_object.hpp"
+
+class ship2 final : public game_object {
   // animation definition
   inline static constexpr sprite_imgs_ix animation_frames[]{6, 7};
   static constexpr unsigned animation_frames_len =
@@ -12,7 +14,7 @@ class ship2 final : public object {
   uint8_t animation_frames_ix = 0;
 
 public:
-  ship2() : object{ship2_cls}, animation_frame_ms{clk.ms} {
+  ship2() : game_object{ship2_cls}, animation_frame_ms{clk.ms} {
     col_bits = cb_hero;
     col_mask = cb_enemy_bullet;
 
@@ -23,7 +25,7 @@ public:
 
   // returns true if object died
   auto update() -> bool override {
-    if (object::update()) {
+    if (game_object::update()) {
       return true;
     }
 

@@ -1,6 +1,8 @@
 # anatomy of a game object
 
-base class `object` defined in `engine.hpp` has attributes and behavior common to most objects and provides overridable functions for custom logic of every step in the game loop
+* `game_object` extends class `object` defined in `engine.hpp`
+* contains attributes and behavior common to most objects
+* provides overridable functions for custom logic of every step in the game loop
 
 ## attributes
 
@@ -55,6 +57,11 @@ base class `object` defined in `engine.hpp` has attributes and behavior common t
   - check `col_with`, if not `nullptr`, handle collision, then set to `nullptr`
 * return `true` if object has 'died' and should be de-allocated by the engine
 
+### pre_render
+* game loop calls `pre_render` before rendering pass
+* default implementation sets sprite screen position using object position
+* objects composed of several sprites override this function to set screen position on the additional sprites
+
 ### on_collision
 * called from default object `update` if object is in collision
 * default implementation is to reduce health with the damage caused by the colliding object
@@ -63,11 +70,6 @@ base class `object` defined in `engine.hpp` has attributes and behavior common t
 
 ### on_death_by_collision
 * called during `on_collision` if object has died due to collision damage
-
-### update_sprite
-* game loop calls `update_sprite` before rendering
-* default implementation sets sprite screen position using object position
-* objects composed of several sprites override this function to set screen position on the additional sprites
 
 ## examples
 * `ship1.hpp` basic object with typical implementation

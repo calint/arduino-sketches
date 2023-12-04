@@ -56,6 +56,7 @@ static void main_wave_1();
 static void main_wave_2();
 static void main_wave_3();
 static void main_wave_4();
+static void main_wave_5();
 
 // util to more easily position where waves are triggered
 constexpr unsigned tiles_per_screen = display_height / tile_height;
@@ -80,12 +81,14 @@ struct wave_trigger {
     {float((tile_map_height - tiles_per_screen * 2.5f) * tile_height),
      main_wave_3},
     {float((tile_map_height - tiles_per_screen * 3.5f) * tile_height),
-     main_wave_1},
-    {float((tile_map_height - tiles_per_screen * 4.0f) * tile_height),
-     main_wave_2},
+     main_wave_4},
     {float((tile_map_height - tiles_per_screen * 4.5f) * tile_height),
      main_wave_3},
     {float((tile_map_height - tiles_per_screen * 5.0f) * tile_height),
+     main_wave_2},
+    {float((tile_map_height - tiles_per_screen * 5.5f) * tile_height),
+     main_wave_1},
+    {float((tile_map_height - tiles_per_screen * 6.0f) * tile_height),
      main_wave_4},
 };
 
@@ -172,10 +175,35 @@ void main_wave_3() {
 }
 
 void main_wave_4() {
-  ship2 *shp = new (objects.allocate_instance()) ship2{};
-  shp->x = -float(sprite_width);
-  shp->y = -float(sprite_height);
-  shp->dy = 25;
-  shp->dx = 32;
-  shp->ddx = 20;
+  {
+    ship2 *shp = new (objects.allocate_instance()) ship2{};
+    shp->x = -float(sprite_width);
+    shp->y = -float(sprite_height);
+    shp->dy = 25;
+    shp->dx = 12;
+    shp->ddy = 20;
+    shp->ddx = 10;
+  }
+  {
+    ship2 *shp = new (objects.allocate_instance()) ship2{};
+    shp->x = display_width;
+    shp->y = -float(sprite_height);
+    shp->dy = 25;
+    shp->dx = -12;
+    shp->ddy = 20;
+    shp->ddx = -10;
+  }
+}
+
+void main_wave_5() {
+  float y = -float(sprite_height);
+  for (unsigned j = 0; j < 12; j++, y -= 10) {
+    float x = 8;
+    for (unsigned i = 0; i < 20; i++, x += 10) {
+      ship1 *shp = new (objects.allocate_instance()) ship1{};
+      shp->x = x;
+      shp->y = y;
+      shp->dy = 30;
+    }
+  }
 }

@@ -19,15 +19,11 @@ public:
   object_class cls;
 
   game_object(object_class c) : cls{c} {}
-  // note. constructor must be defined because the default constructor
-  // overwrites the 'o1store' assigned 'alloc_ix' at the 'new in place'
-  //
-  // note. after constructor of inheriting class 'spr' must be in valid state.
+  // note. after constructor 'spr' must be in valid state.
 
   virtual ~game_object() {
     // turn off sprite
     spr->img = nullptr;
-    // free sprite instance
     sprites.free_instance(spr);
   }
 
@@ -50,14 +46,13 @@ public:
     return false;
   }
 
-  // sets sprite screen position prior to render
+  // called before rendering the sprites
   virtual void pre_render() override {
-    // update rendering info
     spr->scr_x = int16_t(x);
     spr->scr_y = int16_t(y);
   }
 
-  // called from 'update' if object in collision
+  // called from 'update' if object is in collision
   // returns true if object has died
   virtual auto on_collision(game_object *obj) -> bool {
     if (obj->dmg >= hlth) {

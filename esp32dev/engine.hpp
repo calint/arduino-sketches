@@ -51,9 +51,6 @@ public:
 #include "game/resources/tile_imgs.hpp"
 };
 
-// type used to index in the tiles images
-using tile_ix = uint8_t;
-
 class tile_map {
 public:
   tile_ix cell[tile_map_height][tile_map_width];

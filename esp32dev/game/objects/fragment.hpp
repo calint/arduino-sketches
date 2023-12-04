@@ -3,7 +3,6 @@
 
 class fragment final : public object {
 public:
-  int8_t damage = 1;
   clk::time die_at_ms;
 
   fragment() : object{fragment_cls} {

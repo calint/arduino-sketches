@@ -9,12 +9,13 @@
 class hero final : public object {
   sprite *spr_left;
   sprite *spr_right;
-  int16_t health = 10;
 
 public:
   hero() : object{hero_cls} {
     col_bits = cb_hero;
     col_mask = cb_enemy | cb_enemy_bullet;
+
+    hlth = 10;
 
     spr = sprites.allocate_instance();
     spr->obj = this;
@@ -56,22 +57,10 @@ public:
       x = sprite_width_neg;
     }
 
-    if (col_with) {
-      if (col_with->cls == bullet_cls) {
-        bullet *blt = static_cast<bullet *>(col_with);
-        health -= blt->damage;
-        // Serial.printf("hero health: %d\n", health);
-        if (health <= 0) {
-          create_fragments();
-          return true;
-        }
-      }
-      // reset collision information
-      col_with = nullptr;
-    }
-
     return false;
   }
+
+  void on_death_by_collision() override { create_fragments(); }
 
   void update_sprite() override {
     object::update_sprite();

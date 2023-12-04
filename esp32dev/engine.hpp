@@ -166,6 +166,10 @@ using object_ix = uint8_t;
 enum object_class : uint8_t;
 // defined in "game/defs.hpp" enumerating the game object classes
 
+// types representing health and damage inflicted at collision
+using health = uint16_t;
+using damage = uint16_t;
+
 class object {
 public:
   sprite *spr = nullptr;
@@ -185,6 +189,9 @@ public:
   object_ix alloc_ix;
   // note. no default value since it would overwrite the 'o1store' assigned
   // value at 'allocate_instance()'
+
+  health hlth = 0;
+  damage dmg = 0;
 
   const object_class cls;
 
@@ -209,8 +216,29 @@ public:
     dy += ddy * clk.dt;
     x += dx * clk.dt;
     y += dy * clk.dt;
+
+    if (col_with) {
+      if (on_collision(col_with)) {
+        return true;
+      }
+      col_with = nullptr;
+    }
     return false;
   }
+
+  // called from 'update' if object in collision
+  // returns true if object has died
+  virtual auto on_collision(object *obj) -> bool {
+    if (obj->dmg >= hlth) {
+      on_death_by_collision();
+      return true;
+    }
+    hlth -= obj->dmg;
+    return false;
+  }
+
+  // called from 'on_collision' if object has died due to collision
+  virtual void on_death_by_collision() {}
 
   // sets sprite screen position prior to render
   virtual void update_sprite() {

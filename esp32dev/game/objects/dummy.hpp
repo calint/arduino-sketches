@@ -9,9 +9,6 @@ public:
     if (object::update()) {
       return true;
     }
-    if (col_with) {
-      return true;
-    }
     if (x > display_width) {
       return true;
     }

@@ -3,7 +3,7 @@
 
 class ship2 final : public object {
   // animation definition
-  inline static constexpr sprite_ix animation_frames[]{6, 7};
+  inline static constexpr sprite_imgs_ix animation_frames[]{6, 7};
   static constexpr unsigned animation_frames_len =
       sizeof(animation_frames) / sizeof(sprite_ix);
   static constexpr unsigned animation_rate_ms = 500;
@@ -28,10 +28,6 @@ public:
     }
 
     if (y > display_height) {
-      return true;
-    }
-
-    if (col_with) {
       return true;
     }
 

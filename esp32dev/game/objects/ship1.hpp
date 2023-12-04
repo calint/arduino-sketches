@@ -22,10 +22,6 @@ public:
       return true;
     }
 
-    if (col_with) {
-      return true;
-    }
-
     return false;
   }
 };

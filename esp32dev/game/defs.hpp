@@ -4,6 +4,8 @@
 // number of sprite images
 // defined in 'resources/sprite_imgs.hpp'
 static constexpr unsigned sprite_imgs_count = 256;
+// type used to address instance in 'sprite_imgs' array
+using sprite_imgs_ix = uint8_t;
 
 // number of tile images (maximum 256)
 // defined in 'resources/tile_imgs.hpp'

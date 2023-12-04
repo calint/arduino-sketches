@@ -49,8 +49,8 @@ base class `object` defined in engine has attributes common to most objects and 
 ### update
 * game loop calls `update` on allocated objects
 * default implementation is:
-  - update position and motion attributes
   - handle collision by calling `on_collision`
+  - update position and motion attributes
 * common custom logic game objects might implement is collision handling
   - check `col_with`, if not `nullptr`, handle collision, then set to `nullptr`
 * return `true` if object has 'died' and should be de-allocated by the engine
@@ -58,7 +58,7 @@ base class `object` defined in engine has attributes common to most objects and 
 ### on_collision
 * called from default object `update` if object is in collision
 * default implementation is to reduce health with the damage caused by the colliding object
-* if damage is greater or equal to health then `on_death_by_collision` is called
+* if damage is greater or equal than health then `on_death_by_collision` is called
 * returns `true` if object has died
 
 ### on_death_by_collision

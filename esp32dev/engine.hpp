@@ -212,17 +212,18 @@ public:
   // note. regarding classes overriding 'update(...)'
   // after 'update(...)' 'col_with' should be 'nullptr'
   virtual auto update() -> bool {
-    dx += ddx * clk.dt;
-    dy += ddy * clk.dt;
-    x += dx * clk.dt;
-    y += dy * clk.dt;
-
     if (col_with) {
       if (on_collision(col_with)) {
         return true;
       }
       col_with = nullptr;
     }
+
+    dx += ddx * clk.dt;
+    dy += ddy * clk.dt;
+    x += dx * clk.dt;
+    y += dy * clk.dt;
+
     return false;
   }
 

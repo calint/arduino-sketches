@@ -186,7 +186,7 @@ public:
   // after 'update(...)' 'col_with' should be 'nullptr'
   virtual auto update() -> bool { return false; }
 
-  // sets sprite screen position prior to render
+  // called before rendering the sprites
   virtual void pre_render() {}
 };
 
@@ -249,7 +249,7 @@ static void engine_loop() {
   // clear collisions map
   memset(collision_map, sprite_ix_reserved, collision_map_size);
 
-  // updates the screen coordinates of the sprites
+  // prepare objects for render
   objects.pre_render();
 
   // render tiles, sprites and collision map

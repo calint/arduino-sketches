@@ -20,8 +20,6 @@
 ### related to collisions
 * health: `health`
 * damage inflicted on collision: `damage`
-
-### related to collision detection
 * engine performs collision detection between sprites on screen if a bitwise AND operation involving `col_bits` from an object and `col_mask` from another object is non-zero
 * example:
   - if `col_bits` of object A bitwise AND with `col_mask` of object B is non-zero then object B `col_with` pointer is set to object A

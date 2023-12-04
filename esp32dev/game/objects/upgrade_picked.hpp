@@ -8,14 +8,11 @@ class upgrade_picked final : public game_object {
 
 public:
   upgrade_picked() : game_object{upgrade_picked_cls} {
-    col_bits = cb_none;
-    col_mask = cb_none;
-
     spr = sprites.allocate_instance();
     spr->obj = this;
     spr->img = sprite_imgs[9];
 
-    death_at_ms = clk.ms + 1000;
+    death_at_ms = clk.ms + 2000;
   }
 
   // returns true if object died

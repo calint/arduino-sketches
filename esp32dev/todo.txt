@@ -5,7 +5,7 @@
 [ ] render_scanline(...) consider looping through allocated sprites instead of all
 [ ] o1store: consider replacing alloc_ix with pointer to array element
     removing all array look-ups in the algorithm
-[ ] o1store: can_allocate() is not thread safe. remove
+[ ] o1store: can_allocate() is not thread safe
 [ ] o1store: hang if overrun?
 [ ] o1store: consider using std::vector instead of calloc and free
 [ ] o1store: consider a minimal implementation of span to return allocated list

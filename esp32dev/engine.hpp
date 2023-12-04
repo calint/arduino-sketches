@@ -190,7 +190,6 @@ public:
 using object_store =
     o1store<object, 255, object_ix, 2, object_instance_max_size_B>;
 // note. 255 because object_ix a.k.a. uint8_t max size is 255
-//       instance size 256 to fit largest sub-class of 'object'
 
 class objects : public object_store {
 public:

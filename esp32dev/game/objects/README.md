@@ -12,12 +12,12 @@ base class `object` defined in engine has attributes common to most objects and 
 * velocity: `dx`, `dy`
 * acceleration: `ddx`, `ddy`
 
+### related to display
+* sprite: `spr`
+
 ### related to collisions
 * health: `hlth`
 * damage: `dmg`
-
-### related to display
-* sprite: `spr`
 
 ### related to collision detection
 * engine performs collision detection between sprites on screen if a bitwise AND operation involving `col_bits` from an object and `col_mask` from another object is non-zero
@@ -35,7 +35,7 @@ base class `object` defined in engine has attributes common to most objects and 
 ### constructor
 * base constructor sets mandatory `cls` to provide run time information
   - object classes are defined in `enum object_class` in `defs.hpp`
-* allocate and initiate `sprite`
+* allocate and initiate sprite `spr`
   - set `spr->obj` to current object
   - set `spr->img` to image data, usually defined in `sprite_imgs[...]`
 * object may be composed of several sprites

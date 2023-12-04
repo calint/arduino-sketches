@@ -35,7 +35,9 @@ enum object_class : uint8_t {
   dummy_cls,
   fragment_cls,
   ship1_cls,
-  ship2_cls
+  ship2_cls,
+  upgrade_cls,
+  upgrade_picked_cls
 };
 
 // collision bits
@@ -45,3 +47,4 @@ static constexpr collision_bits cb_hero_bullet = 1 << 1;
 static constexpr collision_bits cb_fragment = 1 << 2;
 static constexpr collision_bits cb_enemy = 1 << 3;
 static constexpr collision_bits cb_enemy_bullet = 1 << 4;
+static constexpr collision_bits cb_upgrade = 1 << 5;

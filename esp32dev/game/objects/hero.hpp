@@ -6,10 +6,13 @@
 #include "bullet.hpp"
 #include "fragment.hpp"
 #include "game_object.hpp"
+#include "upgrade.hpp"
 
 class hero final : public game_object {
-  sprite *spr_left;
-  sprite *spr_right;
+  sprite *spr_left = nullptr;
+  sprite *spr_right = nullptr;
+  clk::time last_upgrade_deployed_ms = 0;
+  static constexpr clk::time upgrade_deploy_interval_ms = 10000;
 
 public:
   hero() : game_object{hero_cls} {
@@ -29,6 +32,8 @@ public:
     spr_right = sprites.allocate_instance();
     spr_right->obj = this;
     spr_right->img = sprite_imgs[0];
+
+    last_upgrade_deployed_ms = clk.ms;
 
     game.hero_is_alive = true;
   }
@@ -56,6 +61,14 @@ public:
     } else if (x < sprite_width_neg) {
       dx = -dx;
       x = sprite_width_neg;
+    }
+
+    if (clk.ms - last_upgrade_deployed_ms > upgrade_deploy_interval_ms) {
+      upgrade *upg = new (objects.allocate_instance()) upgrade{};
+      upg->x = x;
+      upg->y = y;
+      upg->ddy = 10;
+      last_upgrade_deployed_ms = clk.ms;
     }
 
     return false;

@@ -79,7 +79,8 @@ static constexpr uint8_t sprite_imgs[sprite_imgs_count]
 
 using sprite_ix = uint8_t;
 // data type used to index a sprite
-// note. for 'collision_map' to fit in heap it must be 8-bit
+// note. for 'collision_map' to fit in a contiguous block of heap it must be
+// 8-bit
 
 // the reserved 'sprite_ix' in 'collision_map' representing 'no sprite pixel'
 static constexpr sprite_ix sprite_ix_reserved =

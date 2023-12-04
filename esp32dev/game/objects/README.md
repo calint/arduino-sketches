@@ -55,7 +55,7 @@
   - update position and motion attributes
 * user code might implement custom collision handling
   - check `col_with`, if not `nullptr`, handle collision, then set to `nullptr`
-* return `true` if object has 'died' and should be de-allocated by the engine
+* return `true` if object has died and should be de-allocated by the engine
 
 ### pre_render
 * game loop calls `pre_render` on allocated objects before rendering the sprites
@@ -64,8 +64,8 @@
 
 ### on_collision
 * called from default object `update` if object is in collision
-* default implementation is to reduce health with the damage caused by the colliding object
-* if damage is greater or equal than health then `on_death_by_collision` is called
+* default implementation is to reduce `health` with the `damage`` caused by the colliding object
+* if `damage` is greater or equal than `health` then `on_death_by_collision` is called
 * returns `true` if object has died
 
 ### on_death_by_collision

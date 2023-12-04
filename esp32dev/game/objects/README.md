@@ -74,4 +74,4 @@
 ## examples
 * `ship1.hpp` basic object with typical implementation
 * `ship2.hpp` ad-hoc implementation of animated sprite
-* `hero.hpp` composed of several sprites
+* `hero.hpp` composed of several sprites, spawns objects

@@ -1,4 +1,4 @@
-[ ] keep engine 'object' minimalistic and extract logic and update to 'game_object'
+[x] keep engine 'object' minimalistic and extract logic and update to 'game_object'
 [ ] consider locking dt to 30 fps for deterministic behavior
 [ ] horizontal, vertical flip of sprite
 [ ] several sets of tiles cycled for animation

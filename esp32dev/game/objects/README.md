@@ -35,7 +35,7 @@ base class `object` defined in `engine.hpp` has attributes and behavior common t
 ### constructor
 * base constructor sets mandatory `cls` to provide run time information
   - object classes are defined in `enum object_class` in `defs.hpp`
-* allocate and initiate sprite `spr`
+* user code must allocate and initiate sprite `spr`
   - set `spr->obj` to current object
   - set `spr->img` to image data, usually defined in `sprite_imgs[...]`
 * object may be composed of several sprites
@@ -43,15 +43,15 @@ base class `object` defined in `engine.hpp` has attributes and behavior common t
   - initiate in the same manner as `spr`
 
 ### destructor
-* object de-allocates sprite
-* additional clean-up implemented by inheriting class such as de-allocating additional sprites
+* object de-allocates the default sprite `spr`
+* user code might do additional clean up such as deallocating sprites
 
 ### update
 * game loop calls `update` on allocated objects
 * default implementation is:
   - handle collision by calling `on_collision` if such occurred during previous frame
   - update position and motion attributes
-* common custom logic game objects might implement is collision handling
+* user code might implement custom collision handling
   - check `col_with`, if not `nullptr`, handle collision, then set to `nullptr`
 * return `true` if object has 'died' and should be de-allocated by the engine
 

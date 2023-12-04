@@ -16,6 +16,11 @@ table of contents:
 * `/game/*` game code using `engine.hpp`
 * `/utils/png-to-resources` tools for extracting resources from png files
 
+important:
+* `/User_Setup.h` configuration for display ILI9341
+  - copy to directory of library TFT_eSPI
+  - on linux using visual code, library is at `~/Arduino/library/TFT_eSPI`
+
 ### about the device
 * [community](https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display)
 * [purchased at](https://www.aliexpress.com/item/1005004502250619.html)

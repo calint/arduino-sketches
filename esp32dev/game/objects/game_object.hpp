@@ -18,6 +18,7 @@ public:
   // damage inflicted on other object at collision
   uint16_t damage = 0;
 
+  // run time information about the class of this object
   object_class cls;
 
   game_object(object_class c) : cls{c} {}

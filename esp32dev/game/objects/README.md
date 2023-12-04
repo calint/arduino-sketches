@@ -30,7 +30,7 @@
 * example:
   - bit 1 - _enemy fire_ - meaning that all classes representing _enemy fire_ enable bit 1 in `col_bits`
   - hero `col_mask` would enable bit 1 to get notified when collision with any _enemy fire_ object occurs
-* this scheme enables objects to collide with each other without triggering collision detection handling, such as enemy ships rendered overlapping each other
+* this scheme enables objects to collide with each other without triggering collision detection, such as enemy ships rendered overlapping each other
 
 ## overridable functions
 

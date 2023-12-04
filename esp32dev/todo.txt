@@ -5,11 +5,11 @@
 [ ] render_scanline(...) consider looping through allocated sprites instead of all
 [ ] o1store: consider replacing alloc_ix with pointer to array element
     removing all array look-ups in the algorithm
+    => free_, alloc_, del_ would hold pointers (x4 space usage)
 [ ] o1store: can_allocate() is not thread safe
 [ ] o1store: hang if overrun?
 [ ] o1store: consider using std::vector instead of calloc and free
 [ ] o1store: consider a minimal implementation of span to return allocated list
-    => free_ would hold pointers (x4 space usage)
 [ ] #define O1STORE_DEBUG to check for double free, index out of bounds
 [ ] modifiable tiles map
 [ ] vectorized functions:

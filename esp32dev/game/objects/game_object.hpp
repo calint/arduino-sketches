@@ -21,7 +21,7 @@ public:
   game_object(object_class c) : cls{c} {}
   // note. after constructor 'spr' must be in valid state.
 
-  virtual ~game_object() {
+  ~game_object() override {
     // turn off sprite
     spr->img = nullptr;
     sprites.free_instance(spr);

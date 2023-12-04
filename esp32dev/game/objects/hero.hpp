@@ -16,7 +16,7 @@ public:
     col_bits = cb_hero;
     col_mask = cb_enemy | cb_enemy_bullet;
 
-    hlth = 10;
+    health = 10;
 
     spr = sprites.allocate_instance();
     spr->obj = this;

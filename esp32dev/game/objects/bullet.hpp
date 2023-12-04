@@ -9,7 +9,7 @@ public:
   bullet() : game_object{bullet_cls} {
     col_bits = cb_enemy_bullet;
     col_mask = cb_hero;
-    dmg = 1;
+    damage = 1;
 
     spr = sprites.allocate_instance();
     spr->obj = this;

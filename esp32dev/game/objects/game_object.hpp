@@ -13,8 +13,10 @@ public:
   float ddx = 0;
   float ddy = 0;
 
-  uint16_t hlth = 0;
-  uint16_t dmg = 0;
+  uint16_t health = 0;
+
+  // damage inflicted on other object at collision
+  uint16_t damage = 0;
 
   object_class cls;
 
@@ -55,11 +57,11 @@ public:
   // called from 'update' if object is in collision
   // returns true if object has died
   virtual auto on_collision(game_object *obj) -> bool {
-    if (obj->dmg >= hlth) {
+    if (obj->damage >= health) {
       on_death_by_collision();
       return true;
     }
-    hlth -= obj->dmg;
+    health -= obj->damage;
     return false;
   }
 

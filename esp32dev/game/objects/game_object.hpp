@@ -6,12 +6,12 @@ class game_object : public object {
 public:
   sprite *spr = nullptr;
 
-  float x = 0;
-  float y = 0;
-  float dx = 0;
-  float dy = 0;
   float ddx = 0;
+  float dx = 0;
+  float x = 0;
   float ddy = 0;
+  float dy = 0;
+  float y = 0;
 
   uint16_t health = 0;
 
@@ -41,8 +41,8 @@ public:
     }
 
     dx += ddx * clk.dt;
-    dy += ddy * clk.dt;
     x += dx * clk.dt;
+    dy += ddy * clk.dt;
     y += dy * clk.dt;
 
     return false;

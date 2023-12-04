@@ -14,6 +14,7 @@ using sprite_imgs_ix = uint8_t;
 // defined in 'resources/tile_imgs.hpp'
 // static constexpr unsigned tile_count = 512;
 static constexpr unsigned tile_count = 256;
+
 // type used to index in the tiles images
 // using tile_ix = uint16_t;
 using tile_ix = uint8_t;

@@ -7,7 +7,7 @@ class ship2 final : public game_object {
   // animation definition
   inline static constexpr sprite_imgs_ix animation_frames[]{6, 7};
   static constexpr unsigned animation_frames_len =
-      sizeof(animation_frames) / sizeof(sprite_ix);
+      sizeof(animation_frames) / sizeof(sprite_imgs_ix);
   static constexpr unsigned animation_rate_ms = 500;
   // animation state
   clk::time animation_frame_ms = 0;

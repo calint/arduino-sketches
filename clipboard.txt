@@ -2,7 +2,9 @@
 ~/.arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/esp-2021r2-patch5-8.4.0/bin/xtensa-esp32-elf-objdump -S build/esp32dev.ino.elf
 
 # stack trace. copy 'back trace' addresses as argument
-~/.arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/esp-2021r2-patch5-8.4.0/bin/xtensa-esp32-elf-addr2line -pfiaC -e build/esp32dev.ino.elf 
+~/.arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/esp-2021r2-patch5-8.4.0/bin/xtensa-esp32-elf-addr2line -pfiaC -e build/esp32dev.ino.elf 0x400d1b14:0x3ffb21e0 0x400d1ce3:0x3ffb2200 0x400d26b5:0x3ffb2220 0x400d8c39:0x3ffb2290
+
+
 
 git config --global credential.helper cache
 git config --global credential.helper 'cache --timeout=36000'

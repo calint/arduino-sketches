@@ -17,19 +17,18 @@
 //
 // note. no destructor since life-time is program life-time
 //
-template <typename Type, const unsigned Size, typename IxType,
-          const unsigned StoreId = 0, const unsigned InstanceSizeInBytes = 0>
+template <typename Type, const unsigned Size, const unsigned StoreId = 0,
+          const unsigned InstanceSizeInBytes = 0>
 class o1store {
   Type *all_ = nullptr;
-  IxType *free_bgn_ = nullptr;
-  IxType *free_ptr_ = nullptr;
-  IxType *free_end_ = nullptr;
-  IxType *alloc_bgn_ = nullptr;
-  IxType *alloc_ptr_ = nullptr;
-  IxType alloc_ix_ = 0;
-  IxType *del_bgn_ = nullptr;
-  IxType *del_ptr_ = nullptr;
-  IxType *del_end_ = nullptr;
+  Type **free_bgn_ = nullptr;
+  Type **free_ptr_ = nullptr;
+  Type **free_end_ = nullptr;
+  Type **alloc_bgn_ = nullptr;
+  Type **alloc_ptr_ = nullptr;
+  Type **del_bgn_ = nullptr;
+  Type **del_ptr_ = nullptr;
+  Type **del_end_ = nullptr;
 
 public:
   o1store() {
@@ -38,19 +37,25 @@ public:
     } else {
       all_ = (Type *)calloc(Size, sizeof(Type));
     }
-    free_ptr_ = free_bgn_ = (IxType *)calloc(Size, sizeof(IxType));
+    free_ptr_ = free_bgn_ = (Type **)calloc(Size, sizeof(Type *));
     free_end_ = free_bgn_ + Size;
-    alloc_ptr_ = alloc_bgn_ = (IxType *)calloc(Size, sizeof(IxType));
-    del_ptr_ = del_bgn_ = (IxType *)calloc(Size, sizeof(IxType));
+    alloc_ptr_ = alloc_bgn_ = (Type **)calloc(Size, sizeof(Type *));
+    del_ptr_ = del_bgn_ = (Type **)calloc(Size, sizeof(Type *));
     del_end_ = del_bgn_ + Size;
     if (!all_ or !free_bgn_ or !alloc_bgn_ or !del_bgn_) {
       Serial.printf("!!! o1store %u: could not allocate arrays\n", StoreId);
       while (true)
         ;
     }
-    IxType i = 0;
-    for (IxType *it = free_bgn_; it < free_end_; i++, it++) {
-      *it = i;
+    // write pointers to instances in the 'free' list
+    Type *all_it = all_;
+    for (Type **free_it = free_bgn_; free_it < free_end_; free_it++) {
+      *free_it = all_it;
+      if constexpr (InstanceSizeInBytes) {
+        all_it = (Type *)((void *)all_it + InstanceSizeInBytes);
+      } else {
+        all_it++;
+      }
     }
   }
 
@@ -69,49 +74,46 @@ public:
     if (free_ptr_ >= free_end_) {
       return nullptr;
     }
-    IxType ix = *free_ptr_;
+    Type *inst = *free_ptr_;
     free_ptr_++;
-    *alloc_ptr_ = ix;
+    *alloc_ptr_ = inst;
+    inst->alloc_ptr = alloc_ptr_;
     alloc_ptr_++;
-    Type *inst = instance(ix);
-    inst->alloc_ix = alloc_ix_;
-    alloc_ix_++;
     return inst;
   }
 
   // adds instance to a list that is applied with 'apply_free()'
-  void free_instance(const Type *inst) {
+  void free_instance(Type *inst) {
     if (del_ptr_ >= del_end_) {
-      Serial.printf("!!! o1store %u: free overrun [alloc_ix=%u]\n", StoreId,
-                    inst->alloc_ix);
+      Serial.printf("!!! o1store %u: free overrun\n", StoreId);
       while (true)
         ;
     }
-    *del_ptr_ = alloc_bgn_[inst->alloc_ix];
+    *del_ptr_ = inst;
     del_ptr_++;
   }
 
   // de-allocates the instances that have been freed
   void apply_free() {
-    for (IxType *it = del_bgn_; it < del_ptr_; it++) {
-      Type *inst_deleted = instance(*it);
+    for (Type **it = del_bgn_; it < del_ptr_; it++) {
+      Type *inst_deleted = *it;
       alloc_ptr_--;
-      IxType inst_ix_to_move = *alloc_ptr_;
-      Type *inst_to_move = instance(inst_ix_to_move);
-      inst_to_move->alloc_ix = inst_deleted->alloc_ix;
-      alloc_bgn_[inst_deleted->alloc_ix] = inst_ix_to_move;
+      Type *inst_to_move = *alloc_ptr_;
+      inst_to_move->alloc_ptr = inst_deleted->alloc_ptr;
+      *(inst_deleted->alloc_ptr) = inst_to_move;
       free_ptr_--;
-      *free_ptr_ = *it;
+      *free_ptr_ = inst_deleted;
     }
-    alloc_ix_ -= (del_ptr_ - del_bgn_);
     del_ptr_ = del_bgn_;
   }
 
   // returns pointer to list of allocated instances
-  inline auto allocated_list() -> IxType * { return alloc_bgn_; }
+  inline auto allocated_list() -> Type ** { return alloc_bgn_; }
 
   // returns size of list of allocated instances
-  inline auto allocated_list_len() -> IxType { return alloc_ix_; }
+  inline auto allocated_list_len() -> unsigned {
+    return alloc_ptr_ - alloc_bgn_;
+  }
 
   // returns the list with all pre-allocated instances
   inline auto all_list() -> Type * { return all_; }
@@ -120,7 +122,7 @@ public:
   constexpr auto all_list_len() -> unsigned { return Size; }
 
   // returns instance from 'all' list at index 'ix'
-  inline auto instance(IxType ix) -> Type * {
+  inline auto instance(unsigned ix) -> Type * {
     if constexpr (!InstanceSizeInBytes) {
       return &all_[ix];
     }
@@ -131,8 +133,8 @@ public:
   // returns the size in bytes of allocated heap memory
   constexpr auto allocated_data_size_B() -> size_t {
     if constexpr (InstanceSizeInBytes) {
-      return Size * InstanceSizeInBytes + 3 * Size * sizeof(IxType);
+      return Size * InstanceSizeInBytes + 3 * Size * sizeof(Type *);
     }
-    return Size * sizeof(Type) + 3 * Size * sizeof(IxType);
+    return Size * sizeof(Type) + 3 * Size * sizeof(Type *);
   }
 };

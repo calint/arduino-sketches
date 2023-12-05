@@ -94,10 +94,10 @@ public:
   uint8_t const *img = nullptr;
   int16_t scr_x = 0;
   int16_t scr_y = 0;
-  sprite_ix alloc_ix = sprite_ix_reserved;
+  sprite **alloc_ptr = nullptr;
 };
 
-using sprites_store = o1store<sprite, 255, sprite_ix, 1>;
+using sprites_store = o1store<sprite, 255, 1>;
 // note. 255 because sprite_ix a.k.a. uint8_t max size is 255
 // note. sprite 255 is reserved which gives 255 [0:254] usable sprites
 
@@ -157,20 +157,17 @@ public:
   }
 } static clk{};
 
-using object_ix = uint8_t;
-// data type used to index an 'object' in 'o1store'
-
 class object {
 public:
+  object **alloc_ptr;
+  // note. no default value since it would overwrite the 'o1store' assigned
+  // value at 'allocate_instance()'
+
   object *col_with = nullptr;
   collision_bits col_bits = 0;
   collision_bits col_mask = 0;
   // note: used to declare interest in collisions with objects whose
   // 'col_bits' bitwise AND with this 'col_mask' is not 0
-
-  object_ix alloc_ix;
-  // note. no default value since it would overwrite the 'o1store' assigned
-  // value at 'allocate_instance()'
 
   object() {}
   // note. constructor must be defined because the default constructor
@@ -187,17 +184,15 @@ public:
   virtual void pre_render() {}
 };
 
-using object_store =
-    o1store<object, 255, object_ix, 2, object_instance_max_size_B>;
-// note. 255 because object_ix a.k.a. uint8_t max size is 255
+using object_store = o1store<object, 255, 2, object_instance_max_size_B>;
 
 class objects : public object_store {
 public:
   void update() {
-    object_ix *it = allocated_list();
-    const object_ix len = allocated_list_len();
-    for (object_ix i = 0; i < len; i++, it++) {
-      object *obj = instance(*it);
+    object **it = allocated_list();
+    const unsigned len = allocated_list_len();
+    for (unsigned i = 0; i < len; i++, it++) {
+      object *obj = *it;
       if (obj->update()) {
         obj->~object();
         free_instance(obj);
@@ -206,10 +201,10 @@ public:
   }
 
   void pre_render() {
-    object_ix *it = allocated_list();
-    const object_ix len = allocated_list_len();
-    for (object_ix i = 0; i < len; i++, it++) {
-      object *obj = instance(*it);
+    object **it = allocated_list();
+    const unsigned len = allocated_list_len();
+    for (unsigned i = 0; i < len; i++, it++) {
+      object *obj = *it;
       obj->pre_render();
     }
   }

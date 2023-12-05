@@ -3,7 +3,7 @@
 intention:
 * developing arduino sketch using visual code targeting esp32 boards
 * exploring the device by developing a toy game
-* developing a toy game engine
+* developing a platform independent toy game engine featuring:
   - smooth scrolling tile map
   - sprites with pixel precision on screen collision detection
   - intuitive definition of game objects and logic

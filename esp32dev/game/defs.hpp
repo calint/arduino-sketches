@@ -25,7 +25,6 @@ using tile_ix = uint8_t;
 // static constexpr unsigned tile_count = 512;
 // using tile_ix = uint16_t;
 
-
 // tile map dimension
 // defined in 'resources/tile_map.hpp'
 static constexpr unsigned tile_map_width = 15;

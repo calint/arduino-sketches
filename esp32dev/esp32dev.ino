@@ -157,7 +157,8 @@ static void render_scanline(
   // and core 1 will do game logic.
 
   sprite *spr = sprites.all_list();
-  for (unsigned i = 0; i < sprites.all_list_len(); i++, spr++) {
+  const unsigned len = sprites.all_list_len();
+  for (unsigned i = 0; i < len; i++, spr++) {
     if (!spr->img or spr->scr_y > scanline_y or
         spr->scr_y + int16_t(sprite_height) <= scanline_y or
         spr->scr_x <= sprite_width_neg or spr->scr_x > int16_t(display_width)) {

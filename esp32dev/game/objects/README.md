@@ -62,7 +62,7 @@
 
 ### on_collision
 * called from default object `update` if object is in collision
-* default implementation is to reduce `health` with the `damage`` caused by the colliding object
+* default implementation is to reduce `health` with the `damage` caused by the colliding object
 * if `damage` is greater or equal than `health` then `on_death_by_collision` is called
 * returns `true` if object has died
 

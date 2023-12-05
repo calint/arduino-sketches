@@ -51,11 +51,12 @@
 // -- https://stackoverflow.com/questions/71085927/how-to-extend-esp32-heap-size
 
 // note. design decision of 'hpp' source files
-// the program is one file split into logical sections using includes
-// directory 'game' contains the user code that interfaces with the engine code
-// order of include and content of 'defs.hpp', 'game.hpp', 'main.hpp' solves
-// circular references and gives user the necessary callbacks to interface with
-// engine
+// * the program is one file split into logical sections using includes
+// * increases optimization opportunities by the compiler
+// * directory 'game' contains the user code that interfaces with the engine
+// * order of include and content of 'defs.hpp', 'game.hpp', 'main.hpp' solves
+//   circular references and gives user the necessary callbacks to interface
+//   with engine
 
 // note. tools to extract sprites, tiles and palettes from png
 // https://github.com/calint/arduino-sketches/tree/main/esp32dev/utils/png-to-resources

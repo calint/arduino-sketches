@@ -247,8 +247,10 @@ static void render(const unsigned x, const unsigned y) {
                       tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
                       tile_sub_y, tile_sub_y_times_tile_width);
     }
+
     display.setAddrWindow(0, frame_y, display_width, tile_height_minus_dy);
     display.pushPixelsDMA(dma_buf, display_width * tile_height_minus_dy);
+
     tile_y++;
     tiles_map_row_ptr += tile_map_width;
     frame_y += tile_height_minus_dy;
@@ -274,6 +276,7 @@ static void render(const unsigned x, const unsigned y) {
                       tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
                       tile_sub_y, tile_sub_y_times_tile_width);
     }
+
     display.setAddrWindow(0, frame_y, display_width, tile_height);
     display.pushPixelsDMA(dma_buf, display_width * tile_height);
   }
@@ -296,6 +299,7 @@ static void render(const unsigned x, const unsigned y) {
                       tile_x, tile_dx, tile_width_minus_dx, tiles_map_row_ptr,
                       tile_sub_y, tile_sub_y_times_tile_width);
     }
+
     display.setAddrWindow(0, frame_y, display_width, tile_dy);
     display.pushPixelsDMA(dma_buf, display_width * tile_dy);
   }

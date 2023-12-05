@@ -2,18 +2,11 @@
 //
 // implements a O(1) store of objects
 //
-// * Type is object type. 'Type' must contain public field '<IxType> alloc_ix'
+// * Type is object type. 'Type' must contain public field 'Type **alloc_ptr'
 // * Size is number of pre-allocated objects
-// * IxType is type used to index in lists and should be unsigned with a bit
-//   width that fits 'Size'
 // * StoreId is for debugging
 // * InstanceSizeInBytes is custom size of instance
-//   used to fit largest object in an object hierarchy in lack of std::variant
-//
-// example:
-//   Type = sprite, Size = 255, IxType = uint8_t gives 255 allocatable sprites
-//   note. size should be at most the number that fits in IxType
-//         in example uint8_t fits 255 indexes
+//   used to fit largest object in an object hierarchy
 //
 // note. no destructor since life-time is program life-time
 //

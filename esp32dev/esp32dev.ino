@@ -11,7 +11,7 @@
 // additional boards:
 // https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 //    install boards: esp32 by Espressif 2.0.14
-//   install library: TFT_eSPI by Bodmer 2.5.31
+//   install library: TFT_eSPI by Bodmer 2.5.34
 //                    XPT2046_Touchscreen by Paul Stoffregen 1.4.0
 //     setup library: replace User_Setup.h in libraries/TFT_eSPI/ with provided
 //                    file
@@ -43,6 +43,9 @@
 //    * install libraries (plug-in installs libraries in ~/Arduino/libraries)
 //    * replace User_Setup.h in ~/Arduino/libraries/TFT_eSPI/ with provided file
 //
+
+// note. after upgrading library TFT_eSPI replace the User_Setup.h and make a
+// clean build
 
 // note. why some buffers are allocated at 'setup'
 // Due to a technical limitation, the maximum statically allocated DRAM usage is

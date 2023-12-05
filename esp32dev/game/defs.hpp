@@ -46,6 +46,9 @@ enum object_class : uint8_t {
   upgrade_picked_cls
 };
 
+// define the size of collision bits
+using collision_bits = uint16_t;
+
 // collision bits
 static constexpr collision_bits cb_none = 0;
 static constexpr collision_bits cb_hero = 1 << 0;

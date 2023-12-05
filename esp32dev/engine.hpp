@@ -1,9 +1,6 @@
 #pragma once
 // platform independent game engine code
 
-using collision_bits = unsigned;
-// used by 'object' for collision detection interest flags
-
 // include platform constants
 #include "platform.hpp"
 

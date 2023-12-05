@@ -58,7 +58,7 @@ static void main_wave_1();
 static void main_wave_2();
 static void main_wave_3();
 static void main_wave_4();
-static void main_wave_5();
+// static void main_wave_5();
 
 // util to more easily position where waves are triggered
 constexpr unsigned tiles_per_screen = display_height / tile_height;
@@ -197,15 +197,15 @@ void main_wave_4() {
   }
 }
 
-void main_wave_5() {
-  float y = -float(sprite_height);
-  for (unsigned j = 0; j < 12; j++, y -= 10) {
-    float x = 8;
-    for (unsigned i = 0; i < 20; i++, x += 10) {
-      ship1 *shp = new (objects.allocate_instance()) ship1{};
-      shp->x = x;
-      shp->y = y;
-      shp->dy = 30;
-    }
-  }
-}
+// void main_wave_5() {
+//   float y = -float(sprite_height);
+//   for (unsigned j = 0; j < 12; j++, y -= 10) {
+//     float x = 8;
+//     for (unsigned i = 0; i < 20; i++, x += 10) {
+//       ship1 *shp = new (objects.allocate_instance()) ship1{};
+//       shp->x = x;
+//       shp->y = y;
+//       shp->dy = 30;
+//     }
+//   }
+// }

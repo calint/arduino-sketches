@@ -401,26 +401,23 @@ void setup(void) {
   Serial.println(WiFi.localIP());
 #endif
 
-  // set random seed to get same random every time
+  // set random seed to for deterministic behavior
   randomSeed(0);
 
   // initiate clock to current time and frames-per-second calculation to every 2
   // seconds
   clk.init(millis(), 2000);
 
-  // callback to user code
   main_setup();
 }
 
 void loop() {
-  // frames per second update
   if (clk.on_frame(millis())) {
     Serial.printf("t=%lu  fps=%u  ldr=%u  objs=%u  sprs=%u\n", clk.ms, clk.fps,
                   analogRead(cyd_ldr_pin), objects.allocated_list_len(),
                   sprites.allocated_list_len());
   }
 
-  // check touch screen
   if (touch_screen.tirqTouched() and touch_screen.touched()) {
     const TS_Point pt = touch_screen.getPoint();
     main_on_touch_screen(pt.x, pt.y, pt.z);

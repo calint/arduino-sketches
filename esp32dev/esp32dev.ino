@@ -401,7 +401,7 @@ void setup(void) {
   Serial.println(WiFi.localIP());
 #endif
 
-  // set random seed to for deterministic behavior
+  // set random seed for deterministic behavior
   randomSeed(0);
 
   // initiate clock to current time and frames-per-second calculation to every 2

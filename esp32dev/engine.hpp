@@ -225,10 +225,10 @@ static void engine_loop() {
   // call 'update()' on allocated objects
   objects.update();
 
-  // de-allocate the objects freed during 'objects.update()'
+  // deallocate the objects freed during 'objects.update()'
   objects.apply_free();
 
-  // de-allocate the sprites freed during 'objects.update()'
+  // deallocate the sprites freed during 'objects.update()'
   sprites.apply_free();
 
   // clear collisions map

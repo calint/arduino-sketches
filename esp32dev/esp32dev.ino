@@ -58,9 +58,6 @@
 //   circular references and gives user the necessary callbacks to interface
 //   with engine
 
-// note. tools to extract sprites, tiles and palettes from png
-// https://github.com/calint/arduino-sketches/tree/main/esp32dev/utils/png-to-resources
-
 // platform specific constants
 #include "platform.hpp"
 

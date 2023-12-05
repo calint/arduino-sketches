@@ -2,8 +2,8 @@
 // constants used by engine and game objects
 
 // portrait or landscape orientation of screen
-static constexpr uint8_t display_orientation = 0;
 // 0: portrait, 1: landscape
+static constexpr uint8_t display_orientation = 0;
 
 
 // number of sprite images

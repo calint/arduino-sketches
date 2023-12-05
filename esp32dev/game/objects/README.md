@@ -7,7 +7,7 @@
 ## attributes
 
 ### related to run time information
-* object class: `cls` is mandatory to initiate an object and is defined in `defs.hpp` by game code, where each object class has an entry
+* object class: `cls` is mandatory to initiate a game object and is defined in `defs.hpp` by game code, where each game object class has an entry
 
 ### related to position and motion
 * position: `x`, `y`
@@ -28,7 +28,9 @@
 * example:
   - bit 1 - _'enemy fire'_ - meaning that all classes representing _'enemy fire'_ enable bit 1 in `col_bits`
   - hero `col_mask` would enable bit 1 to get notified when collision with any _'enemy fire'_ object occurs
-* this scheme enables objects to collide with each other without triggering collision detection, such as enemy ships rendered overlapping each other
+* this scheme enables:
+  - objects to collide with each other without triggering collision detection, such as enemy ships rendered overlapping each other
+  - allows to react to collisions with a set of object classes such as _'enemy fire'_ simplifying the design
 
 ## overridable functions
 
@@ -44,7 +46,7 @@
 
 ### destructor
 * object de-allocates the default sprite `spr`
-* user code might do additional clean up such as deallocating sprites
+* user code might do additional clean up such as deallocating additional sprites
 
 ### update
 * game loop calls `update` on allocated objects at the beginning of the frame
@@ -53,7 +55,7 @@
   - update position and motion attributes
 * user code might implement custom collision handling
   - check `col_with`, if not `nullptr`, handle collision, then set to `nullptr`
-* return `true` if object has died and should be de-allocated by the engine
+* return `true` if object has died and should be deallocated by the engine
 
 ### pre_render
 * game loop calls `pre_render` on allocated objects before rendering the sprites
@@ -61,13 +63,13 @@
 * objects composed of several sprites override this function to set screen position on the additional sprites
 
 ### on_collision
-* called from default object `update` if object is in collision
+* called from `update` if game object is in collision
 * default implementation is to reduce `health` with the `damage` caused by the colliding object
 * if `damage` is greater or equal than `health` then `on_death_by_collision` is called
 * returns `true` if object has died
 
 ### on_death_by_collision
-* called during `on_collision` if object has died due to collision damage
+* called during `on_collision` if game object has died due to collision damage
 
 ## examples
 * `ship1.hpp` basic object with typical implementation

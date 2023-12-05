@@ -205,7 +205,7 @@ static void render_scanline(
 }
 
 // buffer: one tile height, palette, 8-bit tiles from tiles map, 8-bit sprites
-// 31 fps with dma, 22 fps without
+// 31 fps with DMA, 22 fps without
 static void render(const unsigned x, const unsigned y) {
   display.startWrite();
 
@@ -334,7 +334,7 @@ void setup(void) {
   Serial.printf("            double: %zu B\n", sizeof(double));
   Serial.printf("             void*: %zu B\n", sizeof(void *));
 
-  // allocate dma buffers
+  // allocate DMA buffers
   dma_buf_1 = (uint16_t *)malloc(dma_buf_size);
   dma_buf_2 = (uint16_t *)malloc(dma_buf_size);
   if (!dma_buf_1 or !dma_buf_2) {

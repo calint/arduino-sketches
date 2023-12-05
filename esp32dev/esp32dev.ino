@@ -376,11 +376,12 @@ void setup(void) {
   // setup ldr
   pinMode(cyd_ldr_pin, INPUT);
 
-  // start the SPI for the touch screen and init the TS library
+  // start the spi for the touch screen and init the library
   spi.begin(xpt2046_clk, xpt2046_miso, xpt2046_mosi, xpt2046_cs);
   touch_screen.begin(spi);
   touch_screen.setRotation(display_orientation);
 
+  // initiate display
   display.init();
   display.setRotation(display_orientation);
   display.initDMA(true);
@@ -402,7 +403,7 @@ void setup(void) {
   // set random seed for deterministic behavior
   randomSeed(0);
 
-  // initiate clock to current time and frames-per-second calculation to every 2
+  // initiate clock to current time and frames-per-second calculation every 2
   // seconds
   clk.init(millis(), 2000);
 

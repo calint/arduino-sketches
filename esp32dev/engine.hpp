@@ -165,7 +165,7 @@ public:
 
   object() {}
   // note. constructor must be defined because the default constructor
-  // overwrites the 'o1store' assigned 'alloc_ix' at the 'new in place'
+  // overwrites the 'o1store' assigned 'alloc_ptr' at the 'new in place'
 
   virtual ~object() {}
 

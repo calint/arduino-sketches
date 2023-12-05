@@ -52,7 +52,7 @@
 
 // note. design decision of 'hpp' source files
 // * the program is one file split into logical sections using includes
-// * increases opportunities for optimization by the compiler.
+// * increases opportunities for optimization by the compiler
 // * directory 'game' contains the user code that interfaces with 'engine.hpp'
 // * order of include and content of 'defs.hpp', 'game.hpp', 'main.hpp' solves
 //   circular references and gives user the necessary callbacks to interface
@@ -86,7 +86,7 @@ static constexpr uint8_t cyd_ldr_pin = 34;
 
 // setup touch screen
 // https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/Examples/Basics/2-TouchTest/2-TouchTest.ino
-static constexpr uint8_t xpt2046_irq = 36;
+static constexpr uint8_t xpt2046_irq = 36;  // Interrupt Request
 static constexpr uint8_t xpt2046_mosi = 32; // Master Out Slave In
 static constexpr uint8_t xpt2046_miso = 39; // Master In Slave Out
 static constexpr uint8_t xpt2046_clk = 25;  // Clock

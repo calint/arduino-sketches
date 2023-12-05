@@ -151,8 +151,7 @@ static void render_scanline(
 
   // render sprites
   // note. although grossly inefficient algorithm the DMA is busy while
-  // rendering one tile height of sprites and tiles. core 0 will do graphics
-  // and core 1 will do game logic.
+  // rendering one tile height of sprites and tiles
 
   sprite *spr = sprites.all_list();
   const unsigned len = sprites.all_list_len();

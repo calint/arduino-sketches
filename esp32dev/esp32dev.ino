@@ -77,16 +77,16 @@
 #include "secrets.h"
 #endif
 
-// ldr (light dependant resistor)
-// analog read of pin gives: 0 for full brightness, higher values is darker
-static constexpr uint8_t cyd_ldr_pin = 34;
-
 // rgb led
 static constexpr uint8_t cyd_led_blue = 17;
 static constexpr uint8_t cyd_led_red = 4;
 static constexpr uint8_t cyd_led_green = 16;
 
-// setting up screen and touch from:
+// ldr (light dependant resistor)
+// analog read of pin gives: 0 for full brightness, higher values is darker
+static constexpr uint8_t cyd_ldr_pin = 34;
+
+// setup touch screen
 // https://github.com/witnessmenow/ESP32-Cheap-Yellow-Display/blob/main/Examples/Basics/2-TouchTest/2-TouchTest.ino
 static constexpr uint8_t xpt2046_irq = 36;
 static constexpr uint8_t xpt2046_mosi = 32; // Master Out Slave In

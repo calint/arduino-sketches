@@ -1,17 +1,14 @@
 #pragma once
 // platform independent game engine code
 
+using collision_bits = unsigned;
+// used by 'object' for collision detection interest flags
+
 // include platform constants
 #include "platform.hpp"
 
 #include "o1store.hpp"
 #include <limits>
-
-using collision_bits = unsigned;
-// used by 'object' for collision detection interest flags
-
-// including defs for engine and game
-#include "game/defs.hpp"
 
 // palette used when rendering tiles
 // converts uint8_t to uint16_t rgb 565 (red being the highest bits)

@@ -1,9 +1,7 @@
 #pragma once
 // game state used by objects
 
-#include "../engine.hpp"
-
-class game final {
+class game_state final {
 public:
   bool hero_is_alive = false;
-} game{};
+} game_state{};

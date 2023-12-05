@@ -1,8 +1,7 @@
 #pragma once
 // platform constants used by engine and game
 
-static constexpr uint8_t display_orientation = 0;
-// 0: vertical, 1: horizontal
+#include "game/defs.hpp"
 
 // display dimensions of screen ILI9341 depending on orientation
 static constexpr unsigned display_width = display_orientation == 0 ? 240 : 320;

@@ -58,9 +58,6 @@
 //   circular references and gives user the necessary callbacks to interface
 //   with engine
 
-// platform specific constants
-#include "platform.hpp"
-
 // main entry file to user code
 #include "game/main.hpp"
 

@@ -2,7 +2,9 @@
 // setup initial game state, callbacks from engine, game logic
 // solves circular references between 'game' and game objects
 
-#include "game.hpp"
+#include "../engine.hpp"
+
+#include "game_state.hpp"
 
 #include "objects/bullet.hpp"
 #include "objects/hero.hpp"
@@ -119,7 +121,7 @@ static void main_on_frame_completed() {
     wave_triggers_ix = 0;
   }
 
-  if (not game.hero_is_alive) {
+  if (not game_state.hero_is_alive) {
     hero *hro = new (objects.allocate_instance()) hero{};
     hro->x = float(rand()) * display_width / RAND_MAX;
     hro->y = 30;

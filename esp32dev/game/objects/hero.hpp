@@ -1,7 +1,7 @@
 #pragma once
 #include "../../engine.hpp"
 // include game logic
-#include "../game.hpp"
+#include "../game_state.hpp"
 // include dependencies
 #include "bullet.hpp"
 #include "fragment.hpp"
@@ -35,7 +35,7 @@ public:
 
     last_upgrade_deployed_ms = clk.ms;
 
-    game.hero_is_alive = true;
+    game_state.hero_is_alive = true;
   }
 
   ~hero() override {
@@ -46,7 +46,7 @@ public:
     sprites.free_instance(spr_left);
     sprites.free_instance(spr_right);
 
-    game.hero_is_alive = false;
+    game_state.hero_is_alive = false;
   }
 
   // returns true if object died

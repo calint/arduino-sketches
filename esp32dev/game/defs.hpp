@@ -5,7 +5,6 @@
 // 0: portrait, 1: landscape
 static constexpr uint8_t display_orientation = 0;
 
-
 // number of sprite images
 // defined in 'resources/sprite_imgs.hpp'
 static constexpr unsigned sprite_imgs_count = 256;

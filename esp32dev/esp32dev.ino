@@ -205,7 +205,7 @@ static void render_scanline(
 }
 
 // buffer: one tile height, palette, 8-bit tiles from tiles map, 8-bit sprites
-// 31 fps
+// 31 fps with dma, 22 fps without
 static void render(const unsigned x, const unsigned y) {
   display.startWrite();
 

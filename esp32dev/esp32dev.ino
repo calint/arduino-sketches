@@ -204,7 +204,7 @@ static void render_scanline(
   }
 }
 
-// one tile height buffer, palette, 8-bit tiles from tiles map, 8-bit sprites
+// buffer: one tile height, palette, 8-bit tiles from tiles map, 8-bit sprites
 // 31 fps
 static void render(const unsigned x, const unsigned y) {
   display.startWrite();

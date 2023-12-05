@@ -79,7 +79,7 @@
 
 // ldr (light dependant resistor)
 // analog read of pin gives: 0 for full brightness, higher values is darker
-static constexpr uint8_t ldr_pin = 34;
+static constexpr uint8_t cyd_ldr_pin = 34;
 
 // rgb led
 static constexpr uint8_t cyd_led_blue = 17;
@@ -376,7 +376,7 @@ void setup(void) {
   digitalWrite(cyd_led_blue, HIGH);
 
   // setup ldr
-  pinMode(ldr_pin, INPUT);
+  pinMode(cyd_ldr_pin, INPUT);
 
   // start the SPI for the touch screen and init the TS library
   spi.begin(xpt2046_clk, xpt2046_miso, xpt2046_mosi, xpt2046_cs);
@@ -416,14 +416,13 @@ void loop() {
   // frames per second update
   if (clk.on_frame(millis())) {
     Serial.printf("t=%lu  fps=%u  ldr=%u  objs=%u  sprs=%u\n", clk.ms, clk.fps,
-                  analogRead(ldr_pin), objects.allocated_list_len(),
+                  analogRead(cyd_ldr_pin), objects.allocated_list_len(),
                   sprites.allocated_list_len());
   }
 
   // check touch screen
   if (touch_screen.tirqTouched() and touch_screen.touched()) {
     const TS_Point pt = touch_screen.getPoint();
-    // callback
     main_on_touch_screen(pt.x, pt.y, pt.z);
   }
 

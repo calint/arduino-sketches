@@ -34,7 +34,7 @@
 //                           Programmer: Esptool
 //
 //  Visual Code:
-//    * install plug-in Arduino by Microsoft sv0.6.0
+//    * install plug-in Arduino by Microsoft v0.6.0
 //    * task ">Arduino: Initialize"
 //    * task ">Arduino: Board Manager"
 //        install "esp32 by Espressif Systems Version 2.0.14"

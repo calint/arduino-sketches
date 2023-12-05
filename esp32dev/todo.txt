@@ -1,10 +1,9 @@
-[x] keep engine 'object' minimalistic and extract logic and update to 'game_object'
+[ ] o1store: consider replacing alloc_ix with pointer to array element
+    removing array look-ups vs free_, alloc_, del_ would hold pointers (x4 space usage)
 [ ] consider locking dt to 30 fps for deterministic behavior
 [ ] horizontal, vertical flip of sprite
 [ ] several sets of tiles cycled for animation
 [ ] render_scanline(...) consider looping through allocated sprites instead of all
-[ ] o1store: consider replacing alloc_ix with pointer to array element
-    removing array look-ups vs free_, alloc_, del_ would hold pointers (x4 space usage)
 [ ] o1store: can_allocate() is not thread safe
 [ ] o1store: hang if overrun?
 [ ] o1store: consider using std::vector instead of calloc and free
@@ -18,6 +17,7 @@
     float result[4];
     vaddf(result, a, b, 4);
 -------------------------------------------------------------------------------
+[x] keep engine 'object' minimalistic and extract logic and update to 'game_object'
 [x] display_width and height is defined in engine.hpp but is device dependent
     => extracted to 'platform.hpp' as platform dependent constant
 [x] animated sprite class {sprite_img,ms}

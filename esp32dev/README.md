@@ -10,14 +10,14 @@ intention:
   - decent performance, ~30 frames per second on the device
 
 table of contents:
-* `/esp32dev.ino` booting and rendering
-* `/platform.hpp` platform constants used by engine and game
-* `/engine.hpp` platform independent game engine code
-* `/game/*` game code using `engine.hpp`
-* `/utils/png-to-resources` tools for extracting resources from png files
+* `esp32dev.ino` booting and rendering
+* `platform.hpp` platform constants used by engine and game
+* `engine.hpp` platform independent game engine code
+* `game/*` game code using `engine.hpp`
+* `utils/png-to-resources` tools for extracting resources from png files
 
 important:
-* `/User_Setup.h` configuration for display ILI9341
+* `User_Setup.h` configuration for display ILI9341
   - copy to directory of library TFT_eSPI
   - on linux using visual code, library is at `~/Arduino/library/TFT_eSPI`
 

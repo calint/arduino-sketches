@@ -10,7 +10,7 @@
 //                    Arduino IDE 2.2.1
 // additional boards:
 // https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-//    install boards: esp32 by Espressif 2.0.14
+//    install boards: esp32 by Espressif 2.0.13
 //   install library: TFT_eSPI by Bodmer 2.5.34
 //                    XPT2046_Touchscreen by Paul Stoffregen 1.4.0
 //     setup library: replace User_Setup.h in libraries/TFT_eSPI/ with provided

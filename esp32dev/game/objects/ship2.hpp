@@ -5,10 +5,9 @@
 
 class ship2 final : public game_object {
   // animation definition
-  inline static constexpr sprite_imgs_ix animation_frames[]{6, 7};
-  static constexpr unsigned animation_frames_len =
-      sizeof(animation_frames) / sizeof(sprite_imgs_ix);
-  static constexpr unsigned animation_rate_ms = 500;
+  static const sprite_imgs_ix animation_frames[];
+  static const unsigned animation_frames_len;
+  static const unsigned animation_rate_ms;
   // animation state
   clk::time animation_frame_ms = 0;
   uint8_t animation_frames_ix = 0;
@@ -57,3 +56,7 @@ public:
     upg->ddy = 20;
   }
 };
+
+const sprite_imgs_ix ship2::animation_frames[] = {6, 7};
+const unsigned ship2::animation_frames_len = sizeof(ship2::animation_frames) / sizeof(sprite_imgs_ix);
+const unsigned ship2::animation_rate_ms = 500;

@@ -25,7 +25,7 @@ class o1store {
 
 public:
   o1store() {
-    if constexpr (InstanceSizeInBytes) {
+    if (InstanceSizeInBytes) {
       all_ = (Type *)calloc(Size, InstanceSizeInBytes);
     } else {
       all_ = (Type *)calloc(Size, sizeof(Type));
@@ -44,8 +44,8 @@ public:
     Type *all_it = all_;
     for (Type **free_it = free_bgn_; free_it < free_end_; free_it++) {
       *free_it = all_it;
-      if constexpr (InstanceSizeInBytes) {
-        all_it = (Type *)((void *)all_it + InstanceSizeInBytes);
+      if (InstanceSizeInBytes) {
+        all_it = (Type *)((char *)all_it + InstanceSizeInBytes);
       } else {
         all_it++;
       }
@@ -116,16 +116,16 @@ public:
 
   // returns instance from 'all' list at index 'ix'
   inline auto instance(unsigned ix) -> Type * {
-    if constexpr (!InstanceSizeInBytes) {
+    if (!InstanceSizeInBytes) {
       return &all_[ix];
     }
     // note. if instance size is specified do pointer shenanigans
-    return (Type *)((void *)all_ + InstanceSizeInBytes * ix);
+    return (Type *)((char *)all_ + InstanceSizeInBytes * ix);
   }
 
   // returns the size in bytes of allocated heap memory
   constexpr auto allocated_data_size_B() -> size_t {
-    if constexpr (InstanceSizeInBytes) {
+    if (InstanceSizeInBytes) {
       return Size * InstanceSizeInBytes + 3 * Size * sizeof(Type *);
     }
     return Size * sizeof(Type) + 3 * Size * sizeof(Type *);

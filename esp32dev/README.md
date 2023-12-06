@@ -1,3 +1,5 @@
+notice: development continued in repository: [bam](https://github.com/calint/bam)
+
 ### toy game for ESP32-2432S028R a.k.a. cheap-yellow-display (cyd)
 
 intention:
